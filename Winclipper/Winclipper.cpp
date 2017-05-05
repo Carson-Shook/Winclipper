@@ -2,8 +2,8 @@
 //
 #include "stdafx.h"
 #include "resource.h"
-#include "Winclipper.h"
 #include "ClipsMenu.h"
+#include "Winclipper.h"
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
                      _In_opt_ HINSTANCE hPrevInstance,
@@ -12,8 +12,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 {
     UNREFERENCED_PARAMETER(hPrevInstance);
     UNREFERENCED_PARAMETER(lpCmdLine);
-
-    // TODO: Place code here.
 
     // Initialize global strings
     LoadStringW(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
@@ -129,66 +127,67 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     switch (message)
     {
     case WM_COMMAND:
+    {
+        int wmId = LOWORD(wParam);
+        // Parse the menu selections:
+        switch (wmId)
         {
-            int wmId = LOWORD(wParam);
-            // Parse the menu selections:
-            switch (wmId)
-            {
-            case IDM_ABOUT:
-                DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
-                break;
-            case IDM_EXIT:
-                DestroyWindow(hWnd);
-                break;
-            default:
-                return DefWindowProc(hWnd, message, wParam, lParam);
-            }
+        case IDM_ABOUT:
+            DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
+            break;
+        case IDM_EXIT:
+            DestroyWindow(hWnd);
+            break;
+        default:
+            return DefWindowProc(hWnd, message, wParam, lParam);
         }
-        break;
+    }
+    break;
     case WM_PAINT:
+    {
+        PAINTSTRUCT ps;
+        HDC hdc = BeginPaint(hWnd, &ps);
+        // TODO: Add any drawing code that uses hdc here...
+        EndPaint(hWnd, &ps);
+    }
+    break;
+    case WM_CLIPBOARDUPDATE:
+    {
+        cManager.AddToClips(hWnd);
+
+        if (!OpenClipboard(hWnd))
+            return FALSE;
+        HANDLE psClipboardData = GetClipboardData(CF_UNICODETEXT);
+        if (psClipboardData != NULL)
         {
-            PAINTSTRUCT ps;
-            HDC hdc = BeginPaint(hWnd, &ps);
-            // TODO: Add any drawing code that uses hdc here...
-            EndPaint(hWnd, &ps);
+            wchar_t * data = reinterpret_cast<wchar_t*>(GlobalLock(psClipboardData));
+            wchar_t * derefData = _wcsdup(data);
+
+            SetDlgItemText(hWnd, IDC_MAIN_EDIT, derefData);
+            GlobalUnlock(psClipboardData);
         }
-        break;
-	case WM_CLIPBOARDUPDATE:
-		{
-			if (!OpenClipboard(hWnd))
-				return FALSE;
-			HANDLE psClipboardData = GetClipboardData(CF_UNICODETEXT);
-			if (psClipboardData != NULL)
-			{
-				wchar_t * data = reinterpret_cast<wchar_t*>(GlobalLock(psClipboardData));
-				wchar_t * derefData = _wcsdup(data);
+        CloseClipboard();
+    }
+    break;
+    case WM_HOTKEY:
+    {
+        HWND curWin = GetForegroundWindow();
+        ShowClipsMenu(hWnd, curWin, cManager);
 
-				SetDlgItemText(hWnd, IDC_MAIN_EDIT, derefData);
-				GlobalUnlock(psClipboardData);
-			}
-			CloseClipboard();
-			UpdateWindow(hWnd);
-		}
-		break;
-	case WM_HOTKEY:
-		{
-			HWND curWin = GetForegroundWindow();
-			ShowClipsMenu(hWnd, curWin);
+        SetDlgItemText(hWnd, IDC_MAIN_EDIT, L"Test");
+    }
+    break;
+    case WM_SIZE:
+    {
+        HWND hEdit;
+        RECT rcClient;
 
-			SetDlgItemText(hWnd, IDC_MAIN_EDIT, L"Test");
-		}
-		break;
-	case WM_SIZE:
-		{
-			HWND hEdit;
-			RECT rcClient;
+        GetClientRect(hWnd, &rcClient);
 
-			GetClientRect(hWnd, &rcClient);
-
-			hEdit = GetDlgItem(hWnd, IDC_MAIN_EDIT);
-			SetWindowPos(hEdit, NULL, 0, 0, rcClient.right, rcClient.bottom, SWP_NOZORDER);
-		}
-		break;
+        hEdit = GetDlgItem(hWnd, IDC_MAIN_EDIT);
+        SetWindowPos(hEdit, NULL, 0, 0, rcClient.right, rcClient.bottom, SWP_NOZORDER);
+    }
+    break;
     case WM_DESTROY:
         PostQuitMessage(0);
         break;
