@@ -23,25 +23,62 @@ BOOL ClipsManager::AddToClips(HWND hWnd)
     if (psClipboardData != NULL)
     {
         wchar_t * data = (wchar_t*)GlobalLock(psClipboardData);
-        wchar_t * derefData = _wcsdup(data);
-        GlobalUnlock(psClipboardData);
-
-        if (clips.size() == maxClips)
+        if (data != NULL)
         {
-            // get reference to the back object before we pop it
-            wchar_t * back = clips.back();
-            clips.pop_back();
-            // dealocate the former back object
-            delete back;
+            wchar_t * derefData = _wcsdup(data);
+            GlobalUnlock(psClipboardData);
+
+            if (clips.size() == maxClips)
+            {
+                // get reference to the back object before we pop it
+                wchar_t * back = clips.back();
+                clips.pop_back();
+                // dealocate the former back object
+                delete back;
+            }
+            clips.push_front(derefData);
         }
-        clips.push_front(derefData);
+        else 
+        {
+            GlobalUnlock(psClipboardData);
+        }
     }
     CloseClipboard();
+
+    return TRUE;
 }
 
-BOOL ClipsManager::SetClipboardToClipAtIndex(HWND, int)
+BOOL ClipsManager::SetClipboardToClipAtIndex(HWND hWnd, int index)
 {
-    return 0;
+    if (!OpenClipboard(hWnd))
+        return FALSE;
+
+    EmptyClipboard();
+
+    wchar_t * clip = clips.at(index);
+
+    HGLOBAL hClipboardData = GlobalAlloc(GMEM_MOVEABLE, (wcslen(clip) + 1) * sizeof(wchar_t));
+    if (hClipboardData != NULL)
+    {
+        wchar_t * pwcData = (wchar_t*)GlobalLock(hClipboardData);
+        if (pwcData != NULL)
+        {
+            wcscpy_s(pwcData, wcslen(clip) + 1, clip);
+
+            GlobalUnlock(hClipboardData);
+
+            SetClipboardData(CF_UNICODETEXT, hClipboardData);
+
+            delete clip;
+            clips.erase(clips.begin() + index);
+        }
+        else {
+            GlobalUnlock(hClipboardData);
+        }
+    }
+    CloseClipboard();
+
+    return TRUE;
 }
 
 int ShowClipsMenu(HWND hWnd, HWND curWin, ClipsManager& cm)
@@ -110,29 +147,13 @@ int ShowClipsMenu(HWND hWnd, HWND curWin, ClipsManager& cm)
 		if (menuSelection)
 		{
 			SetForegroundWindow(curWin);
-			Sleep(10);
-            
-            if (!OpenClipboard(curWin))
-            {
-                return FALSE;
-            }
+			Sleep(20);
 
-            EmptyClipboard();
+            // Have to subtract 1 from index because returning 0 in
+            // TrackPopupMenu means cancelation
+            cm.SetClipboardToClipAtIndex(curWin, menuSelection - 1);
 
-            wchar_t * clip = cm.GetClips().at(menuSelection - 1);
-
-            HGLOBAL hClipboardData = GlobalAlloc(GMEM_MOVEABLE, (wcslen(clip) + 1) * sizeof(wchar_t));
-			if (hClipboardData != NULL)
-			{
-				wchar_t * pwcData = (wchar_t*)GlobalLock(hClipboardData);
-                wcscpy_s(pwcData, wcslen(clip) + 1, clip);
-
-                GlobalUnlock(hClipboardData);
-
-                SetClipboardData(CF_UNICODETEXT, hClipboardData);
-			}
-			CloseClipboard();
-            Sleep(10);
+            Sleep(20);
             SendPasteInput();
 		}
 		SetForegroundWindow(curWin);

@@ -1,5 +1,4 @@
 #pragma once
-#include <deque>
 
 #define MENU_TEXT_LENGTH    84
 #define CANCELED_SELECTION	1		// user selected nothing, pressed esc, or clicked outside the window

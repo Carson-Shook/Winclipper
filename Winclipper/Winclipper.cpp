@@ -31,7 +31,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     // Main message loop:
     while (GetMessage(&msg, nullptr, 0, 0))
     {
-        if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg))
+        if (!TranslateAccelerator(msg.hwnd, hAccelTable,  &msg))
         {
             TranslateMessage(&msg);
             DispatchMessage(&msg);
@@ -64,7 +64,7 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
     wcex.hbrBackground  = (HBRUSH)(COLOR_WINDOW+1);
     wcex.lpszMenuName   = MAKEINTRESOURCEW(IDC_WINCLIPPER);
     wcex.lpszClassName  = szWindowClass;
-    wcex.hIconSm        = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_SMALL));
+    wcex.hIconSm        = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_WINCLIPPER));
 
     return RegisterClassExW(&wcex);
 }
@@ -91,21 +91,10 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
       return FALSE;
    }
 
-   HGDIOBJ hfDefault;
-   HWND hEdit;
-
-   hEdit = CreateWindowEx(WS_EX_CLIENTEDGE, L"EDIT", L"",
-	   WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_HSCROLL | ES_MULTILINE | ES_AUTOVSCROLL | ES_AUTOHSCROLL,
-	   0, 0, 100, 100, hWnd, (HMENU)IDC_MAIN_EDIT, GetModuleHandle(NULL), NULL);
-   if (hEdit == NULL)
-	   MessageBox(hWnd, L"Could not create edit box.", L"Error", MB_OK | MB_ICONERROR);
-
-   hfDefault = GetStockObject(DEVICE_DEFAULT_FONT);
-   SendMessage(hEdit, WM_SETFONT, (WPARAM)hfDefault, MAKELPARAM(FALSE, 0));
-
    AddClipboardFormatListener(hWnd);
    RegisterHotKey(hWnd, ID_REG_HOTKEY, MOD_ALT | MOD_NOREPEAT, 0x56);
 
+   
    ShowWindow(hWnd, SW_HIDE);
    UpdateWindow(hWnd);
    
@@ -143,14 +132,34 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         }
     }
     break;
-    case WM_PAINT:
-    {
-        PAINTSTRUCT ps;
-        HDC hdc = BeginPaint(hWnd, &ps);
-        // TODO: Add any drawing code that uses hdc here...
-        EndPaint(hWnd, &ps);
-    }
+    case WMAPP_NOTIFYCALLBACK:
+        switch (LOWORD(lParam))
+        {
+        case NIN_SELECT:
+            // for NOTIFYICON_VERSION_4 clients, NIN_SELECT is prerable to listening to mouse clicks and key presses
+            // directly.
+            if (!IsWindowVisible(hWnd))
+            {
+                ShowWindow(hWnd, SW_SHOW);
+            }
+            break;
+        case WM_CONTEXTMENU:
+        {
+            POINT const pt = { LOWORD(wParam), HIWORD(wParam) };
+            ShowContextMenu(hWnd, pt);
+        }
+        break;
+        }
     break;
+
+    //case WM_PAINT:
+    //{
+    //    PAINTSTRUCT ps;
+    //    HDC hdc = BeginPaint(hWnd, &ps);
+    //    // TODO: Add any drawing code that uses hdc here...
+    //    EndPaint(hWnd, &ps);
+    //}
+    //break;
     case WM_CLIPBOARDUPDATE:
     {
         cManager.AddToClips(hWnd);
@@ -160,10 +169,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         HANDLE psClipboardData = GetClipboardData(CF_UNICODETEXT);
         if (psClipboardData != NULL)
         {
-            wchar_t * data = reinterpret_cast<wchar_t*>(GlobalLock(psClipboardData));
-            wchar_t * derefData = _wcsdup(data);
-
-            SetDlgItemText(hWnd, IDC_MAIN_EDIT, derefData);
+            wchar_t * data = (wchar_t*)(GlobalLock(psClipboardData));
+            if (data != NULL)
+            {
+                wchar_t * derefData = _wcsdup(data);
+            }
             GlobalUnlock(psClipboardData);
         }
         CloseClipboard();
@@ -173,23 +183,40 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     {
         HWND curWin = GetForegroundWindow();
         ShowClipsMenu(hWnd, curWin, cManager);
-
-        SetDlgItemText(hWnd, IDC_MAIN_EDIT, L"Test");
     }
     break;
-    case WM_SIZE:
+    //case WM_SIZE:
+    //{
+    //    HWND hEdit;
+    //    RECT rcClient;
+
+    //    GetClientRect(hWnd, &rcClient);
+    //}
+    break;
+    case WM_CLOSE:
     {
-        HWND hEdit;
-        RECT rcClient;
+        ShowWindow(hWnd, SW_HIDE);
+    }
+    break;
+    case WM_CREATE:
+    {
+        // add the notification icon
+        if (!AddNotificationIcon(hWnd))
+        {
+            MessageBox(hWnd,
+                L"There was an error adding the notification icon. You might want to try restarting your computer, or reinstalling this application.",
+                L"Error adding icon", MB_OK);
+            
+            return -1;
 
-        GetClientRect(hWnd, &rcClient);
-
-        hEdit = GetDlgItem(hWnd, IDC_MAIN_EDIT);
-        SetWindowPos(hEdit, NULL, 0, 0, rcClient.right, rcClient.bottom, SWP_NOZORDER);
+        }
     }
     break;
     case WM_DESTROY:
+    {
+        DeleteNotificationIcon();
         PostQuitMessage(0);
+    }
         break;
     default:
         return DefWindowProc(hWnd, message, wParam, lParam);
@@ -215,4 +242,58 @@ INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
         break;
     }
     return (INT_PTR)FALSE;
+}
+
+// Adds the application notification icon to the notifcation area
+BOOL AddNotificationIcon(HWND hWnd)
+{
+    NOTIFYICONDATA nid = { sizeof(nid) };
+    nid.hWnd = hWnd;
+    nid.uFlags = NIF_ICON | NIF_MESSAGE;
+    nid.uCallbackMessage = WMAPP_NOTIFYCALLBACK;
+    nid.uID = 
+    // Load the icon for high DPI.
+    LoadIconMetric(hInst, MAKEINTRESOURCE(IDI_WINCLIPPER), LIM_LARGE, &nid.hIcon);
+    
+    // Show the notification.
+    Shell_NotifyIcon(NIM_ADD, &nid);
+
+    nid.uVersion = NOTIFYICON_VERSION_4;
+    return Shell_NotifyIcon(NIM_SETVERSION, &nid);
+}
+
+// Removes the application notification icon from the notifcation area
+BOOL DeleteNotificationIcon()
+{
+    NOTIFYICONDATA nid = { sizeof(nid) };
+    nid.uID = UID_NOTIFYICON;
+    return Shell_NotifyIcon(NIM_DELETE, &nid);
+}
+
+void ShowContextMenu(HWND hWnd, POINT pt)
+{
+    HMENU hMenu = LoadMenu(hInst, MAKEINTRESOURCE(IDC_NIMENU));
+    if (hMenu)
+    {
+        HMENU hSubMenu = GetSubMenu(hMenu, 0);
+        if (hSubMenu)
+        {
+            // our window must be foreground before calling TrackPopupMenu or the menu will not disappear when the user clicks away
+            SetForegroundWindow(hWnd);
+
+            // respect menu drop alignment
+            UINT uFlags = TPM_RIGHTBUTTON;
+            if (GetSystemMetrics(SM_MENUDROPALIGNMENT) != 0)
+            {
+                uFlags |= TPM_RIGHTALIGN;
+            }
+            else
+            {
+                uFlags |= TPM_LEFTALIGN;
+            }
+
+            TrackPopupMenu(hSubMenu, uFlags, pt.x, pt.y, 0, hWnd, NULL);
+        }
+        DestroyMenu(hMenu);
+    }
 }
