@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include "resource.h"
 #include "ClipsMenu.h"
 
 ClipsManager::ClipsManager()
@@ -6,6 +7,11 @@ ClipsManager::ClipsManager()
 }
 
 ClipsManager::~ClipsManager()
+{
+    ClearClips();
+}
+
+void ClipsManager::ClearClips()
 {
     for (int i = 0, j = clips.size(); i < j; i++)
     {
@@ -96,42 +102,53 @@ int ShowClipsMenu(HWND hWnd, HWND curWin, ClipsManager& cm)
 
 		HMENU menu = CreatePopupMenu();
 
-        for (int i = 0, j = cm.GetClips().size(); i < j; i++)
+        int curSize = cm.GetClips().size();
+
+        if (curSize > 0)
         {
-            wchar_t * clip = cm.GetClips().at(i);
-            if (clip != NULL)
+            for (int i = 0; i < curSize; i++)
             {
-                int maxClipSize = wcslen(clip);
-
-                wchar_t menuText[MENU_TEXT_LENGTH];
-
-                // I know this is a little unorthodox, but we can count
-                // on these lengths so long as MENU_TEXT_LENGTH > 5
-                // and I really want these ellipses.
-                if (maxClipSize > MENU_TEXT_LENGTH - 4)
+                wchar_t * clip = cm.GetClips().at(i);
+                if (clip != NULL)
                 {
-                    maxClipSize = MENU_TEXT_LENGTH - 4;
-                    menuText[MENU_TEXT_LENGTH - 4] = '.';
-                    menuText[MENU_TEXT_LENGTH - 3] = '.';
-                    menuText[MENU_TEXT_LENGTH - 2] = '.';
-                    menuText[MENU_TEXT_LENGTH - 1] = '\0';
-                }
-                else
-                {
-                    menuText[maxClipSize] = '\0';
-                }
+                    int maxClipSize = wcslen(clip);
 
-                for (int k = 0; k < maxClipSize; k++)
-                {
-                    menuText[k] = clip[k];
-                }
+                    wchar_t menuText[MENU_TEXT_LENGTH];
 
-                AppendMenu(menu, MF_STRING, i + 1, menuText);
+                    // I know this is a little unorthodox, but we can count
+                    // on these lengths so long as MENU_TEXT_LENGTH > 5
+                    // and I really want these ellipses.
+                    if (maxClipSize > MENU_TEXT_LENGTH - 4)
+                    {
+                        maxClipSize = MENU_TEXT_LENGTH - 4;
+                        menuText[MENU_TEXT_LENGTH - 4] = '.';
+                        menuText[MENU_TEXT_LENGTH - 3] = '.';
+                        menuText[MENU_TEXT_LENGTH - 2] = '.';
+                        menuText[MENU_TEXT_LENGTH - 1] = '\0';
+                    }
+                    else
+                    {
+                        menuText[maxClipSize] = '\0';
+                    }
+
+                    for (int k = 0; k < maxClipSize; k++)
+                    {
+                        menuText[k] = clip[k];
+                    }
+
+                    AppendMenu(menu, MF_STRING, i + 1, menuText);
+                }
             }
+        }
+        else
+        {
+            AppendMenu(menu, MF_STRING | MF_DISABLED, 0, L"Nothing on the clipboard");
         }
 
         AppendMenu(menu, MF_SEPARATOR, 0, 0);
-        AppendMenu(menu, MF_STRING, 1000, L"Settings");
+        AppendMenu(menu, MF_STRING, CLEARCLIPS_SELECT, L"&Clear Clips");
+        AppendMenu(menu, MF_SEPARATOR, 0, 0);
+        AppendMenu(menu, MF_STRING, SETTINGS_SELECT, L"&Settings");
 		
         int menuSelection;
         menuSelection = TrackPopupMenu(
@@ -146,17 +163,30 @@ int ShowClipsMenu(HWND hWnd, HWND curWin, ClipsManager& cm)
 
 		if (menuSelection)
 		{
-			SetForegroundWindow(curWin);
-			Sleep(20);
+            switch (menuSelection)
+            {
+            case SETTINGS_SELECT:
+                SendMessage(hWnd, WM_COMMAND, IDM_SETTINGS, 0);
+                break;
+            case CLEARCLIPS_SELECT:
+                SendMessage(hWnd, WM_COMMAND, IDM_CLEARCLIPS, 0);
+                SetForegroundWindow(curWin);
+                break;
+            default:
+                // for once a program where default actually does something more than error handling
+                SetForegroundWindow(curWin);
+                Sleep(20);
 
-            // Have to subtract 1 from index because returning 0 in
-            // TrackPopupMenu means cancelation
-            cm.SetClipboardToClipAtIndex(curWin, menuSelection - 1);
+                // Have to subtract 1 from index because returning 0 in
+                // TrackPopupMenu means cancelation
+                cm.SetClipboardToClipAtIndex(curWin, menuSelection - 1);
 
-            Sleep(20);
-            SendPasteInput();
+                Sleep(20);
+                SendPasteInput();
+                SetForegroundWindow(curWin);
+                break;
+            }
 		}
-		SetForegroundWindow(curWin);
 		PostMessage(hWnd, WM_NULL, 0, 0);
 	}
 }

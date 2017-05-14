@@ -121,6 +121,15 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         // Parse the menu selections:
         switch (wmId)
         {
+        case IDM_CLEARCLIPS:
+            cManager.ClearClips();
+            break;
+        case IDM_SETTINGS:
+            if (!IsWindowVisible(hWnd))
+            {
+                ShowWindow(hWnd, SW_SHOW);
+            }
+            break;
         case IDM_ABOUT:
             DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
             break;
