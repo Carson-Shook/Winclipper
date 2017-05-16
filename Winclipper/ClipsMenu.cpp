@@ -106,7 +106,9 @@ int ShowClipsMenu(HWND hWnd, HWND curWin, ClipsManager& cm)
 
         if (curSize > 0)
         {
-            for (int i = 0; i < curSize; i++)
+            int j = curSize > SPLIT_COUNT ? SPLIT_COUNT : curSize;
+
+            for (int i = 0; i < j; i++)
             {
                 wchar_t * clip = cm.GetClips().at(i);
                 if (clip != NULL)
@@ -138,6 +140,42 @@ int ShowClipsMenu(HWND hWnd, HWND curWin, ClipsManager& cm)
 
                     AppendMenu(menu, MF_STRING, i + 1, menuText);
                 }
+            }
+            if (curSize > SPLIT_COUNT)
+            {
+                HMENU sMenu = CreatePopupMenu();
+                
+                for (/*j is equal to SPLIT_COUNT */; j < curSize; j++)
+                {
+                    wchar_t * clip = cm.GetClips().at(j);
+                    if (clip != NULL)
+                    {
+                        int maxClipSize = wcslen(clip);
+
+                        wchar_t menuText[MENU_TEXT_LENGTH];
+
+                        if (maxClipSize > MENU_TEXT_LENGTH - 4)
+                        {
+                            maxClipSize = MENU_TEXT_LENGTH - 4;
+                            menuText[MENU_TEXT_LENGTH - 4] = '.';
+                            menuText[MENU_TEXT_LENGTH - 3] = '.';
+                            menuText[MENU_TEXT_LENGTH - 2] = '.';
+                            menuText[MENU_TEXT_LENGTH - 1] = '\0';
+                        }
+                        else
+                        {
+                            menuText[maxClipSize] = '\0';
+                        }
+
+                        for (int k = 0; k < maxClipSize; k++)
+                        {
+                            menuText[k] = clip[k];
+                        }
+
+                        AppendMenu(sMenu, MF_STRING, j + 1, menuText);
+                    }
+                }
+                AppendMenu(menu, MF_STRING | MF_POPUP, (UINT_PTR)sMenu, L"More...");
             }
         }
         else
