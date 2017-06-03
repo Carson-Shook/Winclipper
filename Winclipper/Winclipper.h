@@ -12,17 +12,22 @@
 
 // Global Variables:
 HINSTANCE hInst;                                // current instance
+HWND mainWnd;
+HWND settingsWnd;
 WCHAR szTitle[MAX_LOADSTRING];                  // The title bar text
-WCHAR szWindowClass[MAX_LOADSTRING];            // the main window class name
+WCHAR szMainWindowClass[MAX_LOADSTRING];        // the main window class name
+WCHAR szSettingsWindowClass[MAX_LOADSTRING];    // the settings window class name
 UINT const WMAPP_NOTIFYCALLBACK = WM_APP + 1;   // user defined callback for notfiyicon actions
 ClipsManager cManager;                          // clips manager
 UserSettings uSettings;                         // user settings manager
 
 // Forward declarations of functions included in this code module:
-ATOM                    MyRegisterClass(HINSTANCE hInstance);
-BOOL                    InitInstance(HINSTANCE, int);
+ATOM                    RegisterMainClass(HINSTANCE hInstance);
+ATOM                    RegisterSettingsWindowClass(HINSTANCE hInstance);
+BOOL                    InitMainWindow(HINSTANCE, int);
+BOOL                    InitSettingsWindow(HINSTANCE, int);
 LRESULT CALLBACK        WndProc(HWND, UINT, WPARAM, LPARAM);
+LRESULT CALLBACK        SettingsWndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK        About(HWND, UINT, WPARAM, LPARAM);
 BOOL                    AddNotificationIcon(HWND hWnd);
 BOOL                    DeleteNotificationIcon();
-void                    ShowContextMenu(HWND hWnd, POINT pt);

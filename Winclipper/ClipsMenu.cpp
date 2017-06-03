@@ -11,6 +11,33 @@ ClipsManager::~ClipsManager()
     ClearClips();
 }
 
+
+int ClipsManager::DisplayClips()
+{
+    return displayClips;
+}
+
+void ClipsManager::SetDisplayClips(int displayClips)
+{
+    if (displayClips != ClipsManager::displayClips)
+    {
+        ClipsManager::displayClips = displayClips;
+    }
+}
+
+int ClipsManager::MaxClips()
+{
+    return maxClips;
+}
+
+void ClipsManager::SetMaxClips(int maxClips)
+{
+    if (maxClips != ClipsManager::maxClips)
+    {
+        ClipsManager::maxClips = maxClips;
+    }
+}
+
 void ClipsManager::ClearClips()
 {
     for (int i = 0, j = clips.size(); i < j; i++)
@@ -87,7 +114,7 @@ BOOL ClipsManager::SetClipboardToClipAtIndex(HWND hWnd, int index)
     return TRUE;
 }
 
-int ShowClipsMenu(HWND hWnd, HWND curWin, ClipsManager& cm)
+int ShowClipsMenu(HWND hWnd, HWND curWin, ClipsManager& cm, bool showExit)
 {
 	if (hWnd != NULL && curWin != NULL)
 	{
@@ -103,10 +130,11 @@ int ShowClipsMenu(HWND hWnd, HWND curWin, ClipsManager& cm)
 		HMENU menu = CreatePopupMenu();
 
         int curSize = cm.GetClips().size();
+        int displayCount = cm.DisplayClips();
 
         if (curSize > 0)
         {
-            int j = curSize > SPLIT_COUNT ? SPLIT_COUNT : curSize;
+            int j = curSize > displayCount ? displayCount : curSize;
 
             for (int i = 0; i < j; i++)
             {
@@ -141,11 +169,11 @@ int ShowClipsMenu(HWND hWnd, HWND curWin, ClipsManager& cm)
                     AppendMenu(menu, MF_STRING, i + 1, menuText);
                 }
             }
-            if (curSize > SPLIT_COUNT)
+            if (curSize > displayCount)
             {
                 HMENU sMenu = CreatePopupMenu();
                 
-                for (/*j is equal to SPLIT_COUNT */; j < curSize; j++)
+                for (/*j is equal to displayCount */; j < curSize; j++)
                 {
                     TCHAR * clip = cm.GetClips().at(j);
                     if (clip != NULL)
@@ -187,6 +215,10 @@ int ShowClipsMenu(HWND hWnd, HWND curWin, ClipsManager& cm)
         AppendMenu(menu, MF_STRING, CLEARCLIPS_SELECT, _T("&Clear Clips"));
         AppendMenu(menu, MF_SEPARATOR, 0, 0);
         AppendMenu(menu, MF_STRING, SETTINGS_SELECT, _T("&Settings"));
+        if (showExit)
+        {
+            AppendMenu(menu, MF_STRING, EXIT_SELECT, _T("&Exit"));
+        }
 		
         int menuSelection;
         menuSelection = TrackPopupMenu(
@@ -203,12 +235,15 @@ int ShowClipsMenu(HWND hWnd, HWND curWin, ClipsManager& cm)
 		{
             switch (menuSelection)
             {
-            case SETTINGS_SELECT:
-                SendMessage(hWnd, WM_COMMAND, IDM_SETTINGS, 0);
-                break;
             case CLEARCLIPS_SELECT:
                 SendMessage(hWnd, WM_COMMAND, IDM_CLEARCLIPS, 0);
                 SetForegroundWindow(curWin);
+                break;
+            case SETTINGS_SELECT:
+                PostMessage(hWnd, WM_COMMAND, IDM_SETTINGS, 0);
+                break;
+            case EXIT_SELECT:
+                SendMessage(hWnd, WM_COMMAND, IDM_EXIT, 0);
                 break;
             default:
                 // for once a program where default actually does something more than error handling

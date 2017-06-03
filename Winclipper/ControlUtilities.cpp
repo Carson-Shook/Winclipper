@@ -22,7 +22,7 @@ HWND AddLabel(HWND hWnd, HFONT font, int x, int y, HINSTANCE hIn, LPCWSTR text, 
     return hControl;
 }
 
-HWND CreateUpDnBuddy(HWND hWnd, HFONT font, int x, int y, HINSTANCE hIn, int min, int max, int id)
+HWND CreateUpDnBuddy(HWND hWnd, HFONT font, int x, int y, HINSTANCE hIn, int id)
 {
     HWND hControl = CreateWindowEx(WS_EX_LEFT | WS_EX_CLIENTEDGE,    //Extended window styles.
         WC_EDIT,
@@ -62,7 +62,7 @@ HWND CreateUpDnCtl(HWND hWnd, HFONT font, int x, int y, HINSTANCE hIn, int min, 
 
 VOID AddSpinner(HWND hWnd, HFONT font, int x, int y, HINSTANCE hIn, int min, int max, int udId, int txtId)
 {
-    CreateUpDnBuddy(hWnd, font, x, y, hIn, min, max, txtId);
+    CreateUpDnBuddy(hWnd, font, x, y, hIn, txtId);
     CreateUpDnCtl(hWnd, font, x, y, hIn, min, max, udId);
 
     return;

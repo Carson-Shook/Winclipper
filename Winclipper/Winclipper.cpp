@@ -18,16 +18,23 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
     // Initialize global strings
     LoadStringW(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
-    LoadStringW(hInstance, IDC_WINCLIPPER, szWindowClass, MAX_LOADSTRING);
-    MyRegisterClass(hInstance);
+    LoadStringW(hInstance, IDC_WINCLIPPER, szMainWindowClass, MAX_LOADSTRING);
+    LoadStringW(hInstance, IDC_WINCSETTINGS, szSettingsWindowClass, MAX_LOADSTRING);
+    RegisterMainClass(hInstance);
+    RegisterSettingsWindowClass(hInstance);
 
-    // Perform application initialization:
-    if (!InitInstance (hInstance, nCmdShow))
+    hInst = hInstance; // Store instance handle in our global variable
+
+    if (!InitMainWindow (hInstance, nCmdShow))
+    {
+        return FALSE;
+    }
+    if (!InitSettingsWindow(hInstance, nCmdShow))
     {
         return FALSE;
     }
 
-    HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_WINCLIPPER));
+    HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_WINCSETTINGS));
 
     MSG msg;
 
@@ -47,14 +54,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     return (int) msg.wParam;
 }
 
-
-
-//
-//  FUNCTION: MyRegisterClass()
-//
-//  PURPOSE: Registers the window class.
-//
-ATOM MyRegisterClass(HINSTANCE hInstance)
+ATOM RegisterMainClass(HINSTANCE hInstance)
 {
     WNDCLASSEXW wcex;
 
@@ -68,28 +68,38 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
     wcex.hIcon          = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_WINCLIPPER));
     wcex.hCursor        = LoadCursor(nullptr, IDC_ARROW);
     wcex.hbrBackground  = (HBRUSH)(COLOR_WINDOW);
-    wcex.lpszMenuName   = MAKEINTRESOURCEW(IDC_WINCLIPPER);
-    wcex.lpszClassName  = szWindowClass;
+    wcex.lpszMenuName   = 0;
+    wcex.lpszClassName  = szMainWindowClass;
     wcex.hIconSm        = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_WINCLIPPER));
 
     return RegisterClassExW(&wcex);
 }
 
-//
-//   FUNCTION: InitInstance(HINSTANCE, int)
-//
-//   PURPOSE: Saves instance handle and creates main window
-//
-//   COMMENTS:
-//
-//        In this function, we save the instance handle in a global variable and
-//        create and display the main program window.
-//
-BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
+ATOM RegisterSettingsWindowClass(HINSTANCE hInstance)
 {
-   hInst = hInstance; // Store instance handle in our global variable
+    WNDCLASSEXW wcex;
 
-   HWND hWnd = CreateWindowExW(0, szWindowClass, szTitle, WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU,
+    wcex.cbSize = sizeof(WNDCLASSEX);
+
+    wcex.style = CS_HREDRAW | CS_VREDRAW;
+    wcex.lpfnWndProc = SettingsWndProc;
+    wcex.cbClsExtra = 0;
+    wcex.cbWndExtra = 0;
+    wcex.hInstance = hInstance;
+    wcex.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_WINCLIPPER));
+    wcex.hCursor = LoadCursor(nullptr, IDC_ARROW);
+    wcex.hbrBackground = (HBRUSH)(COLOR_WINDOW);
+    wcex.lpszMenuName = MAKEINTRESOURCEW(IDC_WINCSETTINGS);
+    wcex.lpszClassName = szSettingsWindowClass;
+    wcex.hIconSm = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_WINCLIPPER));
+
+    return RegisterClassExW(&wcex);
+}
+
+BOOL InitMainWindow(HINSTANCE hInstance, int nCmdShow)
+{
+
+   HWND hWnd = CreateWindowExW(0, szMainWindowClass, szTitle, WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU,
       CW_USEDEFAULT, CW_USEDEFAULT, 1000, 600, nullptr, nullptr, hInstance, nullptr);
 
    if (!hWnd)
@@ -97,26 +107,47 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
       return FALSE;
    }
 
+   mainWnd = hWnd;
+
    AddClipboardFormatListener(hWnd);
-   RegisterHotKey(hWnd, ID_REG_HOTKEY, MOD_ALT | MOD_NOREPEAT, 0x56);
-
-   NONCLIENTMETRICS hfDefault;
-   hfDefault.cbSize = sizeof(NONCLIENTMETRICS);
-   SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(NONCLIENTMETRICS), &hfDefault, 0);
-   HFONT font = CreateFontIndirectW(&hfDefault.lfCaptionFont);
-
-   AddLabel(hWnd, font, 10, 10, hInstance, _T("Number of clips to display"), LBL_MAX_CLIPS_DISPLAY);
-   AddSpinner(hWnd, font, 230, 10, hInstance, MAX_DISPLAY_LOWER, MAX_DISPLAY_UPPER, UD_MAX_CLIPS_DISPLAY, TXT_MAX_CLIPS_DISPLAY);
-   AddLabel(hWnd, font, 360, 10, hInstance, _T("Maximum clips to save"), LBL_MAX_CLIPS_SAVED);
-   AddSpinner(hWnd, font, 550, 10, hInstance, MAX_STORED_LOWER, MAX_STORED_UPPER, UD_MAX_CLIPS_SAVED, TXT_MAX_CLIPS_SAVED);
-
-   SetDlgItemInt(hWnd, TXT_MAX_CLIPS_DISPLAY, uSettings.MaxDisplayClips(), TRUE);
-   SetDlgItemInt(hWnd, TXT_MAX_CLIPS_SAVED, uSettings.MaxStoredClips(), TRUE);
+   RegisterHotKey(hWnd, ID_REG_HOTKEY, MOD_SHIFT | MOD_CONTROL | MOD_NOREPEAT, 0x56);
 
    ShowWindow(hWnd, SW_HIDE);
    UpdateWindow(hWnd);
    
    return TRUE;
+}
+
+BOOL InitSettingsWindow(HINSTANCE hInstance, int nCmdShow)
+{
+
+    HWND hWnd = CreateWindowExW(0, szSettingsWindowClass, szTitle, WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU,
+        CW_USEDEFAULT, CW_USEDEFAULT, 1000, 600, nullptr, nullptr, hInstance, nullptr);
+
+    if (!hWnd)
+    {
+        return FALSE;
+    }
+
+    settingsWnd = hWnd;
+
+    NONCLIENTMETRICS hfDefault;
+    hfDefault.cbSize = sizeof(NONCLIENTMETRICS);
+    SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(NONCLIENTMETRICS), &hfDefault, 0);
+    HFONT font = CreateFontIndirectW(&hfDefault.lfCaptionFont);
+
+    AddLabel(hWnd, font, 10, 10, hInstance, _T("Number of clips to display"), LBL_MAX_CLIPS_DISPLAY);
+    AddSpinner(hWnd, font, 230, 10, hInstance, MAX_DISPLAY_LOWER, MAX_DISPLAY_UPPER, UD_MAX_CLIPS_DISPLAY, TXT_MAX_CLIPS_DISPLAY);
+    AddLabel(hWnd, font, 360, 10, hInstance, _T("Maximum clips to save"), LBL_MAX_CLIPS_SAVED);
+    AddSpinner(hWnd, font, 550, 10, hInstance, MAX_SAVED_LOWER, MAX_SAVED_UPPER, UD_MAX_CLIPS_SAVED, TXT_MAX_CLIPS_SAVED);
+
+    SetDlgItemInt(hWnd, TXT_MAX_CLIPS_DISPLAY, uSettings.MaxDisplayClips(), TRUE);
+    SetDlgItemInt(hWnd, TXT_MAX_CLIPS_SAVED, uSettings.MaxSavedClips(), TRUE);
+
+    ShowWindow(hWnd, SW_HIDE);
+    UpdateWindow(hWnd);
+
+    return TRUE;
 }
 
 //
@@ -143,10 +174,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             cManager.ClearClips();
             break;
         case IDM_SETTINGS:
-            if (!IsWindowVisible(hWnd))
+            if (!IsWindowVisible(settingsWnd))
             {
-                ShowWindow(hWnd, SW_SHOW);
+                ShowWindow(settingsWnd, SW_SHOW);
             }
+            SetForegroundWindow(settingsWnd);
             break;
         case IDM_ABOUT:
             DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
@@ -154,77 +186,34 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         case IDM_EXIT:
             DestroyWindow(hWnd);
             break;
-        case TXT_MAX_CLIPS_DISPLAY:
-
-            if (HIWORD(wParam) == EN_KILLFOCUS)
-            {
-                int value = GetDlgItemInt(hWnd, TXT_MAX_CLIPS_DISPLAY, NULL, TRUE);
-
-                if (value < MAX_DISPLAY_LOWER)
-                {
-                    SetDlgItemInt(hWnd, TXT_MAX_CLIPS_DISPLAY, MAX_DISPLAY_LOWER, TRUE);
-                }
-                else if (value > MAX_DISPLAY_UPPER)
-                {
-                    SetDlgItemInt(hWnd, TXT_MAX_CLIPS_DISPLAY, MAX_DISPLAY_UPPER, TRUE);
-                }
-
-                break; // set focus on the main window again
-            }
-            break;
-        case TXT_MAX_CLIPS_SAVED:
-
-            if (HIWORD(wParam) == EN_KILLFOCUS)
-            {
-                int value = GetDlgItemInt(hWnd, TXT_MAX_CLIPS_SAVED, NULL, TRUE);
-
-                if (value < MAX_STORED_LOWER)
-                {
-                    SetDlgItemInt(hWnd, TXT_MAX_CLIPS_SAVED, MAX_STORED_LOWER, TRUE);
-                }
-                else if (value > MAX_STORED_UPPER)
-                {
-                    SetDlgItemInt(hWnd, TXT_MAX_CLIPS_SAVED, MAX_STORED_UPPER, TRUE);
-                }
-
-                break; // set focus on the main window again
-            }
-            break;
-
         default:
             return DefWindowProc(hWnd, message, wParam, lParam);
         }
-
     }
     break;
     case WMAPP_NOTIFYCALLBACK:
         switch (LOWORD(lParam))
         {
         case WM_LBUTTONDBLCLK:
-            // for NOTIFYICON_VERSION_4 clients, NIN_SELECT is prerable to listening to mouse clicks and key presses
-            // directly.
+        {
             if (!IsWindowVisible(hWnd))
             {
-                ShowWindow(hWnd, SW_SHOW);
+                ShowWindow(settingsWnd, SW_SHOW);
             }
+            SetForegroundWindow(settingsWnd);
+        }
             break;
         case WM_CONTEXTMENU:
         {
-            POINT const pt = { LOWORD(wParam), HIWORD(wParam) };
-            ShowContextMenu(hWnd, pt);
+            //POINT const pt = { LOWORD(wParam), HIWORD(wParam) };
+            //ShowContextMenu(hWnd, pt);
+
+            HWND curWin = GetForegroundWindow();
+            ShowClipsMenu(hWnd, curWin, cManager, TRUE);
         }
         break;
         }
     break;
-
-    //case WM_PAINT:
-    //{
-    //    PAINTSTRUCT ps;
-    //    HDC hdc = BeginPaint(hWnd, &ps);
-    //    // TODO: Add any drawing code that uses hdc here...
-    //    EndPaint(hWnd, &ps);
-    //}
-    //break;
     case WM_CLIPBOARDUPDATE:
     {
         cManager.AddToClips(hWnd);
@@ -247,25 +236,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case WM_HOTKEY:
     {
         HWND curWin = GetForegroundWindow();
-        ShowClipsMenu(hWnd, curWin, cManager);
-    }
-    break;
-    //case WM_SIZE:
-    //{
-    //    HWND hEdit;
-    //    RECT rcClient;
-
-    //    GetClientRect(hWnd, &rcClient);
-    //}
-    break;
-    case WM_MOUSEACTIVATE:
-    {
-        SetFocus(hWnd);
-    }
-    break;
-    case WM_CLOSE:
-    {
-        ShowWindow(hWnd, SW_HIDE);
+        ShowClipsMenu(hWnd, curWin, cManager, FALSE);
     }
     break;
     case WM_CREATE:
@@ -288,6 +259,108 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         PostQuitMessage(0);
     }
         break;
+    default:
+        return DefWindowProc(hWnd, message, wParam, lParam);
+    }
+    return 0;
+}
+
+LRESULT CALLBACK SettingsWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+    switch (message)
+    {
+    case WM_COMMAND:
+    {
+        int wmId = LOWORD(wParam);
+        // Parse the menu selections:
+        switch (wmId)
+        {
+        case IDM_CLEARCLIPS:
+            cManager.ClearClips();
+            break;
+        case IDM_ABOUT:
+            DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
+            break;
+        case IDM_EXIT:
+            DestroyWindow(mainWnd);
+            break;
+        case TXT_MAX_CLIPS_DISPLAY:
+        {
+            if (HIWORD(wParam) == EN_KILLFOCUS)
+            {
+                int value = GetDlgItemInt(hWnd, TXT_MAX_CLIPS_DISPLAY, NULL, TRUE);
+
+                if (value < MAX_DISPLAY_LOWER)
+                {
+                    SetDlgItemInt(hWnd, TXT_MAX_CLIPS_DISPLAY, MAX_DISPLAY_LOWER, TRUE);
+                }
+                else if (value > MAX_DISPLAY_UPPER)
+                {
+                    SetDlgItemInt(hWnd, TXT_MAX_CLIPS_DISPLAY, MAX_DISPLAY_UPPER, TRUE);
+                }
+
+                break; // set focus on the main window again
+            }
+
+            else if (HIWORD(wParam) == EN_CHANGE)
+            {
+                int value = GetDlgItemInt(hWnd, TXT_MAX_CLIPS_DISPLAY, NULL, TRUE);
+
+                if (value >= MAX_DISPLAY_LOWER && value <= MAX_DISPLAY_UPPER)
+                {
+                    cManager.SetDisplayClips(value);
+                    uSettings.SetMaxDisplayClips(GetDlgItemInt(hWnd, TXT_MAX_CLIPS_DISPLAY, NULL, TRUE));
+                }
+            }
+        }
+        break;
+        case TXT_MAX_CLIPS_SAVED:
+        {
+            if (HIWORD(wParam) == EN_KILLFOCUS)
+            {
+                int value = GetDlgItemInt(hWnd, TXT_MAX_CLIPS_SAVED, NULL, TRUE);
+
+                if (value < MAX_SAVED_LOWER)
+                {
+                    SetDlgItemInt(hWnd, TXT_MAX_CLIPS_SAVED, MAX_SAVED_LOWER, TRUE);
+                }
+                else if (value > MAX_SAVED_UPPER)
+                {
+                    SetDlgItemInt(hWnd, TXT_MAX_CLIPS_SAVED, MAX_SAVED_UPPER, TRUE);
+                }
+
+                break; // set focus on the main window again
+            }
+            else if (HIWORD(wParam) == EN_CHANGE)
+            {
+                int value = GetDlgItemInt(hWnd, TXT_MAX_CLIPS_SAVED, NULL, TRUE);
+
+                if (value >= MAX_SAVED_LOWER && value <= MAX_SAVED_UPPER)
+                {
+                    //cManager.SetDisplayClips(value);
+                    //uSettings.SetMaxDisplayClips(GetDlgItemInt(hWnd, TXT_MAX_CLIPS_DISPLAY, NULL, TRUE));
+                }
+            }
+        }
+        break;
+
+        default:
+            return DefWindowProc(hWnd, message, wParam, lParam);
+        }
+
+    }
+    break;
+    case WM_LBUTTONDOWN:
+    {
+        SetFocus(hWnd);
+    }
+    break;
+    case WM_CLOSE:
+    {
+        SetFocus(hWnd);
+        ShowWindow(hWnd, SW_HIDE);
+    }
+    break;
     default:
         return DefWindowProc(hWnd, message, wParam, lParam);
     }
@@ -338,32 +411,4 @@ BOOL DeleteNotificationIcon()
     NOTIFYICONDATA nid = { sizeof(nid) };
     nid.uID = UID_NOTIFYICON;
     return Shell_NotifyIcon(NIM_DELETE, &nid);
-}
-
-void ShowContextMenu(HWND hWnd, POINT pt)
-{
-    HMENU hMenu = LoadMenu(hInst, MAKEINTRESOURCE(IDC_NIMENU));
-    if (hMenu)
-    {
-        HMENU hSubMenu = GetSubMenu(hMenu, 0);
-        if (hSubMenu)
-        {
-            // our window must be foreground before calling TrackPopupMenu or the menu will not disappear when the user clicks away
-            SetForegroundWindow(hWnd);
-
-            // respect menu drop alignment
-            UINT uFlags = TPM_RIGHTBUTTON;
-            if (GetSystemMetrics(SM_MENUDROPALIGNMENT) != 0)
-            {
-                uFlags |= TPM_RIGHTALIGN;
-            }
-            else
-            {
-                uFlags |= TPM_LEFTALIGN;
-            }
-
-            TrackPopupMenu(hSubMenu, uFlags, pt.x, pt.y, 0, hWnd, NULL);
-        }
-        DestroyMenu(hMenu);
-    }
 }

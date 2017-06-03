@@ -5,7 +5,7 @@
 UserSettings::UserSettings()
 {
     maxDisplayClips = 20;
-    maxStoredClips = 100;
+    maxSavedClips = 100;
 }
 
 UserSettings::~UserSettings()
@@ -25,16 +25,16 @@ void UserSettings::SetMaxDisplayClips(int maxDisplayClips)
     }
 }
 
-int UserSettings::MaxStoredClips()
+int UserSettings::MaxSavedClips()
 {
-    return maxStoredClips;
+    return maxSavedClips;
 }
 
-void UserSettings::SetMaxStoredClips(int maxStoredClips)
+void UserSettings::SetMaxSavedClips(int maxSavedClips)
 {
-    if (maxStoredClips != UserSettings::maxStoredClips)
+    if (maxSavedClips != UserSettings::maxSavedClips)
     {
-        UserSettings::maxStoredClips = maxStoredClips;
+        UserSettings::maxSavedClips = maxSavedClips;
     }
 }
 

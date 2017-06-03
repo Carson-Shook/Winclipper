@@ -6,8 +6,8 @@
 #define MAX_DISPLAY_UPPER   99
 #define MAX_DISPLAY_LOWER   1
 
-#define MAX_STORED_UPPER    500
-#define MAX_STORED_LOWER    1
+#define MAX_SAVED_UPPER    500
+#define MAX_SAVED_LOWER    1
 
 class UserSettings
 {
@@ -16,14 +16,14 @@ public:
     ~UserSettings();
 
     int                 MaxDisplayClips();
-    void                SetMaxDisplayClips(int);
+    void                SetMaxDisplayClips(int maxDisplayClips);
 
-    int                 MaxStoredClips();
-    void                SetMaxStoredClips(int);
+    int                 MaxSavedClips();
+    void                SetMaxSavedClips(int maxSavedClips);
 
 private:
     int                 maxDisplayClips;
-    int                 maxStoredClips;
+    int                 maxSavedClips;
 };
 
 
