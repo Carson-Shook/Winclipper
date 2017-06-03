@@ -36,8 +36,11 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     {
         if (!TranslateAccelerator(msg.hwnd, hAccelTable,  &msg))
         {
-            TranslateMessage(&msg);
-            DispatchMessage(&msg);
+            if (!IsDialogMessage(GetAncestor(msg.hwnd,GA_ROOTOWNER), &msg))
+            {
+                TranslateMessage(&msg);
+                DispatchMessage(&msg);
+            }
         }
     }
 
@@ -254,6 +257,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
     //    GetClientRect(hWnd, &rcClient);
     //}
+    break;
+    case WM_MOUSEACTIVATE:
+    {
+        SetFocus(hWnd);
+    }
     break;
     case WM_CLOSE:
     {

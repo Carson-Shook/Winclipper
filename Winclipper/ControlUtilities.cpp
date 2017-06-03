@@ -27,7 +27,7 @@ HWND CreateUpDnBuddy(HWND hWnd, HFONT font, int x, int y, HINSTANCE hIn, int min
     HWND hControl = CreateWindowEx(WS_EX_LEFT | WS_EX_CLIENTEDGE,    //Extended window styles.
         WC_EDIT,
         NULL,
-        WS_CHILDWINDOW | WS_VISIBLE    // Window styles.
+        WS_CHILDWINDOW | WS_VISIBLE | WS_TABSTOP   // Window styles.
         | ES_NUMBER | ES_LEFT,                     // Edit control styles.
         x, y,
         80, 30,
