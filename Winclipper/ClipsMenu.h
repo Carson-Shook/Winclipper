@@ -15,15 +15,15 @@ public:
     ~ClipsManager();
 
     void                            ClearClips();
-    BOOL                            AddToClips(HWND hWnd);
+    BOOL                            AddToClips(HWND);
     BOOL                            SetClipboardToClipAtIndex(HWND, int);
-    const std::deque<wchar_t *>&    GetClips() const { return clips; }
+    const std::deque<TCHAR *>&    GetClips() const { return clips; }
 
     void                            SetMaxClips(int newMax) { maxClips = newMax; }
     int                             GetMaxClips() { return maxClips; }
 
 private:
-    std::deque<wchar_t *> clips;
+    std::deque<TCHAR *> clips;
     int maxClips = 200;              // Should never be greater than 999
 };
 

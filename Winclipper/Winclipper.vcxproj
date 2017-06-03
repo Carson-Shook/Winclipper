@@ -101,7 +101,7 @@
       <SuppressStartupBanner>true</SuppressStartupBanner>
     </Link>
     <Manifest>
-      <EnableDpiAwareness>PerMonitorHighDPIAware</EnableDpiAwareness>
+      <EnableDpiAwareness>true</EnableDpiAwareness>
     </Manifest>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -156,13 +156,17 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="ClipsMenu.h" />
+    <ClInclude Include="ControlUtilities.h" />
     <ClInclude Include="Resource.h" />
+    <ClInclude Include="SettingsManager.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="Winclipper.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ClipsMenu.cpp" />
+    <ClCompile Include="ControlUtilities.cpp" />
+    <ClCompile Include="SettingsManager.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>

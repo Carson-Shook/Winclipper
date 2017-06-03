@@ -2,6 +2,9 @@
 //
 #include "stdafx.h"
 #include "resource.h"
+#include "string.h"
+#include "SettingsManager.h"
+#include "ControlUtilities.h"
 #include "ClipsMenu.h"
 #include "Winclipper.h"
 
@@ -61,7 +64,7 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
     wcex.hInstance      = hInstance;
     wcex.hIcon          = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_WINCLIPPER));
     wcex.hCursor        = LoadCursor(nullptr, IDC_ARROW);
-    wcex.hbrBackground  = (HBRUSH)(COLOR_WINDOW+1);
+    wcex.hbrBackground  = (HBRUSH)(COLOR_WINDOW);
     wcex.lpszMenuName   = MAKEINTRESOURCEW(IDC_WINCLIPPER);
     wcex.lpszClassName  = szWindowClass;
     wcex.hIconSm        = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_WINCLIPPER));
@@ -83,8 +86,8 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 {
    hInst = hInstance; // Store instance handle in our global variable
 
-   HWND hWnd = CreateWindowW(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
-      CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, nullptr, nullptr, hInstance, nullptr);
+   HWND hWnd = CreateWindowExW(0, szWindowClass, szTitle, WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU,
+      CW_USEDEFAULT, CW_USEDEFAULT, 1000, 600, nullptr, nullptr, hInstance, nullptr);
 
    if (!hWnd)
    {
@@ -94,7 +97,19 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
    AddClipboardFormatListener(hWnd);
    RegisterHotKey(hWnd, ID_REG_HOTKEY, MOD_ALT | MOD_NOREPEAT, 0x56);
 
-   
+   NONCLIENTMETRICS hfDefault;
+   hfDefault.cbSize = sizeof(NONCLIENTMETRICS);
+   SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(NONCLIENTMETRICS), &hfDefault, 0);
+   HFONT font = CreateFontIndirectW(&hfDefault.lfCaptionFont);
+
+   AddLabel(hWnd, font, 10, 10, hInstance, _T("Number of clips to display"), LBL_MAX_CLIPS_DISPLAY);
+   AddSpinner(hWnd, font, 230, 10, hInstance, MAX_DISPLAY_LOWER, MAX_DISPLAY_UPPER, UD_MAX_CLIPS_DISPLAY, TXT_MAX_CLIPS_DISPLAY);
+   AddLabel(hWnd, font, 360, 10, hInstance, _T("Maximum clips to save"), LBL_MAX_CLIPS_SAVED);
+   AddSpinner(hWnd, font, 550, 10, hInstance, MAX_STORED_LOWER, MAX_STORED_UPPER, UD_MAX_CLIPS_SAVED, TXT_MAX_CLIPS_SAVED);
+
+   SetDlgItemInt(hWnd, TXT_MAX_CLIPS_DISPLAY, uSettings.MaxDisplayClips(), TRUE);
+   SetDlgItemInt(hWnd, TXT_MAX_CLIPS_SAVED, uSettings.MaxStoredClips(), TRUE);
+
    ShowWindow(hWnd, SW_HIDE);
    UpdateWindow(hWnd);
    
@@ -136,15 +151,53 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         case IDM_EXIT:
             DestroyWindow(hWnd);
             break;
+        case TXT_MAX_CLIPS_DISPLAY:
+
+            if (HIWORD(wParam) == EN_KILLFOCUS)
+            {
+                int value = GetDlgItemInt(hWnd, TXT_MAX_CLIPS_DISPLAY, NULL, TRUE);
+
+                if (value < MAX_DISPLAY_LOWER)
+                {
+                    SetDlgItemInt(hWnd, TXT_MAX_CLIPS_DISPLAY, MAX_DISPLAY_LOWER, TRUE);
+                }
+                else if (value > MAX_DISPLAY_UPPER)
+                {
+                    SetDlgItemInt(hWnd, TXT_MAX_CLIPS_DISPLAY, MAX_DISPLAY_UPPER, TRUE);
+                }
+
+                break; // set focus on the main window again
+            }
+            break;
+        case TXT_MAX_CLIPS_SAVED:
+
+            if (HIWORD(wParam) == EN_KILLFOCUS)
+            {
+                int value = GetDlgItemInt(hWnd, TXT_MAX_CLIPS_SAVED, NULL, TRUE);
+
+                if (value < MAX_STORED_LOWER)
+                {
+                    SetDlgItemInt(hWnd, TXT_MAX_CLIPS_SAVED, MAX_STORED_LOWER, TRUE);
+                }
+                else if (value > MAX_STORED_UPPER)
+                {
+                    SetDlgItemInt(hWnd, TXT_MAX_CLIPS_SAVED, MAX_STORED_UPPER, TRUE);
+                }
+
+                break; // set focus on the main window again
+            }
+            break;
+
         default:
             return DefWindowProc(hWnd, message, wParam, lParam);
         }
+
     }
     break;
     case WMAPP_NOTIFYCALLBACK:
         switch (LOWORD(lParam))
         {
-        case NIN_SELECT:
+        case WM_LBUTTONDBLCLK:
             // for NOTIFYICON_VERSION_4 clients, NIN_SELECT is prerable to listening to mouse clicks and key presses
             // directly.
             if (!IsWindowVisible(hWnd))
@@ -178,10 +231,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         HANDLE psClipboardData = GetClipboardData(CF_UNICODETEXT);
         if (psClipboardData != NULL)
         {
-            wchar_t * data = (wchar_t*)(GlobalLock(psClipboardData));
+            TCHAR * data = (TCHAR*)(GlobalLock(psClipboardData));
             if (data != NULL)
             {
-                wchar_t * derefData = _wcsdup(data);
+                TCHAR * derefData = _wcsdup(data);
             }
             GlobalUnlock(psClipboardData);
         }
@@ -213,8 +266,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         if (!AddNotificationIcon(hWnd))
         {
             MessageBox(hWnd,
-                L"There was an error adding the notification icon. You might want to try restarting your computer, or reinstalling this application.",
-                L"Error adding icon", MB_OK);
+                _T("There was an error adding the notification icon. You might want to try restarting your computer, or reinstalling this application."),
+                _T("Error adding icon"), MB_OK);
             
             return -1;
 
