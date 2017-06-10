@@ -35,6 +35,15 @@ void ClipsManager::SetMaxClips(int maxClips)
     if (maxClips != ClipsManager::maxClips)
     {
         ClipsManager::maxClips = maxClips;
+
+        while (clips.size() > ClipsManager::maxClips)
+        {
+            // get reference to the back object before we pop it
+            TCHAR * back = clips.back();
+            clips.pop_back();
+            // dealocate the former back object
+            delete back;
+        }
     }
 }
 
@@ -61,7 +70,7 @@ BOOL ClipsManager::AddToClips(HWND hWnd)
             TCHAR * derefData = _wcsdup(data);
             GlobalUnlock(psClipboardData);
 
-            if (clips.size() == maxClips)
+            while (clips.size() >= maxClips)
             {
                 // get reference to the back object before we pop it
                 TCHAR * back = clips.back();
@@ -102,6 +111,7 @@ BOOL ClipsManager::SetClipboardToClipAtIndex(HWND hWnd, int index)
 
             SetClipboardData(CF_UNICODETEXT, hClipboardData);
 
+            // Safe to delete clip because we have already copied it.
             delete clip;
             clips.erase(clips.begin() + index);
         }
@@ -109,6 +119,8 @@ BOOL ClipsManager::SetClipboardToClipAtIndex(HWND hWnd, int index)
             GlobalUnlock(hClipboardData);
         }
     }
+    // Once the clipboard is closed, the update is fired,
+    // and the clip will be added to the front of the deque with AddToClips
     CloseClipboard();
 
     return TRUE;

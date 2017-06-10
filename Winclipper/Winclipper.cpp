@@ -301,7 +301,6 @@ LRESULT CALLBACK SettingsWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
 
                 break; // set focus on the main window again
             }
-
             else if (HIWORD(wParam) == EN_CHANGE)
             {
                 int value = GetDlgItemInt(hWnd, TXT_MAX_CLIPS_DISPLAY, NULL, TRUE);
@@ -310,6 +309,10 @@ LRESULT CALLBACK SettingsWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
                 {
                     cManager.SetDisplayClips(value);
                     uSettings.SetMaxDisplayClips(GetDlgItemInt(hWnd, TXT_MAX_CLIPS_DISPLAY, NULL, TRUE));
+                    if (value > uSettings.MaxSavedClips())
+                    {
+                        SetDlgItemInt(hWnd, TXT_MAX_CLIPS_SAVED, uSettings.MaxSavedClips(), TRUE);
+                    }
                 }
             }
         }
@@ -328,6 +331,10 @@ LRESULT CALLBACK SettingsWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
                 {
                     SetDlgItemInt(hWnd, TXT_MAX_CLIPS_SAVED, MAX_SAVED_UPPER, TRUE);
                 }
+                else if (value < uSettings.MaxDisplayClips())
+                {
+                    SetDlgItemInt(hWnd, TXT_MAX_CLIPS_SAVED, uSettings.MaxDisplayClips(), TRUE);
+                }
 
                 break; // set focus on the main window again
             }
@@ -335,10 +342,10 @@ LRESULT CALLBACK SettingsWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
             {
                 int value = GetDlgItemInt(hWnd, TXT_MAX_CLIPS_SAVED, NULL, TRUE);
 
-                if (value >= MAX_SAVED_LOWER && value <= MAX_SAVED_UPPER)
+                if (value >= MAX_SAVED_LOWER && value <= MAX_SAVED_UPPER && value >= uSettings.MaxDisplayClips())
                 {
-                    //cManager.SetDisplayClips(value);
-                    //uSettings.SetMaxDisplayClips(GetDlgItemInt(hWnd, TXT_MAX_CLIPS_DISPLAY, NULL, TRUE));
+                    cManager.SetMaxClips(value);
+                    uSettings.SetMaxSavedClips(GetDlgItemInt(hWnd, TXT_MAX_CLIPS_SAVED, NULL, TRUE));
                 }
             }
         }
