@@ -10,6 +10,11 @@
 
 class ClipsManager
 {
+private:
+    std::deque<TCHAR *> clips;
+    int displayClips = 20;
+    int maxClips = 200;              // Please keep it below 999
+
 public:
     ClipsManager();
     ~ClipsManager();
@@ -24,11 +29,6 @@ public:
     BOOL                            AddToClips(HWND hWnd);
     BOOL                            SetClipboardToClipAtIndex(HWND hWnd, int index);
     const std::deque<TCHAR *>&      GetClips(void) const { return clips; }
-
-private:
-    std::deque<TCHAR *> clips;
-    int displayClips = 20;
-    int maxClips = 200;              // Please keep it below 999
 };
 
 // Forward declarations of functions included in this code module:

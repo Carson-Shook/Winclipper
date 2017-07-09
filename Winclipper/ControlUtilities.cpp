@@ -2,6 +2,44 @@
 #include "resource.h"
 #include "ControlUtilities.h"
 
+int _InitX()
+{
+    int dpiX;
+    HDC hdc = GetDC(NULL);
+    if (hdc)
+    {
+        dpiX = GetDeviceCaps(hdc, LOGPIXELSX);
+        ReleaseDC(NULL, hdc);
+    }
+    else
+    {
+        dpiX = 0;
+    }
+    return dpiX;
+}
+
+int _InitY()
+{
+    int dpiY;
+    HDC hdc = GetDC(NULL);
+    if (hdc)
+    {
+        dpiY = GetDeviceCaps(hdc, LOGPIXELSY);
+        ReleaseDC(NULL, hdc);
+    }
+    else
+    {
+        dpiY = 0;
+    }
+    return dpiY;
+}
+
+int _dpiX = _InitX();
+int _dpiY = _InitY();
+
+int ScaleX(int x) { return MulDiv(x, _dpiX, 96); }
+int ScaleY(int y) { return MulDiv(y, _dpiY, 96); }
+
 RECT MeasureString(LPCWSTR text, HFONT font)
 {
     HDC hDC = GetDC(NULL);
@@ -14,8 +52,8 @@ RECT MeasureString(LPCWSTR text, HFONT font)
 HWND AddLabel(HWND hWnd, HFONT font, int x, int y, HINSTANCE hIn, LPCWSTR text, int id)
 {
     RECT boxsize = MeasureString(text, font);
-
-    HWND hControl = CreateWindowExW(WS_EX_LEFT, WC_STATIC, NULL, WS_CHILD | WS_VISIBLE, x, y, boxsize.right, boxsize.bottom, hWnd, (HMENU)id, hIn, nullptr);
+    
+    HWND hControl = CreateWindowExW(WS_EX_LEFT, WC_STATIC, NULL, WS_CHILD | WS_VISIBLE, ScaleX(x), ScaleY(y), boxsize.right, boxsize.bottom, hWnd, (HMENU)id, hIn, nullptr);
     SendMessage(hControl, WM_SETFONT, (WPARAM)font, MAKELPARAM(FALSE, 0));
     SetWindowText(hControl, text);
 
@@ -29,8 +67,8 @@ HWND CreateUpDnBuddy(HWND hWnd, HFONT font, int x, int y, HINSTANCE hIn, int id)
         NULL,
         WS_CHILDWINDOW | WS_VISIBLE | WS_TABSTOP   // Window styles.
         | ES_NUMBER | ES_LEFT,                     // Edit control styles.
-        x, y,
-        80, 30,
+        ScaleX(x), ScaleY(y),
+        ScaleY(50), ScaleX(19),
         hWnd,
         (HMENU)id,
         hIn,

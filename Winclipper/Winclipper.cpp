@@ -100,7 +100,7 @@ BOOL InitMainWindow(HINSTANCE hInstance, int nCmdShow)
 {
 
    HWND hWnd = CreateWindowExW(0, szMainWindowClass, szTitle, WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU,
-      CW_USEDEFAULT, CW_USEDEFAULT, 1000, 600, nullptr, nullptr, hInstance, nullptr);
+      CW_USEDEFAULT, CW_USEDEFAULT, 100, 100, nullptr, nullptr, hInstance, nullptr);
 
    if (!hWnd)
    {
@@ -122,7 +122,7 @@ BOOL InitSettingsWindow(HINSTANCE hInstance, int nCmdShow)
 {
 
     HWND hWnd = CreateWindowExW(0, szSettingsWindowClass, szTitle, WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU,
-        CW_USEDEFAULT, CW_USEDEFAULT, 1000, 600, nullptr, nullptr, hInstance, nullptr);
+        CW_USEDEFAULT, CW_USEDEFAULT, ScaleX(600), ScaleY(400), nullptr, nullptr, hInstance, nullptr);
 
     if (!hWnd)
     {
@@ -137,9 +137,9 @@ BOOL InitSettingsWindow(HINSTANCE hInstance, int nCmdShow)
     HFONT font = CreateFontIndirectW(&hfDefault.lfCaptionFont);
 
     AddLabel(hWnd, font, 10, 10, hInstance, _T("Number of clips to display"), LBL_MAX_CLIPS_DISPLAY);
-    AddSpinner(hWnd, font, 230, 10, hInstance, MAX_DISPLAY_LOWER, MAX_DISPLAY_UPPER, UD_MAX_CLIPS_DISPLAY, TXT_MAX_CLIPS_DISPLAY);
-    AddLabel(hWnd, font, 360, 10, hInstance, _T("Maximum clips to save"), LBL_MAX_CLIPS_SAVED);
-    AddSpinner(hWnd, font, 550, 10, hInstance, MAX_SAVED_LOWER, MAX_SAVED_UPPER, UD_MAX_CLIPS_SAVED, TXT_MAX_CLIPS_SAVED);
+    AddSpinner(hWnd, font, 160, 10, hInstance, MAX_DISPLAY_LOWER, MAX_DISPLAY_UPPER, UD_MAX_CLIPS_DISPLAY, TXT_MAX_CLIPS_DISPLAY);
+    AddLabel(hWnd, font, 240, 10, hInstance, _T("Maximum clips to save"), LBL_MAX_CLIPS_SAVED);
+    AddSpinner(hWnd, font, 370, 10, hInstance, MAX_SAVED_LOWER, MAX_SAVED_UPPER, UD_MAX_CLIPS_SAVED, TXT_MAX_CLIPS_SAVED);
 
     SetDlgItemInt(hWnd, TXT_MAX_CLIPS_DISPLAY, uSettings.MaxDisplayClips(), TRUE);
     SetDlgItemInt(hWnd, TXT_MAX_CLIPS_SAVED, uSettings.MaxSavedClips(), TRUE);
@@ -308,11 +308,12 @@ LRESULT CALLBACK SettingsWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
                 if (value >= MAX_DISPLAY_LOWER && value <= MAX_DISPLAY_UPPER)
                 {
                     cManager.SetDisplayClips(value);
-                    uSettings.SetMaxDisplayClips(GetDlgItemInt(hWnd, TXT_MAX_CLIPS_DISPLAY, NULL, TRUE));
+                    uSettings.SetMaxDisplayClips(value);
                     if (value > uSettings.MaxSavedClips())
                     {
-                        SetDlgItemInt(hWnd, TXT_MAX_CLIPS_SAVED, uSettings.MaxSavedClips(), TRUE);
+                        SetDlgItemInt(hWnd, TXT_MAX_CLIPS_SAVED, value, TRUE);
                     }
+                    SendDlgItemMessage(hWnd, UD_MAX_CLIPS_SAVED, UDM_SETRANGE, 0, MAKELPARAM(MAX_SAVED_UPPER, value));
                 }
             }
         }
@@ -323,17 +324,13 @@ LRESULT CALLBACK SettingsWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
             {
                 int value = GetDlgItemInt(hWnd, TXT_MAX_CLIPS_SAVED, NULL, TRUE);
 
-                if (value < MAX_SAVED_LOWER)
+                if (value < uSettings.MaxDisplayClips())
                 {
-                    SetDlgItemInt(hWnd, TXT_MAX_CLIPS_SAVED, MAX_SAVED_LOWER, TRUE);
+                    SetDlgItemInt(hWnd, TXT_MAX_CLIPS_SAVED, uSettings.MaxDisplayClips(), TRUE);
                 }
                 else if (value > MAX_SAVED_UPPER)
                 {
                     SetDlgItemInt(hWnd, TXT_MAX_CLIPS_SAVED, MAX_SAVED_UPPER, TRUE);
-                }
-                else if (value < uSettings.MaxDisplayClips())
-                {
-                    SetDlgItemInt(hWnd, TXT_MAX_CLIPS_SAVED, uSettings.MaxDisplayClips(), TRUE);
                 }
 
                 break; // set focus on the main window again
@@ -342,7 +339,7 @@ LRESULT CALLBACK SettingsWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
             {
                 int value = GetDlgItemInt(hWnd, TXT_MAX_CLIPS_SAVED, NULL, TRUE);
 
-                if (value >= MAX_SAVED_LOWER && value <= MAX_SAVED_UPPER && value >= uSettings.MaxDisplayClips())
+                if (value <= MAX_SAVED_UPPER && value >= uSettings.MaxDisplayClips())
                 {
                     cManager.SetMaxClips(value);
                     uSettings.SetMaxSavedClips(GetDlgItemInt(hWnd, TXT_MAX_CLIPS_SAVED, NULL, TRUE));

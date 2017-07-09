@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "resource.h"
+#include "SettingsManager.h"
 #include "ClipsMenu.h"
 
 ClipsManager::ClipsManager()
@@ -99,13 +100,13 @@ BOOL ClipsManager::SetClipboardToClipAtIndex(HWND hWnd, int index)
 
     TCHAR * clip = clips.at(index);
 
-    HGLOBAL hClipboardData = GlobalAlloc(GMEM_MOVEABLE, (wcslen(clip) + 1) * sizeof(TCHAR));
+    HGLOBAL hClipboardData = GlobalAlloc(GMEM_MOVEABLE, (_tcslen(clip) + 1) * sizeof(TCHAR));
     if (hClipboardData != NULL)
     {
         TCHAR * pwcData = (TCHAR*)GlobalLock(hClipboardData);
         if (pwcData != NULL)
         {
-            wcscpy_s(pwcData, wcslen(clip) + 1, clip);
+            wcscpy_s(pwcData, _tcslen(clip) + 1, clip);
 
             GlobalUnlock(hClipboardData);
 
@@ -153,7 +154,7 @@ int ShowClipsMenu(HWND hWnd, HWND curWin, ClipsManager& cm, bool showExit)
                 TCHAR * clip = cm.GetClips().at(i);
                 if (clip != NULL)
                 {
-                    int maxClipSize = wcslen(clip);
+                    int maxClipSize = _tcslen(clip);
 
                     TCHAR menuText[MENU_TEXT_LENGTH];
 
@@ -190,7 +191,7 @@ int ShowClipsMenu(HWND hWnd, HWND curWin, ClipsManager& cm, bool showExit)
                     TCHAR * clip = cm.GetClips().at(j);
                     if (clip != NULL)
                     {
-                        int maxClipSize = wcslen(clip);
+                        int maxClipSize = _tcslen(clip);
 
                         TCHAR menuText[MENU_TEXT_LENGTH];
 
