@@ -78,10 +78,10 @@
             "ComponentsUrl" = "8:"
                 "Items"
                 {
-                    "{EDC2488A-8267-493A-A98E-7D9C3B36CDF3}:.NETFramework,Version=v4.6.1"
+                    "{EDC2488A-8267-493A-A98E-7D9C3B36CDF3}:Microsoft.Visual.C++.14.0.x86"
                     {
-                    "Name" = "8:Microsoft .NET Framework 4.6.1 (x86 and x64)"
-                    "ProductCode" = "8:.NETFramework,Version=v4.6.1"
+                    "Name" = "8:Visual C++ \"14\" Runtime Libraries (x86)"
+                    "ProductCode" = "8:Microsoft.Visual.C++.14.0.x86"
                     }
                 }
             }
@@ -207,7 +207,7 @@
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:Winclipper"
         "ProductCode" = "8:{62C1BDA8-0131-49DA-BBEB-E95C6F1F6C84}"
-        "PackageCode" = "8:{8B590D3D-12AE-4DC6-BB20-9DA688F2B51E}"
+        "PackageCode" = "8:{1F2FA845-CF73-4C11-BCDD-2EB25AEBB170}"
         "UpgradeCode" = "8:{8CC431F1-A5CE-4996-8668-2B7D8B0BA315}"
         "AspNetVersion" = "8:4.0.30319.0"
         "RestartWWWService" = "11:FALSE"
@@ -217,7 +217,7 @@
         "ProductVersion" = "8:1.0.0"
         "Manufacturer" = "8:Winclipper"
         "ARPHELPTELEPHONE" = "8:"
-        "ARPHELPLINK" = "8:carsonshook.com/Winclipper"
+        "ARPHELPLINK" = "8:https://carsonshook.com/Winclipper"
         "Title" = "8:Winclipper Setup"
         "Subject" = "8:"
         "ARPCONTACT" = "8:Carson Shook"
