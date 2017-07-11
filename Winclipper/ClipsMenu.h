@@ -12,11 +12,12 @@ class ClipsManager
 {
 private:
     std::deque<TCHAR *> clips;
-    int displayClips = 20;
-    int maxClips = 200;              // Please keep it below 999
+    size_t displayClips = 20;
+    size_t maxClips = 200;              // Please keep it below 999
 
 public:
     ClipsManager();
+    ClipsManager(int displayClips, int maxClips);
     ~ClipsManager();
 
     int                             DisplayClips(void);
@@ -32,5 +33,5 @@ public:
 };
 
 // Forward declarations of functions included in this code module:
-int					ShowClipsMenu(HWND hWnd, HWND curWin, ClipsManager& cm, bool showExit);
+void				ShowClipsMenu(HWND hWnd, HWND curWin, ClipsManager& cm, bool showExit);
 void				SendPasteInput(void);

@@ -19,7 +19,7 @@ WCHAR szMainWindowClass[MAX_LOADSTRING];        // the main window class name
 WCHAR szSettingsWindowClass[MAX_LOADSTRING];    // the settings window class name
 UINT const WMAPP_NOTIFYCALLBACK = WM_APP + 1;   // user defined callback for notfiyicon actions
 UserSettings uSettings;                         // user settings manager
-ClipsManager cManager;                          // clips manager
+ClipsManager cManager { uSettings.MaxDisplayClips(), uSettings.MaxSavedClips() };                          // clips manager
 
 // Forward declarations of functions included in this code module:
 ATOM                    RegisterMainClass(HINSTANCE hInstance);

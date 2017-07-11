@@ -14,8 +14,12 @@ UserSettings::UserSettings()
     _tcsncat_s(fullSettingPath, MAX_PATH, settingFilePath, _tcslen(settingFilePath));
     CoTaskMemFree(tempSettingPath);
 
-    maxDisplayClips = 20;
-    maxSavedClips = 100;
+    std::vector<TSTRING> settings = File::ReadAllLines(fullSettingPath);
+
+    SetMaxDisplayClips(stoi(settings[0]));
+    SetMaxSavedClips(stoi(settings[1]));
+    //maxDisplayClips = 20;
+    //maxSavedClips = 100;
 }
 
 UserSettings::~UserSettings()
@@ -52,9 +56,9 @@ void UserSettings::SetMaxSavedClips(int maxSavedClips)
 
 void UserSettings::WriteSettings()
 {
-    std::vector<std::string> settings = {
-        std::to_string(MaxDisplayClips()),
-        std::to_string(MaxSavedClips())
+    std::vector<TSTRING> settings = {
+        TO_TSTRING(MaxDisplayClips()),
+        TO_TSTRING(MaxSavedClips())
     };
 
     File::WriteAllLines(fullSettingPath, settings);

@@ -7,7 +7,7 @@
 #include <vector>
 #include "File.h"
 
-TSTRING dirnameOf(const TSTRING& fname)
+TSTRING File::GetDirName(const TSTRING& fname)
 {
     TSTRING directory;
     const size_t last_slash_idx = fname.rfind('\\');
@@ -42,13 +42,24 @@ bool File::Exists(const TCHAR *name)
     }
 }
 
-void File::WriteAllLines(const TCHAR* name, std::vector<std::string> lines)
+void File::WriteAllLines(const TCHAR* name, std::vector<TSTRING> lines)
 {
     if (!File::Exists(name))
     {
-        SHCreateDirectoryEx(NULL, (dirnameOf(name).c_str()), NULL);
+        SHCreateDirectoryEx(NULL, (GetDirName(name).c_str()), NULL);
     }
-    std::ofstream output_file(name);
-    std::ostream_iterator<std::string> output_iterator(output_file, "\n");
+    TOFSTREAM output_file(name);
+    std::ostream_iterator<TSTRING_ITERATOR_ARGS> output_iterator(output_file, _T("\n"));
     std::copy(lines.begin(), lines.end(), output_iterator);
+}
+
+std::vector<TSTRING> File::ReadAllLines(const TCHAR * name)
+{
+    std::vector<TSTRING> lines;
+    TIFSTREAM myfile(name);
+
+    std::copy(std::istream_iterator<TSTRING_ITERATOR_ARGS>(myfile),
+        std::istream_iterator<TSTRING_ITERATOR_ARGS>(),
+        std::back_inserter(lines));
+    return lines;
 }

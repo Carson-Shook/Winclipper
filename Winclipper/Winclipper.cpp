@@ -288,22 +288,22 @@ LRESULT CALLBACK SettingsWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
         {
             if (HIWORD(wParam) == EN_KILLFOCUS)
             {
-                int value = GetDlgItemInt(hWnd, TXT_MAX_CLIPS_DISPLAY, NULL, TRUE);
+                int value = GetDlgItemInt(hWnd, TXT_MAX_CLIPS_DISPLAY, NULL, FALSE);
 
                 if (value < MAX_DISPLAY_LOWER)
                 {
-                    SetDlgItemInt(hWnd, TXT_MAX_CLIPS_DISPLAY, MAX_DISPLAY_LOWER, TRUE);
+                    SetDlgItemInt(hWnd, TXT_MAX_CLIPS_DISPLAY, MAX_DISPLAY_LOWER, FALSE);
                 }
                 else if (value > MAX_DISPLAY_UPPER)
                 {
-                    SetDlgItemInt(hWnd, TXT_MAX_CLIPS_DISPLAY, MAX_DISPLAY_UPPER, TRUE);
+                    SetDlgItemInt(hWnd, TXT_MAX_CLIPS_DISPLAY, MAX_DISPLAY_UPPER, FALSE);
                 }
 
                 break; // set focus on the main window again
             }
             else if (HIWORD(wParam) == EN_CHANGE)
             {
-                int value = GetDlgItemInt(hWnd, TXT_MAX_CLIPS_DISPLAY, NULL, TRUE);
+                int value = GetDlgItemInt(hWnd, TXT_MAX_CLIPS_DISPLAY, NULL, FALSE);
 
                 if (value >= MAX_DISPLAY_LOWER && value <= MAX_DISPLAY_UPPER)
                 {
@@ -311,7 +311,7 @@ LRESULT CALLBACK SettingsWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
                     uSettings.SetMaxDisplayClips(value);
                     if (value > uSettings.MaxSavedClips())
                     {
-                        SetDlgItemInt(hWnd, TXT_MAX_CLIPS_SAVED, value, TRUE);
+                        SetDlgItemInt(hWnd, TXT_MAX_CLIPS_SAVED, value, FALSE);
                     }
                     SendDlgItemMessage(hWnd, UD_MAX_CLIPS_SAVED, UDM_SETRANGE, 0, MAKELPARAM(MAX_SAVED_UPPER, value));
                 }
@@ -322,27 +322,27 @@ LRESULT CALLBACK SettingsWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
         {
             if (HIWORD(wParam) == EN_KILLFOCUS)
             {
-                int value = GetDlgItemInt(hWnd, TXT_MAX_CLIPS_SAVED, NULL, TRUE);
+                int value = GetDlgItemInt(hWnd, TXT_MAX_CLIPS_SAVED, NULL, FALSE);
 
                 if (value < uSettings.MaxDisplayClips())
                 {
-                    SetDlgItemInt(hWnd, TXT_MAX_CLIPS_SAVED, uSettings.MaxDisplayClips(), TRUE);
+                    SetDlgItemInt(hWnd, TXT_MAX_CLIPS_SAVED, uSettings.MaxDisplayClips(), FALSE);
                 }
                 else if (value > MAX_SAVED_UPPER)
                 {
-                    SetDlgItemInt(hWnd, TXT_MAX_CLIPS_SAVED, MAX_SAVED_UPPER, TRUE);
+                    SetDlgItemInt(hWnd, TXT_MAX_CLIPS_SAVED, MAX_SAVED_UPPER, FALSE);
                 }
 
                 break; // set focus on the main window again
             }
             else if (HIWORD(wParam) == EN_CHANGE)
             {
-                int value = GetDlgItemInt(hWnd, TXT_MAX_CLIPS_SAVED, NULL, TRUE);
+                int value = GetDlgItemInt(hWnd, TXT_MAX_CLIPS_SAVED, NULL, FALSE);
 
                 if (value <= MAX_SAVED_UPPER && value >= uSettings.MaxDisplayClips())
                 {
                     cManager.SetMaxClips(value);
-                    uSettings.SetMaxSavedClips(GetDlgItemInt(hWnd, TXT_MAX_CLIPS_SAVED, NULL, TRUE));
+                    uSettings.SetMaxSavedClips(GetDlgItemInt(hWnd, TXT_MAX_CLIPS_SAVED, NULL, FALSE));
                 }
             }
         }

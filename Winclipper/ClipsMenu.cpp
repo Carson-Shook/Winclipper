@@ -7,6 +7,12 @@ ClipsManager::ClipsManager()
 {
 }
 
+ClipsManager::ClipsManager(int displayClips, int maxClips)
+{
+    SetDisplayClips(displayClips);
+    SetMaxClips(maxClips);
+}
+
 ClipsManager::~ClipsManager()
 {
     ClearClips();
@@ -127,7 +133,7 @@ BOOL ClipsManager::SetClipboardToClipAtIndex(HWND hWnd, int index)
     return TRUE;
 }
 
-int ShowClipsMenu(HWND hWnd, HWND curWin, ClipsManager& cm, bool showExit)
+void ShowClipsMenu(HWND hWnd, HWND curWin, ClipsManager& cm, bool showExit)
 {
 	if (hWnd != NULL && curWin != NULL)
 	{
