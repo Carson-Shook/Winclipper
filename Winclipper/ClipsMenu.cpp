@@ -1,6 +1,6 @@
 #include "stdafx.h"
 #include "resource.h"
-#include "SettingsManager.h"
+#include "UserSettings.h"
 #include "ClipsMenu.h"
 
 ClipsManager::ClipsManager()

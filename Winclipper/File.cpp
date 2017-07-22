@@ -19,16 +19,6 @@ TSTRING File::GetDirName(const TSTRING& fname)
     return directory;
 }
 
-File::File()
-{
-    
-}
-
-File::~File()
-{
-
-}
-
 bool File::Exists(const TCHAR *name)
 {
     int retval = PathFileExists(name);

@@ -1,10 +1,11 @@
 #include "stdafx.h"
 #include <string>
 #include <vector>
+#include <map>
 #include <thread>
 #include "Shlobj.h"
 #include "File.h"
-#include "SettingsManager.h"
+#include "UserSettings.h"
 
 UserSettings::UserSettings()
 {
@@ -14,12 +15,15 @@ UserSettings::UserSettings()
     _tcsncat_s(fullSettingPath, MAX_PATH, settingFilePath, _tcslen(settingFilePath));
     CoTaskMemFree(tempSettingPath);
 
-    std::vector<TSTRING> settings = File::ReadAllLines(fullSettingPath);
+    if (File::Exists(fullSettingPath))
+    {
+        std::vector<TSTRING> settings = File::ReadAllLines(fullSettingPath);
 
-    SetMaxDisplayClips(stoi(settings[0]));
-    SetMaxSavedClips(stoi(settings[1]));
-    //maxDisplayClips = 20;
-    //maxSavedClips = 100;
+        if (!settings.empty())
+        {
+            this->Deserialize(settings);
+        }
+    }
 }
 
 UserSettings::~UserSettings()
@@ -56,12 +60,54 @@ void UserSettings::SetMaxSavedClips(int maxSavedClips)
 
 void UserSettings::WriteSettings()
 {
-    std::vector<TSTRING> settings = {
-        TO_TSTRING(MaxDisplayClips()),
-        TO_TSTRING(MaxSavedClips())
-    };
+    std::vector<TSTRING> settings = this->Serialize();
 
     File::WriteAllLines(fullSettingPath, settings);
+}
+
+std::vector<TSTRING> UserSettings::Serialize()
+{
+    std::vector<TSTRING> retVal = {
+        (TO_TSTRING(MAX_DISPLAY) + SEPARATOR + TO_TSTRING(MaxDisplayClips())),
+        (TO_TSTRING(MAX_SAVED) + SEPARATOR + TO_TSTRING(MaxSavedClips()))
+    };
+
+    return retVal;
+}
+
+void UserSettings::Deserialize(std::vector<TSTRING> srData)
+{
+    std::map<int, TSTRING> store;
+
+    for each (TSTRING kvPair in srData)
+    {
+        try
+        {
+            store.emplace(
+                stoi(kvPair.substr(0, kvPair.find(SEPARATOR))),
+                kvPair.substr(kvPair.find(SEPARATOR) + 1)
+            );
+        }
+        catch (const std::exception&)
+        {
+            // do nothing
+        }
+    }
+
+    for each (std::pair<int, TSTRING> pair in store)
+    {
+        switch (pair.first)
+        {
+        case MAX_DISPLAY:
+            SetMaxDisplayClips(stoi(pair.second));
+            break;
+        case MAX_SAVED:
+            SetMaxSavedClips(stoi(pair.second));
+            break;
+        default:
+            break;
+        }
+    }
 }
 
 // Call this to schedule a write to the settings file.
@@ -76,7 +122,7 @@ void UserSettings::SaveSettingsAsync()
 void UserSettings::IncrementSettingWriterDelay(int* waitCount, UserSettings* us)
 {
     (*waitCount)++;
-    Sleep(3000);
+    Sleep(2000);
     (*waitCount)--;
 
     if (*waitCount == 0)

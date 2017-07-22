@@ -3,7 +3,7 @@
 #include "stdafx.h"
 #include "resource.h"
 #include "string.h"
-#include "SettingsManager.h"
+#include "UserSettings.h"
 #include "ControlUtilities.h"
 #include "ClipsMenu.h"
 #include "Winclipper.h"
