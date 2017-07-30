@@ -53,9 +53,38 @@ HWND AddLabel(HWND hWnd, HFONT font, int x, int y, HINSTANCE hIn, LPCWSTR text, 
 {
     RECT boxsize = MeasureString(text, font);
     
-    HWND hControl = CreateWindowExW(WS_EX_LEFT, WC_STATIC, NULL, WS_CHILD | WS_VISIBLE, ScaleX(x), ScaleY(y), boxsize.right, boxsize.bottom, hWnd, (HMENU)id, hIn, nullptr);
+    HWND hControl = CreateWindowExW(WS_EX_LEFT,
+        WC_STATIC,
+        text,
+        WS_CHILD | WS_VISIBLE,
+        ScaleX(x), ScaleY(y),
+        boxsize.right, boxsize.bottom,
+        hWnd,
+        (HMENU)id,
+        hIn,
+        NULL);
     SendMessage(hControl, WM_SETFONT, (WPARAM)font, MAKELPARAM(FALSE, 0));
-    SetWindowText(hControl, text);
+    //SetWindowText(hControl, text);
+
+    return hControl;
+}
+
+HWND AddCheckbox(HWND hWnd, HFONT font, int x, int y, HINSTANCE hIn, LPCWSTR text, int id)
+{
+    RECT boxsize = MeasureString(text, font);
+
+    HWND hControl = CreateWindowExW(WS_EX_LEFT,
+        WC_BUTTON,
+        text,
+        WS_CHILD | WS_VISIBLE | BS_CHECKBOX,
+        ScaleX(x), ScaleY(y),
+        boxsize.right + ScaleX(20), boxsize.bottom,
+        hWnd,
+        (HMENU)id,
+        hIn,
+        nullptr);
+    SendMessage(hControl, WM_SETFONT, (WPARAM)font, MAKELPARAM(FALSE, 0));
+    //SetWindowText(hControl, text);
 
     return hControl;
 }
@@ -68,7 +97,7 @@ HWND CreateUpDnBuddy(HWND hWnd, HFONT font, int x, int y, HINSTANCE hIn, int id)
         WS_CHILDWINDOW | WS_VISIBLE | WS_TABSTOP   // Window styles.
         | ES_NUMBER | ES_LEFT,                     // Edit control styles.
         ScaleX(x), ScaleY(y),
-        ScaleY(50), ScaleX(19),
+        ScaleX(50), ScaleY(19),
         hWnd,
         (HMENU)id,
         hIn,

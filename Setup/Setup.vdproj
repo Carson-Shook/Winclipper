@@ -259,7 +259,7 @@
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:Winclipper"
         "ProductCode" = "8:{62C1BDA8-0131-49DA-BBEB-E95C6F1F6C84}"
-        "PackageCode" = "8:{CB4661FA-0017-42A4-8667-DD1F56D3648B}"
+        "PackageCode" = "8:{D7266AA7-1FBA-4CBF-AA60-7E0C4EEB8260}"
         "UpgradeCode" = "8:{8CC431F1-A5CE-4996-8668-2B7D8B0BA315}"
         "AspNetVersion" = "8:4.0.30319.0"
         "RestartWWWService" = "11:FALSE"
@@ -389,7 +389,7 @@
                                                         {
                                                             "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_AE6771601397431A86D7B306481AE88D"
                                                             {
-                                                            "Name" = "8:WinclipperStartup"
+                                                            "Name" = "8:Winclipper"
                                                             "Condition" = "8:"
                                                             "Transitive" = "11:FALSE"
                                                             "ValueTypes" = "3:1"
@@ -858,7 +858,7 @@
         {
             "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_C42BA8CC664F4064AB13415D89D6FA0B"
             {
-            "SourcePath" = "8:..\\Winclipper\\Release\\Winclipper.exe"
+            "SourcePath" = "8:..\\Winclipper\\Debug\\Winclipper.exe"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_8856BDFD5F114E0FAFA5802625BCDEDE"

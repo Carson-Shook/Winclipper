@@ -122,7 +122,7 @@ BOOL InitSettingsWindow(HINSTANCE hInstance, int nCmdShow)
 {
 
     HWND hWnd = CreateWindowExW(0, szSettingsWindowClass, szTitle, WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU,
-        CW_USEDEFAULT, CW_USEDEFAULT, ScaleX(600), ScaleY(400), nullptr, nullptr, hInstance, nullptr);
+        CW_USEDEFAULT, CW_USEDEFAULT, ScaleX(510), ScaleY(300), nullptr, nullptr, hInstance, nullptr);
 
     if (!hWnd)
     {
@@ -136,13 +136,28 @@ BOOL InitSettingsWindow(HINSTANCE hInstance, int nCmdShow)
     SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(NONCLIENTMETRICS), &hfDefault, 0);
     HFONT font = CreateFontIndirectW(&hfDefault.lfCaptionFont);
 
-    AddLabel(hWnd, font, 10, 10, hInstance, _T("Number of clips to display"), LBL_MAX_CLIPS_DISPLAY);
-    AddSpinner(hWnd, font, 160, 10, hInstance, MAX_DISPLAY_LOWER, MAX_DISPLAY_UPPER, UD_MAX_CLIPS_DISPLAY, TXT_MAX_CLIPS_DISPLAY);
-    AddLabel(hWnd, font, 240, 10, hInstance, _T("Maximum clips to save"), LBL_MAX_CLIPS_SAVED);
-    AddSpinner(hWnd, font, 370, 10, hInstance, MAX_SAVED_LOWER, MAX_SAVED_UPPER, UD_MAX_CLIPS_SAVED, TXT_MAX_CLIPS_SAVED);
+    AddLabel(hWnd, font, 10, 10, hInstance, _T("Number of clips to display:"), LBL_MAX_CLIPS_DISPLAY);
+    AddSpinner(hWnd, font, 180, 10, hInstance, MAX_DISPLAY_LOWER, MAX_DISPLAY_UPPER, UD_MAX_CLIPS_DISPLAY, TXT_MAX_CLIPS_DISPLAY);
+    AddLabel(hWnd, font, 260, 10, hInstance, _T("Maximum clips to save:"), LBL_MAX_CLIPS_SAVED);
+    AddSpinner(hWnd, font, 430, 10, hInstance, MAX_SAVED_LOWER, MAX_SAVED_UPPER, UD_MAX_CLIPS_SAVED, TXT_MAX_CLIPS_SAVED);
+    
+    //AddLabel(hWnd, font, 10, 40, hInstance, _T("Number of preview characters:"), LBL_MENU_DISP_CHARS);
+    //AddSpinner(hWnd, font, 180, 40, hInstance, MAX_DISPLAY_LOWER, MAX_DISPLAY_UPPER, UD_MENU_DISP_CHARS, TXT_MENU_DISP_CHARS);
 
-    SetDlgItemInt(hWnd, TXT_MAX_CLIPS_DISPLAY, uSettings.MaxDisplayClips(), TRUE);
-    SetDlgItemInt(hWnd, TXT_MAX_CLIPS_SAVED, uSettings.MaxSavedClips(), TRUE);
+    AddCheckbox(hWnd, font, 10, 70, hInstance, _T("Run Winclipper at startup"), CHK_RUN_AT_STARTUP);
+
+    SetDlgItemInt(hWnd, TXT_MAX_CLIPS_DISPLAY, uSettings.MaxDisplayClips(), FALSE);
+    SetDlgItemInt(hWnd, TXT_MAX_CLIPS_SAVED, uSettings.MaxSavedClips(), FALSE);
+
+    HKEY hOpened;
+    if (RegOpenKeyEx(HKEY_CURRENT_USER, _T("Software\\Microsoft\\Windows\\CurrentVersion\\Run"), 0, KEY_ALL_ACCESS, &hOpened) == ERROR_SUCCESS)
+    {
+        if (QueryKeyForValue(hOpened, _T("Winclipper")) == TRUE)
+        {
+            CheckDlgButton(hWnd, CHK_RUN_AT_STARTUP, BST_CHECKED);
+        }
+    }
+    RegCloseKey(hOpened);
 
     ShowWindow(hWnd, SW_HIDE);
     UpdateWindow(hWnd);
@@ -347,7 +362,23 @@ LRESULT CALLBACK SettingsWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
             }
         }
         break;
-
+        case CHK_RUN_AT_STARTUP:
+        {
+            if (HIWORD(wParam) == BN_CLICKED)
+            {
+                if (IsDlgButtonChecked(hWnd, CHK_RUN_AT_STARTUP))
+                {
+                    DeleteRegistryRun();
+                    CheckDlgButton(hWnd, CHK_RUN_AT_STARTUP, BST_UNCHECKED);
+                }
+                else
+                {
+                    WriteRegistryRun();
+                    CheckDlgButton(hWnd, CHK_RUN_AT_STARTUP, BST_CHECKED);
+                }
+            }
+        }
+        break;
         default:
             return DefWindowProc(hWnd, message, wParam, lParam);
         }
@@ -390,6 +421,110 @@ INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
     }
     return (INT_PTR)FALSE;
 }
+
+BOOL WriteRegistryRun()
+{
+    HKEY hOpened;
+    TCHAR pPath[100];
+
+    GetModuleFileName(0, pPath, 100);
+
+    //OpenRegistryRun(hOpened);
+    RegOpenKeyEx(HKEY_CURRENT_USER, _T("Software\\Microsoft\\Windows\\CurrentVersion\\Run"), 0, KEY_ALL_ACCESS, &hOpened);
+
+    if (RegSetValueEx(hOpened, _T("Winclipper"), 0, REG_SZ, (LPBYTE)pPath, sizeof(pPath)) != ERROR_SUCCESS)
+    {
+        return FALSE;
+    }
+
+    RegCloseKey(hOpened);
+    return TRUE;
+}
+
+BOOL DeleteRegistryRun()
+{
+    HKEY hOpened;
+
+    if (RegOpenKeyEx(HKEY_CURRENT_USER, _T("Software\\Microsoft\\Windows\\CurrentVersion\\Run"), 0, KEY_ALL_ACCESS, &hOpened) == ERROR_SUCCESS)
+    {
+        RegDeleteValue(hOpened, _T("Winclipper"));
+    }
+    else
+    {
+        return FALSE;
+    }
+
+    RegCloseKey(hOpened);
+    return TRUE;
+}
+
+BOOL QueryKeyForValue(HKEY hKey, TCHAR* checkValue)
+{
+#define MAX_KEY_LENGTH 255
+#define MAX_VALUE_NAME 16383
+
+
+    TCHAR    achKey[MAX_KEY_LENGTH];   // buffer for subkey name
+    DWORD    cbName;                   // size of name string 
+    TCHAR    achClass[MAX_PATH] = TEXT("");  // buffer for class name 
+    DWORD    cchClassName = MAX_PATH;  // size of class string 
+    DWORD    cSubKeys = 0;               // number of subkeys 
+    DWORD    cbMaxSubKey;              // longest subkey size 
+    DWORD    cchMaxClass;              // longest class string 
+    DWORD    cValues;              // number of values for key 
+    DWORD    cchMaxValue;          // longest value name 
+    DWORD    cbMaxValueData;       // longest value data 
+    DWORD    cbSecurityDescriptor; // size of security descriptor 
+    FILETIME ftLastWriteTime;      // last write time 
+
+    DWORD i, retCode;
+
+    TCHAR  achValue[MAX_VALUE_NAME];
+    DWORD cchValue = MAX_VALUE_NAME;
+
+    // Get the class name and the value count. 
+    retCode = RegQueryInfoKey(
+        hKey,                    // key handle 
+        achClass,                // buffer for class name 
+        &cchClassName,           // size of class string 
+        NULL,                    // reserved 
+        &cSubKeys,               // number of subkeys 
+        &cbMaxSubKey,            // longest subkey size 
+        &cchMaxClass,            // longest class string 
+        &cValues,                // number of values for this key 
+        &cchMaxValue,            // longest value name 
+        &cbMaxValueData,         // longest value data 
+        &cbSecurityDescriptor,   // security descriptor 
+        &ftLastWriteTime);       // last write time 
+
+                                 // Enumerate the key values. 
+
+    if (cValues)
+    {
+        for (i = 0, retCode = ERROR_SUCCESS; i<cValues; i++)
+        {
+            cchValue = MAX_VALUE_NAME;
+            achValue[0] = '\0';
+            retCode = RegEnumValue(hKey, i,
+                achValue,
+                &cchValue,
+                NULL,
+                NULL,
+                NULL,
+                NULL);
+
+            if (retCode == ERROR_SUCCESS)
+            {
+                if (_tcscmp(checkValue, achValue) == 0)
+                {
+                    return TRUE;
+                }
+            }
+        }
+    }
+    return FALSE;
+}
+
 
 // Adds the application notification icon to the notifcation area
 BOOL AddNotificationIcon(HWND hWnd)
