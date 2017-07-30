@@ -477,12 +477,6 @@ BOOL DeleteRegistryRun()
 
 BOOL QueryKeyForValue(HKEY hKey, TCHAR* checkValue)
 {
-#define MAX_KEY_LENGTH 255
-#define MAX_VALUE_NAME 16383
-
-
-    TCHAR    achKey[MAX_KEY_LENGTH];   // buffer for subkey name
-    DWORD    cbName;                   // size of name string 
     TCHAR    achClass[MAX_PATH] = TEXT("");  // buffer for class name 
     DWORD    cchClassName = MAX_PATH;  // size of class string 
     DWORD    cSubKeys = 0;               // number of subkeys 

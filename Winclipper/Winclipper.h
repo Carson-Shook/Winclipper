@@ -1,6 +1,7 @@
 #pragma once
 
 #define MAX_LOADSTRING	        100
+#define MAX_VALUE_NAME          16383
 #define ID_REG_HOTKEY	        100
 #define UID_NOTIFYICON          2180847866      // random UID for the notifyicon
 
