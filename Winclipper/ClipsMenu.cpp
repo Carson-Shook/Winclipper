@@ -7,10 +7,11 @@ ClipsManager::ClipsManager()
 {
 }
 
-ClipsManager::ClipsManager(int displayClips, int maxClips)
+ClipsManager::ClipsManager(int displayClips, int maxClips, int menuChars)
 {
     SetDisplayClips(displayClips);
     SetMaxClips(maxClips);
+    SetMenuDisplayChars(menuChars);
 }
 
 ClipsManager::~ClipsManager()
@@ -49,9 +50,19 @@ void ClipsManager::SetMaxClips(int maxClips)
             TCHAR * back = clips.back();
             clips.pop_back();
             // dealocate the former back object
-            delete back;
+            delete[] back;
         }
     }
+}
+
+int ClipsManager::MenuDisplayChars()
+{
+    return menuDispChars;
+}
+
+void ClipsManager::SetMenuDisplayChars(int menuDispChars)
+{
+    ClipsManager::menuDispChars = menuDispChars;
 }
 
 void ClipsManager::ClearClips()
@@ -59,7 +70,7 @@ void ClipsManager::ClearClips()
     for (int i = 0, j = clips.size(); i < j; i++)
     {
         TCHAR * clip = clips.at(i);
-        delete clip;
+        delete[] clip;
     }
     clips.clear();
 }
@@ -83,7 +94,7 @@ BOOL ClipsManager::AddToClips(HWND hWnd)
                 TCHAR * back = clips.back();
                 clips.pop_back();
                 // dealocate the former back object
-                delete back;
+                delete[] back;
             }
             clips.push_front(derefData);
         }
@@ -119,7 +130,7 @@ BOOL ClipsManager::SetClipboardToClipAtIndex(HWND hWnd, int index)
             SetClipboardData(CF_UNICODETEXT, hClipboardData);
 
             // Safe to delete clip because we have already copied it.
-            delete clip;
+            delete[] clip;
             clips.erase(clips.begin() + index);
         }
         else {
@@ -150,6 +161,8 @@ void ShowClipsMenu(HWND hWnd, HWND curWin, ClipsManager& cm, bool showExit)
 
         int curSize = cm.GetClips().size();
         int displayCount = cm.DisplayClips();
+        int menuTextLength = cm.MenuDisplayChars();
+        TCHAR* menuText = new TCHAR[menuTextLength];
 
         if (curSize > 0)
         {
@@ -162,18 +175,16 @@ void ShowClipsMenu(HWND hWnd, HWND curWin, ClipsManager& cm, bool showExit)
                 {
                     int maxClipSize = _tcslen(clip);
 
-                    TCHAR menuText[MENU_TEXT_LENGTH];
-
                     // I know this is a little unorthodox, but we can count
                     // on these lengths so long as MENU_TEXT_LENGTH > 5
                     // and I really want these ellipses.
-                    if (maxClipSize > MENU_TEXT_LENGTH - 4)
+                    if (maxClipSize > menuTextLength - 4)
                     {
-                        maxClipSize = MENU_TEXT_LENGTH - 4;
-                        menuText[MENU_TEXT_LENGTH - 4] = '.';
-                        menuText[MENU_TEXT_LENGTH - 3] = '.';
-                        menuText[MENU_TEXT_LENGTH - 2] = '.';
-                        menuText[MENU_TEXT_LENGTH - 1] = '\0';
+                        maxClipSize = menuTextLength - 4;
+                        menuText[menuTextLength - 4] = '.';
+                        menuText[menuTextLength - 3] = '.';
+                        menuText[menuTextLength - 2] = '.';
+                        menuText[menuTextLength - 1] = '\0';
                     }
                     else
                     {
@@ -199,15 +210,13 @@ void ShowClipsMenu(HWND hWnd, HWND curWin, ClipsManager& cm, bool showExit)
                     {
                         int maxClipSize = _tcslen(clip);
 
-                        TCHAR menuText[MENU_TEXT_LENGTH];
-
-                        if (maxClipSize > MENU_TEXT_LENGTH - 4)
+                        if (maxClipSize > menuTextLength - 4)
                         {
-                            maxClipSize = MENU_TEXT_LENGTH - 4;
-                            menuText[MENU_TEXT_LENGTH - 4] = '.';
-                            menuText[MENU_TEXT_LENGTH - 3] = '.';
-                            menuText[MENU_TEXT_LENGTH - 2] = '.';
-                            menuText[MENU_TEXT_LENGTH - 1] = '\0';
+                            maxClipSize = menuTextLength - 4;
+                            menuText[menuTextLength - 4] = '.';
+                            menuText[menuTextLength - 3] = '.';
+                            menuText[menuTextLength - 2] = '.';
+                            menuText[menuTextLength - 1] = '\0';
                         }
                         else
                         {
@@ -280,6 +289,7 @@ void ShowClipsMenu(HWND hWnd, HWND curWin, ClipsManager& cm, bool showExit)
             }
 		}
 		PostMessage(hWnd, WM_NULL, 0, 0);
+        delete[] menuText;
 	}
 }
 

@@ -13,6 +13,10 @@
 #define MAX_SAVED_UPPER     500
 #define MAX_SAVED_LOWER     1
 
+#define MENU_CHARS          3
+#define MENU_CHARS_UPPER    200
+#define MENU_CHARS_LOWER    1
+
 class UserSettings
 {
 private:
@@ -22,6 +26,7 @@ private:
 
     int                 maxDisplayClips;
     int                 maxSavedClips;
+    int                 menuDisplayChars;
 
     void                SaveSettingsAsync();
     static void         IncrementSettingWriterDelay(int* waitCount, UserSettings* us);
@@ -40,6 +45,9 @@ public:
 
     int                 MaxSavedClips();
     void                SetMaxSavedClips(int maxSavedClips);
+
+    int                 MenuDisplayChars();
+    void                SetMenuDisplayChars(int menuDisplayChars);
 };
 
 

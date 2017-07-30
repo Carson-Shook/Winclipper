@@ -24,6 +24,12 @@ UserSettings::UserSettings()
             this->Deserialize(settings);
         }
     }
+    else
+    {
+        SetMaxDisplayClips(20);
+        SetMaxSavedClips(50);
+        SetMenuDisplayChars(64);
+    }
 }
 
 UserSettings::~UserSettings()
@@ -39,7 +45,18 @@ void UserSettings::SetMaxDisplayClips(int maxDisplayClips)
 {
     if (maxDisplayClips != UserSettings::maxDisplayClips)
     {
-        UserSettings::maxDisplayClips = maxDisplayClips;
+        if (maxDisplayClips < MAX_DISPLAY_LOWER)
+        {
+            UserSettings::maxDisplayClips = MAX_DISPLAY_LOWER;
+        }
+        else if (maxDisplayClips > MAX_DISPLAY_UPPER)
+        {
+            UserSettings::maxDisplayClips = MAX_DISPLAY_UPPER;
+        }
+        else
+        {
+            UserSettings::maxDisplayClips = maxDisplayClips;
+        }
         SaveSettingsAsync();
     }
 }
@@ -53,7 +70,43 @@ void UserSettings::SetMaxSavedClips(int maxSavedClips)
 {
     if (maxSavedClips != UserSettings::maxSavedClips)
     {
-        UserSettings::maxSavedClips = maxSavedClips;
+        if (maxSavedClips < MAX_SAVED_LOWER)
+        {
+            UserSettings::maxSavedClips = MAX_SAVED_LOWER;
+        }
+        else if (maxSavedClips > MAX_SAVED_UPPER)
+        {
+            UserSettings::maxSavedClips = MAX_SAVED_UPPER;
+        }
+        else
+        {
+            UserSettings::maxSavedClips = maxSavedClips;
+        }
+        SaveSettingsAsync();
+    }
+}
+
+int UserSettings::MenuDisplayChars()
+{
+    return menuDisplayChars;
+}
+
+void UserSettings::SetMenuDisplayChars(int menuDisplayChars)
+{
+    if (menuDisplayChars != UserSettings::menuDisplayChars)
+    {
+        if (menuDisplayChars < MENU_CHARS_LOWER)
+        {
+            UserSettings::menuDisplayChars = MENU_CHARS_LOWER;
+        }
+        else if (menuDisplayChars > MENU_CHARS_UPPER)
+        {
+            UserSettings::menuDisplayChars = MENU_CHARS_UPPER;
+        }
+        else
+        {
+            UserSettings::menuDisplayChars = menuDisplayChars;
+        }
         SaveSettingsAsync();
     }
 }
@@ -69,7 +122,8 @@ std::vector<TSTRING> UserSettings::Serialize()
 {
     std::vector<TSTRING> retVal = {
         (TO_TSTRING(MAX_DISPLAY) + SEPARATOR + TO_TSTRING(MaxDisplayClips())),
-        (TO_TSTRING(MAX_SAVED) + SEPARATOR + TO_TSTRING(MaxSavedClips()))
+        (TO_TSTRING(MAX_SAVED) + SEPARATOR + TO_TSTRING(MaxSavedClips())),
+        (TO_TSTRING(MENU_CHARS) + SEPARATOR + TO_TSTRING(MenuDisplayChars()))
     };
 
     return retVal;
@@ -103,6 +157,9 @@ void UserSettings::Deserialize(std::vector<TSTRING> srData)
             break;
         case MAX_SAVED:
             SetMaxSavedClips(stoi(pair.second));
+            break;
+        case MENU_CHARS:
+            SetMenuDisplayChars(stoi(pair.second));
             break;
         default:
             break;

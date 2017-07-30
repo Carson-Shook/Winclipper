@@ -1,6 +1,6 @@
 #pragma once
 
-#define MENU_TEXT_LENGTH    64
+//#define MENU_TEXT_LENGTH    64
 #define CANCELED_SELECTION	0		// user selected nothing, pressed esc, or clicked outside the window
 #define	SETTINGS_SELECT     2000	// user selected the Settings option
 #define CLEARCLIPS_SELECT   2001    // clear all clips that are currently saved (doesn't clear the actual clipboard)
@@ -14,17 +14,21 @@ private:
     std::deque<TCHAR *> clips;
     size_t displayClips = 20;
     size_t maxClips = 200;              // Please keep it below 999
+    int menuDispChars = 64;
 
 public:
     ClipsManager();
-    ClipsManager(int displayClips, int maxClips);
+    ClipsManager(int displayClips, int maxClips, int menuChars);
     ~ClipsManager();
 
-    int                             DisplayClips(void);
+    int                             DisplayClips();
     void                            SetDisplayClips(int displayClips);
 
-    int                             MaxClips(void);
+    int                             MaxClips();
     void                            SetMaxClips(int maxClips);
+
+    int                             MenuDisplayChars();
+    void                            SetMenuDisplayChars(int menuDispChars);
 
     void                            ClearClips(void);
     BOOL                            AddToClips(HWND hWnd);

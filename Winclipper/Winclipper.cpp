@@ -141,13 +141,15 @@ BOOL InitSettingsWindow(HINSTANCE hInstance, int nCmdShow)
     AddLabel(hWnd, font, 260, 10, hInstance, _T("Maximum clips to save:"), LBL_MAX_CLIPS_SAVED);
     AddSpinner(hWnd, font, 430, 10, hInstance, MAX_SAVED_LOWER, MAX_SAVED_UPPER, UD_MAX_CLIPS_SAVED, TXT_MAX_CLIPS_SAVED);
     
-    //AddLabel(hWnd, font, 10, 40, hInstance, _T("Number of preview characters:"), LBL_MENU_DISP_CHARS);
-    //AddSpinner(hWnd, font, 180, 40, hInstance, MAX_DISPLAY_LOWER, MAX_DISPLAY_UPPER, UD_MENU_DISP_CHARS, TXT_MENU_DISP_CHARS);
+    AddLabel(hWnd, font, 10, 40, hInstance, _T("Number of preview characters:"), LBL_MENU_DISP_CHARS);
+    AddSpinner(hWnd, font, 180, 40, hInstance, MENU_CHARS_LOWER, MENU_CHARS_UPPER, UD_MENU_DISP_CHARS, TXT_MENU_DISP_CHARS);
 
     AddCheckbox(hWnd, font, 10, 70, hInstance, _T("Run Winclipper at startup"), CHK_RUN_AT_STARTUP);
 
     SetDlgItemInt(hWnd, TXT_MAX_CLIPS_DISPLAY, uSettings.MaxDisplayClips(), FALSE);
     SetDlgItemInt(hWnd, TXT_MAX_CLIPS_SAVED, uSettings.MaxSavedClips(), FALSE);
+
+    SetDlgItemInt(hWnd, TXT_MENU_DISP_CHARS, uSettings.MenuDisplayChars(), FALSE);
 
     HKEY hOpened;
     if (RegOpenKeyEx(HKEY_CURRENT_USER, _T("Software\\Microsoft\\Windows\\CurrentVersion\\Run"), 0, KEY_ALL_ACCESS, &hOpened) == ERROR_SUCCESS)
@@ -232,20 +234,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case WM_CLIPBOARDUPDATE:
     {
         cManager.AddToClips(hWnd);
-
-        if (!OpenClipboard(hWnd))
-            return FALSE;
-        HANDLE psClipboardData = GetClipboardData(CF_UNICODETEXT);
-        if (psClipboardData != NULL)
-        {
-            TCHAR * data = (TCHAR*)(GlobalLock(psClipboardData));
-            if (data != NULL)
-            {
-                TCHAR * derefData = _wcsdup(data);
-            }
-            GlobalUnlock(psClipboardData);
-        }
-        CloseClipboard();
     }
     break;
     case WM_HOTKEY:
@@ -358,6 +346,35 @@ LRESULT CALLBACK SettingsWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
                 {
                     cManager.SetMaxClips(value);
                     uSettings.SetMaxSavedClips(GetDlgItemInt(hWnd, TXT_MAX_CLIPS_SAVED, NULL, FALSE));
+                }
+            }
+        }
+        break;
+        case TXT_MENU_DISP_CHARS:
+        {
+            if (HIWORD(wParam) == EN_KILLFOCUS)
+            {
+                int value = GetDlgItemInt(hWnd, TXT_MENU_DISP_CHARS, NULL, FALSE);
+
+                if (value < MENU_CHARS_LOWER)
+                {
+                    SetDlgItemInt(hWnd, TXT_MENU_DISP_CHARS, MENU_CHARS_LOWER, FALSE);
+                }
+                else if (value > MENU_CHARS_UPPER)
+                {
+                    SetDlgItemInt(hWnd, TXT_MENU_DISP_CHARS, MENU_CHARS_UPPER, FALSE);
+                }
+
+                break; // set focus on the main window again
+            }
+            else if (HIWORD(wParam) == EN_CHANGE)
+            {
+                int value = GetDlgItemInt(hWnd, TXT_MENU_DISP_CHARS, NULL, FALSE);
+
+                if (value >= MENU_CHARS_LOWER && value <= MENU_CHARS_UPPER)
+                {
+                    cManager.SetMenuDisplayChars(value);
+                    uSettings.SetMenuDisplayChars(value);
                 }
             }
         }
