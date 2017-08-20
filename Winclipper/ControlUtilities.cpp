@@ -135,4 +135,40 @@ VOID AddSpinner(HWND hWnd, HFONT font, int x, int y, HINSTANCE hIn, int min, int
     return;
 }
 
+HWND AddHotkeyCtrl(HWND hWnd, HFONT font, int x, int y, int width, int height, HINSTANCE hIn, int id)
+{
+    INITCOMMONCONTROLSEX icex;
+    icex.dwSize = sizeof(INITCOMMONCONTROLSEX);
+    icex.dwICC = ICC_HOTKEY_CLASS;
+
+    InitCommonControlsEx(&icex);
+
+    HWND hControl = CreateWindowEx(0,    //Extended window styles.
+        HOTKEY_CLASS,
+        _T(""),
+        WS_CHILD | WS_VISIBLE,
+        ScaleX(x), ScaleY(y),
+        ScaleX(width), ScaleY(height),
+        hWnd,
+        (HMENU)id,
+        hIn,
+        NULL);
+
+    SendMessage(hControl, WM_SETFONT, (WPARAM)font, MAKELPARAM(FALSE, 0));
+
+    SetFocus(hControl);
+
+    SendMessage(hControl,
+        HKM_SETRULES,
+        (WPARAM)HKCOMB_NONE | HKCOMB_S,   // invalid key combinations 
+        MAKELPARAM(HOTKEYF_ALT, 0));       // add ALT to invalid 
+
+    SendMessage(hControl,
+        HKM_SETHOTKEY,
+        MAKEWORD(0x41, HOTKEYF_CONTROL | HOTKEYF_ALT),
+        0);
+
+    return hControl;
+}
+
 

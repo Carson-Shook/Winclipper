@@ -17,6 +17,9 @@
 #define MENU_CHARS_UPPER    200
 #define MENU_CHARS_LOWER    1
 
+#define CMENU_HOTKEY        4
+#define CMENU_HOTKEY_DEF    MAKEWORD(0x56, HOTKEYF_CONTROL | HOTKEYF_SHIFT)
+
 class UserSettings
 {
 private:
@@ -27,6 +30,7 @@ private:
     int                 maxDisplayClips;
     int                 maxSavedClips;
     int                 menuDisplayChars;
+    WORD                clipsMenuHotkey;
 
     void                SaveSettingsAsync();
     static void         IncrementSettingWriterDelay(int* waitCount, UserSettings* us);
@@ -48,6 +52,9 @@ public:
 
     int                 MenuDisplayChars();
     void                SetMenuDisplayChars(int menuDisplayChars);
+
+    WORD                ClipsMenuHotkey();
+    void                SetClipsMenuHotkey(WORD clipsMenuHotkey);
 };
 
 

@@ -1,11 +1,62 @@
 #include "stdafx.h"
 #include <string>
+#include <limits>
 #include <vector>
 #include <map>
 #include <thread>
 #include "Shlobj.h"
 #include "File.h"
 #include "UserSettings.h"
+
+// stous - string to unsigned short
+// NOTE: May move to static utility class in future
+unsigned short stous(std::string str)
+{
+    try
+    {
+        int convint = stoi(str);
+
+        if (convint < (std::numeric_limits<unsigned short>::min)())
+        {
+            throw std::range_error("Converted sequence below minimum range of unsigned short");
+        }
+        if (convint > (std::numeric_limits<unsigned short>::max)())
+        {
+            throw std::range_error("Converted sequence above maximum range of unsigned short");
+        }
+
+        return (unsigned short)convint;
+    }
+    catch(std::exception &e)
+    {
+        throw;
+    }
+}
+
+// stous - wstring to unsigned short
+// NOTE: May move to static utility class in future
+unsigned short stous(std::wstring str)
+{
+    try
+    {
+        int convint = stoi(str);
+
+        if (convint < (std::numeric_limits<unsigned short>::min)())
+        {
+            throw std::range_error("Converted sequence below minimum range of unsigned short");
+        }
+        if (convint > (std::numeric_limits<unsigned short>::max)())
+        {
+            throw std::range_error("Converted sequence above maximum range of unsigned short");
+        }
+
+        return (unsigned short)convint;
+    }
+    catch (std::exception &e)
+    {
+        throw;
+    }
+}
 
 UserSettings::UserSettings()
 {
@@ -26,9 +77,11 @@ UserSettings::UserSettings()
     }
     else
     {
+        // Set all defaults for first time run
         SetMaxDisplayClips(20);
         SetMaxSavedClips(50);
         SetMenuDisplayChars(64);
+        SetClipsMenuHotkey(CMENU_HOTKEY_DEF);
     }
 }
 
@@ -38,6 +91,14 @@ UserSettings::~UserSettings()
 
 int UserSettings::MaxDisplayClips()
 {
+    if (maxDisplayClips < MAX_DISPLAY_LOWER)
+    {
+        maxDisplayClips = MAX_DISPLAY_LOWER;
+    }
+    else if (maxDisplayClips > MAX_DISPLAY_UPPER)
+    {
+        maxDisplayClips = MAX_DISPLAY_UPPER;
+    }
     return maxDisplayClips;
 }
 
@@ -63,6 +124,15 @@ void UserSettings::SetMaxDisplayClips(int maxDisplayClips)
 
 int UserSettings::MaxSavedClips()
 {
+
+    if (maxSavedClips < MAX_SAVED_LOWER)
+    {
+        maxSavedClips = MAX_SAVED_LOWER;
+    }
+    else if (maxSavedClips > MAX_SAVED_UPPER)
+    {
+        maxSavedClips = MAX_SAVED_UPPER;
+    }
     return maxSavedClips;
 }
 
@@ -88,6 +158,14 @@ void UserSettings::SetMaxSavedClips(int maxSavedClips)
 
 int UserSettings::MenuDisplayChars()
 {
+    if (menuDisplayChars < MENU_CHARS_LOWER)
+    {
+        menuDisplayChars = MENU_CHARS_LOWER;
+    }
+    else if (menuDisplayChars > MENU_CHARS_UPPER)
+    {
+        menuDisplayChars = MENU_CHARS_UPPER;
+    }
     return menuDisplayChars;
 }
 
@@ -111,6 +189,24 @@ void UserSettings::SetMenuDisplayChars(int menuDisplayChars)
     }
 }
 
+WORD UserSettings::ClipsMenuHotkey()
+{
+    if (clipsMenuHotkey == 0)
+    {
+        clipsMenuHotkey = CMENU_HOTKEY_DEF;
+    }
+    return clipsMenuHotkey;
+}
+
+void UserSettings::SetClipsMenuHotkey(WORD clipsMenuHotkey)
+{
+    if (clipsMenuHotkey != UserSettings::clipsMenuHotkey)
+    {
+        UserSettings::clipsMenuHotkey = clipsMenuHotkey;
+        SaveSettingsAsync();
+    }
+}
+
 void UserSettings::WriteSettings()
 {
     std::vector<TSTRING> settings = this->Serialize();
@@ -123,7 +219,8 @@ std::vector<TSTRING> UserSettings::Serialize()
     std::vector<TSTRING> retVal = {
         (TO_TSTRING(MAX_DISPLAY) + SEPARATOR + TO_TSTRING(MaxDisplayClips())),
         (TO_TSTRING(MAX_SAVED) + SEPARATOR + TO_TSTRING(MaxSavedClips())),
-        (TO_TSTRING(MENU_CHARS) + SEPARATOR + TO_TSTRING(MenuDisplayChars()))
+        (TO_TSTRING(MENU_CHARS) + SEPARATOR + TO_TSTRING(MenuDisplayChars())),
+        (TO_TSTRING(CMENU_HOTKEY) + SEPARATOR + TO_TSTRING(ClipsMenuHotkey()))
     };
 
     return retVal;
@@ -160,6 +257,9 @@ void UserSettings::Deserialize(std::vector<TSTRING> srData)
             break;
         case MENU_CHARS:
             SetMenuDisplayChars(stoi(pair.second));
+            break;
+        case CMENU_HOTKEY:
+            SetClipsMenuHotkey(stous(pair.second));
             break;
         default:
             break;

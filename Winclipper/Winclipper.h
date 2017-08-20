@@ -19,6 +19,9 @@
 
 #define CHK_RUN_AT_STARTUP      209
 
+#define LBL_SHOW_CLIPS_HOTK     210
+#define HKY_SHOW_CLIPS_MENU     211
+
 // Global Variables:
 HINSTANCE hInst;                                    // current instance
 HWND mainWnd;

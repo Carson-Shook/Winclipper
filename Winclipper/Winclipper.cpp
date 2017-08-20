@@ -146,6 +146,9 @@ BOOL InitSettingsWindow(HINSTANCE hInstance, int nCmdShow)
 
     AddCheckbox(hWnd, font, 10, 70, hInstance, _T("Run Winclipper at startup"), CHK_RUN_AT_STARTUP);
 
+    AddLabel(hWnd, font, 10, 100, hInstance, _T("Clips menu shortcut:"), LBL_SHOW_CLIPS_HOTK);
+    HWND hHotKey = AddHotkeyCtrl(hWnd, font, 130, 100, 100, 20, hInstance, HKY_SHOW_CLIPS_MENU);
+
     SetDlgItemInt(hWnd, TXT_MAX_CLIPS_DISPLAY, uSettings.MaxDisplayClips(), FALSE);
     SetDlgItemInt(hWnd, TXT_MAX_CLIPS_SAVED, uSettings.MaxSavedClips(), FALSE);
 
@@ -160,6 +163,8 @@ BOOL InitSettingsWindow(HINSTANCE hInstance, int nCmdShow)
         }
     }
     RegCloseKey(hOpened);
+
+    SendMessage(hHotKey, HKM_SETHOTKEY, uSettings.ClipsMenuHotkey(), 0);
 
     ShowWindow(hWnd, SW_HIDE);
     UpdateWindow(hWnd);
@@ -222,9 +227,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             break;
         case WM_CONTEXTMENU:
         {
-            //POINT const pt = { LOWORD(wParam), HIWORD(wParam) };
-            //ShowContextMenu(hWnd, pt);
-
             HWND curWin = GetForegroundWindow();
             ShowClipsMenu(hWnd, curWin, cManager, TRUE);
         }
@@ -262,6 +264,15 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         PostQuitMessage(0);
     }
         break;
+    case WM_MENUSELECT:
+    {
+        DWORD flags = HIWORD(wParam);
+        if (flags && MF_HILITE != 0)
+        {
+            int i = LOWORD(wParam);
+            int j = i;
+        }
+    }
     default:
         return DefWindowProc(hWnd, message, wParam, lParam);
     }
