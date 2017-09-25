@@ -7,6 +7,7 @@
 #include <vector>
 #include "File.h"
 
+// Gets the directory path from a given file path.
 TSTRING File::GetDirName(const TSTRING& fname)
 {
     TSTRING directory;
@@ -19,6 +20,7 @@ TSTRING File::GetDirName(const TSTRING& fname)
     return directory;
 }
 
+// Determines whether or not a file eixists
 bool File::Exists(const TCHAR *name)
 {
     int retval = PathFileExists(name);
@@ -32,6 +34,7 @@ bool File::Exists(const TCHAR *name)
     }
 }
 
+// Writes all lines in a vector to a text file
 void File::WriteAllLines(const TCHAR* name, std::vector<TSTRING> lines)
 {
     if (!File::Exists(name))
@@ -43,6 +46,7 @@ void File::WriteAllLines(const TCHAR* name, std::vector<TSTRING> lines)
     std::copy(lines.begin(), lines.end(), output_iterator);
 }
 
+// Reads newline delimited values from a file into a vector
 std::vector<TSTRING> File::ReadAllLines(const TCHAR * name)
 {
     std::vector<TSTRING> lines;

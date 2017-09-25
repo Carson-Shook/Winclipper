@@ -96,9 +96,10 @@ ATOM RegisterSettingsWindowClass(HINSTANCE hInstance)
     return RegisterClassExW(&wcex);
 }
 
+// Initializes the main window. The main window is where
+// the clips menu is called from.
 BOOL InitMainWindow(HINSTANCE hInstance, int nCmdShow)
 {
-
    HWND hWnd = CreateWindowExW(0, szMainWindowClass, szTitle, WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU,
       CW_USEDEFAULT, CW_USEDEFAULT, 100, 100, nullptr, nullptr, hInstance, nullptr);
 
@@ -107,9 +108,13 @@ BOOL InitMainWindow(HINSTANCE hInstance, int nCmdShow)
       return FALSE;
    }
 
+   // Still trying to figure out how to not do this. I wish events were a thing.
    mainWnd = hWnd;
 
+   // Adds the main window to the clipboard format listener list.
    AddClipboardFormatListener(hWnd);
+
+   // Register the hotkey that we have stored in settings
    RegisterHotKey(hWnd, ID_REG_HOTKEY, HIBYTE(uSettings.ClipsMenuHotkeyTrl()), LOBYTE(uSettings.ClipsMenuHotkeyTrl()));
 
    ShowWindow(hWnd, SW_HIDE);
@@ -118,6 +123,10 @@ BOOL InitMainWindow(HINSTANCE hInstance, int nCmdShow)
    return TRUE;
 }
 
+// Initializes the settings window. This window contains
+// all of the available user settings. For the most part,
+// we don't care about the handles of each control. Just make 
+// sure that they all have an ID so we can reference them later.
 BOOL InitSettingsWindow(HINSTANCE hInstance, int nCmdShow)
 {
 
@@ -129,6 +138,7 @@ BOOL InitSettingsWindow(HINSTANCE hInstance, int nCmdShow)
         return FALSE;
     }
 
+    // Still trying to figure out how to not do this.
     settingsWnd = hWnd;
 
     NONCLIENTMETRICS hfDefault;
@@ -136,6 +146,7 @@ BOOL InitSettingsWindow(HINSTANCE hInstance, int nCmdShow)
     SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(NONCLIENTMETRICS), &hfDefault, 0);
     HFONT font = CreateFontIndirectW(&hfDefault.lfCaptionFont);
 
+    // Add controls in tab order
     AddLabel(hWnd, font, 10, 10, hInstance, _T("Number of clips to display:"), LBL_MAX_CLIPS_DISPLAY);
     AddSpinner(hWnd, font, 180, 10, hInstance, MAX_DISPLAY_LOWER, MAX_DISPLAY_UPPER, UD_MAX_CLIPS_DISPLAY, TXT_MAX_CLIPS_DISPLAY);
     AddLabel(hWnd, font, 260, 10, hInstance, _T("Maximum clips to save:"), LBL_MAX_CLIPS_SAVED);
@@ -149,6 +160,7 @@ BOOL InitSettingsWindow(HINSTANCE hInstance, int nCmdShow)
     AddLabel(hWnd, font, 10, 100, hInstance, _T("Clips menu shortcut:"), LBL_SHOW_CLIPS_HOTK);
     HWND hHotKey = AddHotkeyCtrl(hWnd, font, 130, 100, 100, 20, hInstance, HKY_SHOW_CLIPS_MENU);
 
+    // Load values from user settings
     SetDlgItemInt(hWnd, TXT_MAX_CLIPS_DISPLAY, uSettings.MaxDisplayClips(), FALSE);
     SetDlgItemInt(hWnd, TXT_MAX_CLIPS_SAVED, uSettings.MaxSavedClips(), FALSE);
 
@@ -166,22 +178,14 @@ BOOL InitSettingsWindow(HINSTANCE hInstance, int nCmdShow)
 
     SendMessage(hHotKey, HKM_SETHOTKEY, uSettings.ClipsMenuHotkey(), 0);
 
+    // Hide the window and update the layout
     ShowWindow(hWnd, SW_HIDE);
     UpdateWindow(hWnd);
 
     return TRUE;
 }
 
-//
-//  FUNCTION: WndProc(HWND, UINT, WPARAM, LPARAM)
-//
-//  PURPOSE:  Processes messages for the main window.
-//
-//  WM_COMMAND  - process the application menu
-//  WM_PAINT    - Paint the main window
-//  WM_DESTROY  - post a quit message and return
-//
-//
+// Processes messages for the main window.
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     switch (message)
@@ -214,6 +218,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     }
     break;
     case WMAPP_NOTIFYCALLBACK:
+        // React to clicks on the notify icon
         switch (LOWORD(lParam))
         {
         case WM_LBUTTONDBLCLK:
@@ -235,18 +240,21 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     break;
     case WM_CLIPBOARDUPDATE:
     {
+        // Add clips to the clips manager when the clipboard updates.
         cManager.AddToClips(hWnd);
     }
     break;
     case WM_HOTKEY:
     {
+        // When the global hotkey is called, get the current window
+        // so we can reactivate it later, and then show the clips menu.
         HWND curWin = GetForegroundWindow();
         ShowClipsMenu(hWnd, curWin, cManager, FALSE);
     }
     break;
     case WM_CREATE:
     {
-        // add the notification icon
+        // Add the notification icon
         if (!AddNotificationIcon(hWnd))
         {
             MessageBox(hWnd,
@@ -254,7 +262,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 _T("Error adding icon"), MB_OK);
             
             return -1;
-
         }
     }
     break;
@@ -266,6 +273,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         break;
     case WM_MENUSELECT:
     {
+        // Will use this case later for hover-previews when they're implemented
         DWORD flags = HIWORD(wParam);
         if (flags && MF_HILITE != 0)
         {
@@ -279,6 +287,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     return 0;
 }
 
+// Processes messages for the settings window.
 LRESULT CALLBACK SettingsWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     switch (message)
@@ -416,13 +425,22 @@ LRESULT CALLBACK SettingsWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
                 // Retrieve the hot key (virtual key code and modifiers). 
                 wHotkey = (WORD)SendMessage(GetDlgItem(hWnd, HKY_SHOW_CLIPS_MENU), HKM_GETHOTKEY, 0, 0);
 
-                uSettings.SetClipsMenuHotkey(MAKEWORD(LOBYTE(LOWORD(wHotkey)), HIBYTE(LOWORD(wHotkey))));
-
+                // Resets to the default hotkey if the combo is cleared.
+                if (wHotkey == 0)
+                {
+                    SendMessage(GetDlgItem(hWnd, HKY_SHOW_CLIPS_MENU), HKM_SETHOTKEY, CMENU_HOTKEY_DEF, 0);
+                    uSettings.SetClipsMenuHotkey(CMENU_HOTKEY_DEF);
+                }
+                else
+                {
+                    // So the WORD returned from HKM_GETHOTKEY stuffs all of the
+                    // hotkey info in the LOWORD side into the LOBYTE and HIBYTE
+                    // intead of on each side of the WORD, so we have to split
+                    // these out for consistency with storing in settings.
+                    uSettings.SetClipsMenuHotkey(MAKEWORD(LOBYTE(LOWORD(wHotkey)), HIBYTE(LOWORD(wHotkey))));
+                }
                 UnregisterHotKey(mainWnd, ID_REG_HOTKEY);
                 RegisterHotKey(mainWnd, ID_REG_HOTKEY, HIBYTE(uSettings.ClipsMenuHotkeyTrl()), LOBYTE(uSettings.ClipsMenuHotkeyTrl()));
-                // Use the result as wParam for WM_SETHOTKEY. 
-                //SendMessage(mainWnd, WM_SETHOTKEY, wHotkey, 0);
-
             }
         }
         break;
@@ -469,6 +487,7 @@ INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
     return (INT_PTR)FALSE;
 }
 
+// Writes the "run at startup" registry key for Winclipper
 BOOL WriteRegistryRun()
 {
     HKEY hOpened;
@@ -488,6 +507,7 @@ BOOL WriteRegistryRun()
     return TRUE;
 }
 
+// Deletes the "run at startup" registry key for Winclipper
 BOOL DeleteRegistryRun()
 {
     HKEY hOpened;
@@ -505,6 +525,7 @@ BOOL DeleteRegistryRun()
     return TRUE;
 }
 
+// Get the value of a key in the registry if one exists
 BOOL QueryKeyForValue(HKEY hKey, TCHAR* checkValue)
 {
     TCHAR    achClass[MAX_PATH] = TEXT("");  // buffer for class name 

@@ -4,6 +4,7 @@
 // and makes them available to read or change
 #include <vector>
 #define SEPARATOR           _T("|")
+#define WRITE_DELAY         2000
 
 #define MAX_DISPLAY         1
 #define MAX_DISPLAY_UPPER   99
@@ -20,6 +21,7 @@
 #define CMENU_HOTKEY        4
 #define CMENU_HOTKEY_DEF    MAKEWORD(0x56, HOTKEYF_CONTROL | HOTKEYF_SHIFT)
 
+// Save and load user settings to and from disk
 class UserSettings
 {
 private:

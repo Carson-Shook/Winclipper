@@ -58,6 +58,9 @@ unsigned short stous(std::wstring str)
     }
 }
 
+// Attempt to load any settings from the disk if they exist.
+// If no settings can be found, set all defaults for first time run. 
+// They will only be written to disk once a change has been made.
 UserSettings::UserSettings()
 {
     TCHAR* tempSettingPath;
@@ -85,6 +88,7 @@ UserSettings::UserSettings()
     }
 }
 
+// Not used since this object should exist for the life of the program.
 UserSettings::~UserSettings()
 {
 }
@@ -198,6 +202,13 @@ WORD UserSettings::ClipsMenuHotkey()
     return clipsMenuHotkey;
 }
 
+// This translates the ClipsMenuHotkey values (which are
+// what Winclipper stores internally) into the modifier
+// keys used by the RegisterHotkey method.
+//
+// For some reason MS thought it was a good idea to
+// flip the values used by SHIFT and ALT for the
+// two different kinds of hotkeys.
 WORD UserSettings::ClipsMenuHotkeyTrl()
 {
     if (clipsMenuHotkey == 0)
@@ -241,6 +252,7 @@ void UserSettings::SetClipsMenuHotkey(WORD clipsMenuHotkey)
     }
 }
 
+// Writes a serialized version of the current settings to disk.
 void UserSettings::WriteSettings()
 {
     std::vector<TSTRING> settings = this->Serialize();
@@ -248,6 +260,8 @@ void UserSettings::WriteSettings()
     File::WriteAllLines(fullSettingPath, settings);
 }
 
+// Returns a vector of type TSTRING containing TSTRING
+// representations of all current settings.
 std::vector<TSTRING> UserSettings::Serialize()
 {
     std::vector<TSTRING> retVal = {
@@ -260,6 +274,13 @@ std::vector<TSTRING> UserSettings::Serialize()
     return retVal;
 }
 
+// Deserializes a vector of type TSTRING into setting values,
+// and then sets them where availble. 
+// Define a constant for each setting, and then add it to the switch. 
+// Expects a format of:
+// 1|settingValue1
+// 2|settingValue2
+// n|settingValueN
 void UserSettings::Deserialize(std::vector<TSTRING> srData)
 {
     std::map<int, TSTRING> store;
@@ -301,7 +322,7 @@ void UserSettings::Deserialize(std::vector<TSTRING> srData)
     }
 }
 
-// Call this to schedule a write to the settings file.
+// Schedules a write operation to the settings file.
 void UserSettings::SaveSettingsAsync()
 {
     std::thread([&]() {IncrementSettingWriterDelay(&settingWriterWaitCount, this); }).detach();
@@ -313,7 +334,7 @@ void UserSettings::SaveSettingsAsync()
 void UserSettings::IncrementSettingWriterDelay(int* waitCount, UserSettings* us)
 {
     (*waitCount)++;
-    Sleep(2000);
+    Sleep(WRITE_DELAY);
     (*waitCount)--;
 
     if (*waitCount == 0)

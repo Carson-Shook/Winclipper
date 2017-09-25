@@ -9,7 +9,7 @@ typedef std::wifstream TIFSTREAM;
 #define TSTRING_ITERATOR_ARGS std::wstring, wchar_t
 #endif
 
-
+// Contains a collection of file utilities for easy file management.
 class File
 {   
 private:
