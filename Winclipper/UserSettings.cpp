@@ -198,6 +198,40 @@ WORD UserSettings::ClipsMenuHotkey()
     return clipsMenuHotkey;
 }
 
+WORD UserSettings::ClipsMenuHotkeyTrl()
+{
+    if (clipsMenuHotkey == 0)
+    {
+        clipsMenuHotkey = CMENU_HOTKEY_DEF;
+    }
+
+    BYTE lByte = LOBYTE(clipsMenuHotkey);
+    BYTE hByte = HIBYTE(clipsMenuHotkey);
+
+    BYTE hByteAdjusted = 0;
+
+    if ((hByte & HOTKEYF_SHIFT) == HOTKEYF_SHIFT)
+    {
+        hByteAdjusted |= MOD_SHIFT;
+    }
+    if ((hByte & HOTKEYF_CONTROL) == HOTKEYF_CONTROL)
+    {
+        hByteAdjusted |= MOD_CONTROL;
+    }
+    if ((hByte & HOTKEYF_ALT) == HOTKEYF_ALT)
+    {
+        hByteAdjusted |= MOD_ALT;
+    }
+    if ((hByte & HOTKEYF_EXT) == HOTKEYF_EXT)
+    {
+        hByteAdjusted |= MOD_WIN;
+    }
+
+    WORD retVal = MAKEWORD(lByte, hByteAdjusted);
+
+    return retVal;
+}
+
 void UserSettings::SetClipsMenuHotkey(WORD clipsMenuHotkey)
 {
     if (clipsMenuHotkey != UserSettings::clipsMenuHotkey)

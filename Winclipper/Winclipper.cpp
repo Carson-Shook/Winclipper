@@ -110,7 +110,7 @@ BOOL InitMainWindow(HINSTANCE hInstance, int nCmdShow)
    mainWnd = hWnd;
 
    AddClipboardFormatListener(hWnd);
-   RegisterHotKey(hWnd, ID_REG_HOTKEY, MOD_SHIFT | MOD_CONTROL | MOD_NOREPEAT, 0x56);
+   RegisterHotKey(hWnd, ID_REG_HOTKEY, HIBYTE(uSettings.ClipsMenuHotkeyTrl()), LOBYTE(uSettings.ClipsMenuHotkeyTrl()));
 
    ShowWindow(hWnd, SW_HIDE);
    UpdateWindow(hWnd);
@@ -404,6 +404,25 @@ LRESULT CALLBACK SettingsWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
                     WriteRegistryRun();
                     CheckDlgButton(hWnd, CHK_RUN_AT_STARTUP, BST_CHECKED);
                 }
+            }
+        }
+        break;
+        case HKY_SHOW_CLIPS_MENU:
+        {
+            if (HIWORD(wParam) == EN_CHANGE)
+            {
+                WORD wHotkey;
+
+                // Retrieve the hot key (virtual key code and modifiers). 
+                wHotkey = (WORD)SendMessage(GetDlgItem(hWnd, HKY_SHOW_CLIPS_MENU), HKM_GETHOTKEY, 0, 0);
+
+                uSettings.SetClipsMenuHotkey(MAKEWORD(LOBYTE(LOWORD(wHotkey)), HIBYTE(LOWORD(wHotkey))));
+
+                UnregisterHotKey(mainWnd, ID_REG_HOTKEY);
+                RegisterHotKey(mainWnd, ID_REG_HOTKEY, HIBYTE(uSettings.ClipsMenuHotkeyTrl()), LOBYTE(uSettings.ClipsMenuHotkeyTrl()));
+                // Use the result as wParam for WM_SETHOTKEY. 
+                //SendMessage(mainWnd, WM_SETHOTKEY, wHotkey, 0);
+
             }
         }
         break;

@@ -54,6 +54,7 @@ public:
     void                SetMenuDisplayChars(int menuDisplayChars);
 
     WORD                ClipsMenuHotkey();
+    WORD                ClipsMenuHotkeyTrl();
     void                SetClipsMenuHotkey(WORD clipsMenuHotkey);
 };
 
