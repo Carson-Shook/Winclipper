@@ -76,7 +76,7 @@ HWND AddCheckbox(HWND hWnd, HFONT font, int x, int y, HINSTANCE hIn, LPCWSTR tex
     HWND hControl = CreateWindowExW(WS_EX_LEFT,
         WC_BUTTON,
         text,
-        WS_CHILD | WS_VISIBLE | BS_CHECKBOX,
+        WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_CHECKBOX,
         ScaleX(x), ScaleY(y),
         boxsize.right + ScaleX(20), boxsize.bottom,
         hWnd,
