@@ -5,6 +5,7 @@
 #include <iterator>
 #include <string>
 #include <vector>
+#include <deque>
 #include "File.h"
 
 // Gets the directory path from a given file path.
@@ -56,4 +57,30 @@ std::vector<TSTRING> File::ReadAllLines(const TCHAR * name)
         std::istream_iterator<TSTRING_ITERATOR_ARGS>(),
         std::back_inserter(lines));
     return lines;
+}
+
+std::deque<TCHAR *> File::BinaryReadDeque(const TCHAR * name)
+{
+    TIFSTREAM in(name, std::ios::binary);
+    if (!in) {
+        throw std::runtime_error("Could not open file for reading");
+    }
+    std::noskipws(in);
+    return std::deque<TCHAR *>(std::istream_iterator<TCHAR_ITERATOR_ARGS>(in),
+        std::istream_iterator<TCHAR_ITERATOR_ARGS>());
+
+}
+
+void File::BinaryWriteDeque(std::deque<TCHAR *> data, const TCHAR * name)
+{
+    if (!File::Exists(name))
+    {
+        SHCreateDirectoryEx(NULL, (GetDirName(name).c_str()), NULL);
+    }
+    TOFSTREAM out(name, std::ios::binary);
+    if (!out) {
+        throw std::runtime_error("Could not open file for writing");
+    }
+    std::copy(data.begin(), data.end(),
+        std::ostream_iterator<TCHAR_ITERATOR_ARGS>(out, _T("\x01E")));
 }

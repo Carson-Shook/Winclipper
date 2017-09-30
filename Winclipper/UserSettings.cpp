@@ -85,6 +85,7 @@ UserSettings::UserSettings()
         SetMaxSavedClips(50);
         SetMenuDisplayChars(64);
         SetClipsMenuHotkey(CMENU_HOTKEY_DEF);
+        SetSaveToDisk(SAVE_TO_DISK_DEF);
     }
 }
 
@@ -252,6 +253,20 @@ void UserSettings::SetClipsMenuHotkey(WORD clipsMenuHotkey)
     }
 }
 
+bool UserSettings::SaveToDisk()
+{
+    return UserSettings::saveToDisk;
+}
+
+void UserSettings::SetSaveToDisk(bool saveToDisk)
+{
+    if (saveToDisk != UserSettings::saveToDisk)
+    {
+        UserSettings::saveToDisk = saveToDisk;
+        SaveSettingsAsync();
+    }
+}
+
 // Writes a serialized version of the current settings to disk.
 void UserSettings::WriteSettings()
 {
@@ -268,7 +283,8 @@ std::vector<TSTRING> UserSettings::Serialize()
         (TO_TSTRING(MAX_DISPLAY) + SEPARATOR + TO_TSTRING(MaxDisplayClips())),
         (TO_TSTRING(MAX_SAVED) + SEPARATOR + TO_TSTRING(MaxSavedClips())),
         (TO_TSTRING(MENU_CHARS) + SEPARATOR + TO_TSTRING(MenuDisplayChars())),
-        (TO_TSTRING(CMENU_HOTKEY) + SEPARATOR + TO_TSTRING(ClipsMenuHotkey()))
+        (TO_TSTRING(CMENU_HOTKEY) + SEPARATOR + TO_TSTRING(ClipsMenuHotkey())),
+        (TO_TSTRING(SAVE_TO_DISK) + SEPARATOR + TO_TSTRING(SaveToDisk()))
     };
 
     return retVal;
@@ -315,6 +331,12 @@ void UserSettings::Deserialize(std::vector<TSTRING> srData)
             break;
         case CMENU_HOTKEY:
             SetClipsMenuHotkey(stous(pair.second));
+            break;
+        case SAVE_TO_DISK:
+            {
+                bool result = pair.second.compare(TO_TSTRING(true)) == 0;
+                SetSaveToDisk(result);
+            }
             break;
         default:
             break;

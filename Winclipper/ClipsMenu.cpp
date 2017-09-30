@@ -1,10 +1,40 @@
 #include "stdafx.h"
 #include "resource.h"
+#include <thread>
 #include "UserSettings.h"
+#include "File.h"
+#include "Shlobj.h"
 #include "ClipsMenu.h"
+
+void ClipsManager::SaveClipsAsync()
+{
+    std::thread([&]() {IncrementClipsWriterDelay(&clipsWriterWaitCount, this); }).detach();
+}
+
+void ClipsManager::IncrementClipsWriterDelay(int * waitCount, ClipsManager * cs)
+{
+    (*waitCount)++;
+    Sleep(5000);
+    (*waitCount)--;
+
+    if (*waitCount == 0)
+    {
+        cs->WriteClips();
+    }
+}
+
+void ClipsManager::WriteClips()
+{
+    File::BinaryWriteDeque(clips, _T("C:\\Users\\Carson Shook\\AppData\\Local\\Winclipper\\Winclipper\\clips.dat"));
+}
 
 ClipsManager::ClipsManager()
 {
+    //TCHAR* tempClipsPath;
+    //SHGetKnownFolderPath(FOLDERID_LocalAppData, KF_FLAG_DEFAULT, NULL, &tempClipsPath);
+    //_tcsncat_s(fullClipsPath, MAX_PATH, tempClipsPath, _tcslen(tempClipsPath));
+    //_tcsncat_s(fullClipsPath, MAX_PATH, clipsFilePath, _tcslen(clipsFilePath));
+    //CoTaskMemFree(tempClipsPath);
 }
 
 ClipsManager::ClipsManager(int displayClips, int maxClips, int menuChars)
@@ -73,6 +103,7 @@ void ClipsManager::ClearClips()
         delete[] clip;
     }
     clips.clear();
+    SaveClipsAsync();
 }
 
 BOOL ClipsManager::AddToClips(HWND hWnd)
@@ -104,7 +135,7 @@ BOOL ClipsManager::AddToClips(HWND hWnd)
         }
     }
     CloseClipboard();
-
+    SaveClipsAsync();
     return TRUE;
 }
 
@@ -140,7 +171,7 @@ BOOL ClipsManager::SetClipboardToClipAtIndex(HWND hWnd, int index)
     // Once the clipboard is closed, the update is fired,
     // and the clip will be added to the front of the deque with AddToClips
     CloseClipboard();
-
+    SaveClipsAsync();
     return TRUE;
 }
 

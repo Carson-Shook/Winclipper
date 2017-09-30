@@ -156,6 +156,7 @@ BOOL InitSettingsWindow(HINSTANCE hInstance, int nCmdShow)
     AddSpinner(hWnd, font, 180, 40, hInstance, MENU_CHARS_LOWER, MENU_CHARS_UPPER, UD_MENU_DISP_CHARS, TXT_MENU_DISP_CHARS);
 
     AddCheckbox(hWnd, font, 10, 70, hInstance, _T("Run Winclipper at startup"), CHK_RUN_AT_STARTUP);
+    AddCheckbox(hWnd, font, 260, 70, hInstance, _T("Save clips to disk"), CHK_SAVE_TO_DISK);
 
     AddLabel(hWnd, font, 10, 100, hInstance, _T("Clips menu shortcut:"), LBL_SHOW_CLIPS_HOTK);
     HWND hHotKey = AddHotkeyCtrl(hWnd, font, 130, 100, 100, 20, hInstance, HKY_SHOW_CLIPS_MENU);
@@ -175,6 +176,10 @@ BOOL InitSettingsWindow(HINSTANCE hInstance, int nCmdShow)
         }
     }
     RegCloseKey(hOpened);
+    if (uSettings.SaveToDisk())
+    {
+        CheckDlgButton(hWnd, CHK_SAVE_TO_DISK, BST_CHECKED);
+    }
 
     SendMessage(hHotKey, HKM_SETHOTKEY, uSettings.ClipsMenuHotkey(), 0);
 
@@ -412,6 +417,23 @@ LRESULT CALLBACK SettingsWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
                 {
                     WriteRegistryRun();
                     CheckDlgButton(hWnd, CHK_RUN_AT_STARTUP, BST_CHECKED);
+                }
+            }
+        }
+        break;
+        case CHK_SAVE_TO_DISK:
+        {
+            if (HIWORD(wParam) == BN_CLICKED)
+            {
+                if (IsDlgButtonChecked(hWnd, CHK_SAVE_TO_DISK))
+                {
+                    uSettings.SetSaveToDisk(false);
+                    CheckDlgButton(hWnd, CHK_SAVE_TO_DISK, BST_UNCHECKED);
+                }
+                else
+                {
+                    uSettings.SetSaveToDisk(true);
+                    CheckDlgButton(hWnd, CHK_SAVE_TO_DISK, BST_CHECKED);
                 }
             }
         }

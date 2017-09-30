@@ -21,6 +21,9 @@
 #define CMENU_HOTKEY        4
 #define CMENU_HOTKEY_DEF    MAKEWORD(0x56, HOTKEYF_CONTROL | HOTKEYF_SHIFT)
 
+#define SAVE_TO_DISK        5
+#define SAVE_TO_DISK_DEF    true
+
 // Save and load user settings to and from disk
 class UserSettings
 {
@@ -33,6 +36,7 @@ private:
     int                 maxSavedClips;
     int                 menuDisplayChars;
     WORD                clipsMenuHotkey;
+    bool                saveToDisk = SAVE_TO_DISK_DEF;
 
     void                SaveSettingsAsync();
     static void         IncrementSettingWriterDelay(int* waitCount, UserSettings* us);
@@ -58,6 +62,9 @@ public:
     WORD                ClipsMenuHotkey();
     WORD                ClipsMenuHotkeyTrl();
     void                SetClipsMenuHotkey(WORD clipsMenuHotkey);
+
+    bool                SaveToDisk();
+    void                SetSaveToDisk(bool saveToDisk);
 };
 
 
