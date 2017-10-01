@@ -1,11 +1,13 @@
 #include "stdafx.h"
 #include "Shlwapi.h"
 #include "Shlobj.h"
+#include <codecvt>
 #include <fstream>
 #include <iterator>
 #include <string>
 #include <vector>
 #include <deque>
+#include "base64.h"
 #include "File.h"
 
 // Gets the directory path from a given file path.
@@ -61,26 +63,57 @@ std::vector<TSTRING> File::ReadAllLines(const TCHAR * name)
 
 std::deque<TCHAR *> File::BinaryReadDeque(const TCHAR * name)
 {
-    TIFSTREAM in(name, std::ios::binary);
-    if (!in) {
+    std::ifstream inFile(name, std::ios::binary);
+    if (!inFile) {
         throw std::runtime_error("Could not open file for reading");
     }
-    std::noskipws(in);
-    return std::deque<TCHAR *>(std::istream_iterator<TCHAR_ITERATOR_ARGS>(in),
-        std::istream_iterator<TCHAR_ITERATOR_ARGS>());
 
+    std::deque<TCHAR *> retVal;
+
+    // Really need to go through all of this and consider what
+    // does and doesn't need to be done to account for UNICODE.
+    std::wstring_convert<std::codecvt_utf8<wchar_t>, wchar_t> converter;
+
+    while (!inFile.eof())
+    {
+        std::string base64str;
+        inFile >> base64str;
+
+        if (base64str.compare("") == 0)
+        {
+            break;
+        }
+
+        std::string byteStr = base64_decode(base64str);
+        std::wstring wideStr = converter.from_bytes(byteStr);
+        wchar_t * pushVal = _wcsdup(wideStr.c_str());
+        retVal.push_back(pushVal);
+    }
+
+    return retVal;
 }
 
-void File::BinaryWriteDeque(std::deque<TCHAR *> data, const TCHAR * name)
+void File::BinaryWriteDeque(const std::deque<TCHAR *> data, const TCHAR * name)
 {
     if (!File::Exists(name))
     {
         SHCreateDirectoryEx(NULL, (GetDirName(name).c_str()), NULL);
     }
-    TOFSTREAM out(name, std::ios::binary);
-    if (!out) {
+
+    std::ofstream outFile(name, std::ios::binary);
+    if (!outFile) {
         throw std::runtime_error("Could not open file for writing");
     }
-    std::copy(data.begin(), data.end(),
-        std::ostream_iterator<TCHAR_ITERATOR_ARGS>(out, _T("\x01E")));
+
+    std::wstring_convert<std::codecvt_utf8<wchar_t>, wchar_t> converter;
+
+    for (int i = 0, j = data.size(); i < j; i++)
+    {
+        std::string anotherTemp = converter.to_bytes(data.at(i));
+        const char * temp = anotherTemp.c_str();
+        outFile << base64_encode((unsigned char *)temp, strlen(temp) + 1);
+        outFile << "\r\n";
+    }
+
+    outFile.close();
 }

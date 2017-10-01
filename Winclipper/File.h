@@ -25,5 +25,5 @@ public:
     static void WriteAllLines(const TCHAR* name, std::vector<TSTRING> lines);
     static std::vector<TSTRING> ReadAllLines(const TCHAR* name);
     static std::deque<TCHAR *> BinaryReadDeque(const TCHAR * name);
-    static void BinaryWriteDeque(std::deque<TCHAR *> data, const TCHAR * name);
+    static void BinaryWriteDeque(const std::deque<TCHAR *> data, const TCHAR * name);
 };

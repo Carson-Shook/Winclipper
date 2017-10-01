@@ -22,6 +22,7 @@ private:
     void                            SaveClipsAsync();
     static void                     IncrementClipsWriterDelay(int* waitCount, ClipsManager* cs);
     void                            WriteClips();
+    void                            ReadClips();
 
 public:
     ClipsManager();

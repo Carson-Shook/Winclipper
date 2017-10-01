@@ -28,6 +28,14 @@ void ClipsManager::WriteClips()
     File::BinaryWriteDeque(clips, _T("C:\\Users\\Carson Shook\\AppData\\Local\\Winclipper\\Winclipper\\clips.dat"));
 }
 
+void ClipsManager::ReadClips()
+{
+    if (File::Exists(_T("C:\\Users\\Carson Shook\\AppData\\Local\\Winclipper\\Winclipper\\clips.dat")))
+    {
+        clips = File::BinaryReadDeque(_T("C:\\Users\\Carson Shook\\AppData\\Local\\Winclipper\\Winclipper\\clips.dat"));
+    }
+}
+
 ClipsManager::ClipsManager()
 {
     //TCHAR* tempClipsPath;
@@ -39,6 +47,7 @@ ClipsManager::ClipsManager()
 
 ClipsManager::ClipsManager(int displayClips, int maxClips, int menuChars)
 {
+    ReadClips();
     SetDisplayClips(displayClips);
     SetMaxClips(maxClips);
     SetMenuDisplayChars(menuChars);
