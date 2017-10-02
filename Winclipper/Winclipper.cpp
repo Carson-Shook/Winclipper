@@ -131,7 +131,7 @@ BOOL InitSettingsWindow(HINSTANCE hInstance, int nCmdShow)
 {
 
     HWND hWnd = CreateWindowExW(0, szSettingsWindowClass, szTitle, WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU,
-        CW_USEDEFAULT, CW_USEDEFAULT, ScaleX(510), ScaleY(300), nullptr, nullptr, hInstance, nullptr);
+        CW_USEDEFAULT, CW_USEDEFAULT, ScaleX(260), ScaleY(240), nullptr, nullptr, hInstance, nullptr);
 
     if (!hWnd)
     {
@@ -149,17 +149,19 @@ BOOL InitSettingsWindow(HINSTANCE hInstance, int nCmdShow)
     // Add controls in tab order
     AddLabel(hWnd, font, 10, 10, hInstance, _T("Number of clips to display:"), LBL_MAX_CLIPS_DISPLAY);
     AddSpinner(hWnd, font, 180, 10, hInstance, MAX_DISPLAY_LOWER, MAX_DISPLAY_UPPER, UD_MAX_CLIPS_DISPLAY, TXT_MAX_CLIPS_DISPLAY);
-    AddLabel(hWnd, font, 260, 10, hInstance, _T("Maximum clips to save:"), LBL_MAX_CLIPS_SAVED);
-    AddSpinner(hWnd, font, 430, 10, hInstance, MAX_SAVED_LOWER, MAX_SAVED_UPPER, UD_MAX_CLIPS_SAVED, TXT_MAX_CLIPS_SAVED);
+    AddLabel(hWnd, font, 10, 40, hInstance, _T("Maximum clips to save:"), LBL_MAX_CLIPS_SAVED);
+    AddSpinner(hWnd, font, 180, 40, hInstance, MAX_SAVED_LOWER, MAX_SAVED_UPPER, UD_MAX_CLIPS_SAVED, TXT_MAX_CLIPS_SAVED);
     
-    AddLabel(hWnd, font, 10, 40, hInstance, _T("Number of preview characters:"), LBL_MENU_DISP_CHARS);
-    AddSpinner(hWnd, font, 180, 40, hInstance, MENU_CHARS_LOWER, MENU_CHARS_UPPER, UD_MENU_DISP_CHARS, TXT_MENU_DISP_CHARS);
-
-    AddCheckbox(hWnd, font, 10, 70, hInstance, _T("Run Winclipper at startup"), CHK_RUN_AT_STARTUP);
-    AddCheckbox(hWnd, font, 260, 70, hInstance, _T("Save clips to disk"), CHK_SAVE_TO_DISK);
+    AddLabel(hWnd, font, 10, 70, hInstance, _T("Number of preview characters:"), LBL_MENU_DISP_CHARS);
+    AddSpinner(hWnd, font, 180, 70, hInstance, MENU_CHARS_LOWER, MENU_CHARS_UPPER, UD_MENU_DISP_CHARS, TXT_MENU_DISP_CHARS);
 
     AddLabel(hWnd, font, 10, 100, hInstance, _T("Clips menu shortcut:"), LBL_SHOW_CLIPS_HOTK);
     HWND hHotKey = AddHotkeyCtrl(hWnd, font, 130, 100, 100, 20, hInstance, HKY_SHOW_CLIPS_MENU);
+
+    AddCheckbox(hWnd, font, 10, 130, hInstance, _T("Save clips to disk"), CHK_SAVE_TO_DISK);
+    AddCheckbox(hWnd, font, 10, 154, hInstance, _T("Run Winclipper at startup"), CHK_RUN_AT_STARTUP);
+
+
 
     // Load values from user settings
     SetDlgItemInt(hWnd, TXT_MAX_CLIPS_DISPLAY, uSettings.MaxDisplayClips(), FALSE);
