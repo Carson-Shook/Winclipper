@@ -15,6 +15,7 @@ private:
     size_t                          displayClips = 20;
     size_t                          maxClips = 200;         // Please keep it below 999
     int                             menuDispChars = 64;
+    bool                            saveToDisk = false;
 
     int                             clipsWriterWaitCount = 0;
 
@@ -36,6 +37,9 @@ public:
 
     int                             MenuDisplayChars();
     void                            SetMenuDisplayChars(int menuDispChars);
+
+    bool                            SaveToDisk();
+    void                            SetSaveToDisk(bool saveToDisk);
 
     void                            ClearClips(void);
     BOOL                            AddToClips(HWND hWnd);

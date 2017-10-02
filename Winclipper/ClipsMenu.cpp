@@ -9,7 +9,17 @@
 
 void ClipsManager::SaveClipsAsync()
 {
-    std::thread([&]() {IncrementClipsWriterDelay(&clipsWriterWaitCount, this); }).detach();
+    if (SaveToDisk())
+    {
+        std::thread([&]() {IncrementClipsWriterDelay(&clipsWriterWaitCount, this); }).detach();
+    }
+    else
+    {
+        if (File::Exists(fullClipsPath))
+        {
+            File::Delete(fullClipsPath);
+        }
+    }
 }
 
 void ClipsManager::IncrementClipsWriterDelay(int * waitCount, ClipsManager * cs)
@@ -111,6 +121,20 @@ int ClipsManager::MenuDisplayChars()
 void ClipsManager::SetMenuDisplayChars(int menuDispChars)
 {
     ClipsManager::menuDispChars = menuDispChars;
+}
+
+bool ClipsManager::SaveToDisk()
+{
+    return ClipsManager::saveToDisk;
+}
+
+void ClipsManager::SetSaveToDisk(bool saveToDisk)
+{
+    if (saveToDisk != ClipsManager::saveToDisk)
+    {
+        ClipsManager::saveToDisk = saveToDisk;
+        SaveClipsAsync();
+    }
 }
 
 void ClipsManager::ClearClips()

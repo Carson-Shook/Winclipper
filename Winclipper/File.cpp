@@ -31,10 +31,16 @@ bool File::Exists(const TCHAR *name)
     {
         return true;
     }
-    else
+    return false;
+}
+
+bool File::Delete(const TCHAR * name)
+{
+    if (DeleteFile(name) == 0)
     {
-        return false;
+        return true;
     }
+    return false;
 }
 
 // Writes all lines in a vector to a text file

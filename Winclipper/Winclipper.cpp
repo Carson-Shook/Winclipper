@@ -427,11 +427,13 @@ LRESULT CALLBACK SettingsWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
             {
                 if (IsDlgButtonChecked(hWnd, CHK_SAVE_TO_DISK))
                 {
+                    cManager.SetSaveToDisk(false);
                     uSettings.SetSaveToDisk(false);
                     CheckDlgButton(hWnd, CHK_SAVE_TO_DISK, BST_UNCHECKED);
                 }
                 else
                 {
+                    cManager.SetSaveToDisk(true);
                     uSettings.SetSaveToDisk(true);
                     CheckDlgButton(hWnd, CHK_SAVE_TO_DISK, BST_CHECKED);
                 }

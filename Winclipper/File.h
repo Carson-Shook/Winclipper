@@ -20,8 +20,9 @@ private:
     ~File() { };
 
 public:
-    static bool Exists(const TCHAR* name);
     static TSTRING File::GetDirName(const TSTRING& fname);
+    static bool Exists(const TCHAR* name);
+    static bool Delete(const TCHAR* name);
     static void WriteAllLines(const TCHAR* name, std::vector<TSTRING> lines);
     static std::vector<TSTRING> ReadAllLines(const TCHAR* name);
     static std::deque<TCHAR *> BinaryReadDeque(const TCHAR * name);
