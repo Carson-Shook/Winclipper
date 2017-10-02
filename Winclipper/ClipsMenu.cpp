@@ -4,6 +4,7 @@
 #include "UserSettings.h"
 #include "File.h"
 #include "Shlobj.h"
+#include "Shlwapi.h"
 #include "ClipsMenu.h"
 
 void ClipsManager::SaveClipsAsync()
@@ -25,28 +26,35 @@ void ClipsManager::IncrementClipsWriterDelay(int * waitCount, ClipsManager * cs)
 
 void ClipsManager::WriteClips()
 {
-    File::BinaryWriteDeque(clips, _T("C:\\Users\\Carson Shook\\AppData\\Local\\Winclipper\\Winclipper\\clips.dat"));
+    File::BinaryWriteDeque(GetClips(), fullClipsPath);
 }
 
 void ClipsManager::ReadClips()
 {
-    if (File::Exists(_T("C:\\Users\\Carson Shook\\AppData\\Local\\Winclipper\\Winclipper\\clips.dat")))
+    if (File::Exists(fullClipsPath))
     {
-        clips = File::BinaryReadDeque(_T("C:\\Users\\Carson Shook\\AppData\\Local\\Winclipper\\Winclipper\\clips.dat"));
+        std::deque<TCHAR *> tempClips = File::BinaryReadDeque(fullClipsPath);
+
+        clips.assign(tempClips.begin(), tempClips.end());
+
+        tempClips.clear();
     }
 }
 
 ClipsManager::ClipsManager()
 {
-    //TCHAR* tempClipsPath;
-    //SHGetKnownFolderPath(FOLDERID_LocalAppData, KF_FLAG_DEFAULT, NULL, &tempClipsPath);
-    //_tcsncat_s(fullClipsPath, MAX_PATH, tempClipsPath, _tcslen(tempClipsPath));
-    //_tcsncat_s(fullClipsPath, MAX_PATH, clipsFilePath, _tcslen(clipsFilePath));
-    //CoTaskMemFree(tempClipsPath);
 }
 
 ClipsManager::ClipsManager(int displayClips, int maxClips, int menuChars)
 {
+    PTSTR tempClipsPath;
+    if (SUCCEEDED(SHGetKnownFolderPath(FOLDERID_LocalAppData, KF_FLAG_DEFAULT, NULL, &tempClipsPath)))
+    {
+        _tcscpy_s(fullClipsPath, tempClipsPath);
+        PathAppend(fullClipsPath, _T("\\Winclipper\\Winclipper\\clips.dat"));
+        CoTaskMemFree(tempClipsPath);
+    }
+
     ReadClips();
     SetDisplayClips(displayClips);
     SetMaxClips(maxClips);
@@ -91,6 +99,7 @@ void ClipsManager::SetMaxClips(int maxClips)
             // dealocate the former back object
             delete[] back;
         }
+        SaveClipsAsync();
     }
 }
 

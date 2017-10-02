@@ -5,6 +5,7 @@
 #include <map>
 #include <thread>
 #include "Shlobj.h"
+#include "Shlwapi.h"
 #include "File.h"
 #include "UserSettings.h"
 
@@ -64,10 +65,12 @@ unsigned short stous(std::wstring str)
 UserSettings::UserSettings()
 {
     TCHAR* tempSettingPath;
-    SHGetKnownFolderPath(FOLDERID_LocalAppData, KF_FLAG_DEFAULT, NULL, &tempSettingPath);
-    _tcsncat_s(fullSettingPath, MAX_PATH, tempSettingPath, _tcslen(tempSettingPath));
-    _tcsncat_s(fullSettingPath, MAX_PATH, settingFilePath, _tcslen(settingFilePath));
-    CoTaskMemFree(tempSettingPath);
+    if (SUCCEEDED(SHGetKnownFolderPath(FOLDERID_LocalAppData, KF_FLAG_DEFAULT, NULL, &tempSettingPath)))
+    {
+        _tcscpy_s(fullSettingPath, tempSettingPath);
+        PathAppend(fullSettingPath, _T("\\Winclipper\\Winclipper\\settings.dat"));
+        CoTaskMemFree(tempSettingPath);
+    }
 
     if (File::Exists(fullSettingPath))
     {

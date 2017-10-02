@@ -29,7 +29,6 @@ class UserSettings
 {
 private:
     TCHAR               fullSettingPath[MAX_PATH];
-    TCHAR*              settingFilePath = _T("\\Winclipper\\Winclipper\\settings.dat");
     int                 settingWriterWaitCount = 0;
 
     int                 maxDisplayClips;

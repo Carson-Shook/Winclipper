@@ -11,7 +11,6 @@ class ClipsManager
 {
 private:
     TCHAR                           fullClipsPath[MAX_PATH];
-    TCHAR*                          clipsFilePath = _T("\\Winclipper\\Winclipper\\clips.dat");
     std::deque<TCHAR *>             clips;
     size_t                          displayClips = 20;
     size_t                          maxClips = 200;         // Please keep it below 999
