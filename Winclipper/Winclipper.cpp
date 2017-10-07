@@ -131,7 +131,7 @@ BOOL InitSettingsWindow(HINSTANCE hInstance, int nCmdShow)
 {
 
     HWND hWnd = CreateWindowExW(0, szSettingsWindowClass, szTitle, WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU,
-        CW_USEDEFAULT, CW_USEDEFAULT, ScaleX(260), ScaleY(240), nullptr, nullptr, hInstance, nullptr);
+        CW_USEDEFAULT, CW_USEDEFAULT, ScaleX(260), ScaleY(260), nullptr, nullptr, hInstance, nullptr);
 
     if (!hWnd)
     {
@@ -160,8 +160,7 @@ BOOL InitSettingsWindow(HINSTANCE hInstance, int nCmdShow)
 
     AddCheckbox(hWnd, font, 10, 130, hInstance, _T("Save clips to disk"), CHK_SAVE_TO_DISK);
     AddCheckbox(hWnd, font, 10, 154, hInstance, _T("Run Winclipper at startup"), CHK_RUN_AT_STARTUP);
-
-
+    AddCheckbox(hWnd, font, 10, 178, hInstance, _T("Auto-select second clip"), CHK_SLCT_2ND_CLIP);
 
     // Load values from user settings
     SetDlgItemInt(hWnd, TXT_MAX_CLIPS_DISPLAY, uSettings.MaxDisplayClips(), FALSE);
@@ -181,6 +180,10 @@ BOOL InitSettingsWindow(HINSTANCE hInstance, int nCmdShow)
     if (uSettings.SaveToDisk())
     {
         CheckDlgButton(hWnd, CHK_SAVE_TO_DISK, BST_CHECKED);
+    }
+    if (uSettings.Select2ndClip())
+    {
+        CheckDlgButton(hWnd, CHK_SLCT_2ND_CLIP, BST_CHECKED);
     }
 
     SendMessage(hHotKey, HKM_SETHOTKEY, uSettings.ClipsMenuHotkey(), 0);
@@ -277,7 +280,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         DeleteNotificationIcon();
         PostQuitMessage(0);
     }
-        break;
+    break;
+    case WM_INITMENUPOPUP:
+    {
+        SelectDefaultMenuItem(uSettings.Select2ndClip());
+    }
+    break;
     case WM_MENUSELECT:
     {
         // Will use this case later for hover-previews when they're implemented
@@ -288,6 +296,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             int j = i;
         }
     }
+    break;
     default:
         return DefWindowProc(hWnd, message, wParam, lParam);
     }
@@ -438,6 +447,23 @@ LRESULT CALLBACK SettingsWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
                     cManager.SetSaveToDisk(true);
                     uSettings.SetSaveToDisk(true);
                     CheckDlgButton(hWnd, CHK_SAVE_TO_DISK, BST_CHECKED);
+                }
+            }
+        }
+        break;
+        case CHK_SLCT_2ND_CLIP:
+        {
+            if (HIWORD(wParam) == BN_CLICKED)
+            {
+                if (IsDlgButtonChecked(hWnd, CHK_SLCT_2ND_CLIP))
+                {
+                    uSettings.SetSelect2ndClip(false);
+                    CheckDlgButton(hWnd, CHK_SLCT_2ND_CLIP, BST_UNCHECKED);
+                }
+                else
+                {
+                    uSettings.SetSelect2ndClip(true);
+                    CheckDlgButton(hWnd, CHK_SLCT_2ND_CLIP, BST_CHECKED);
                 }
             }
         }

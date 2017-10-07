@@ -89,6 +89,7 @@ UserSettings::UserSettings()
         SetMenuDisplayChars(64);
         SetClipsMenuHotkey(CMENU_HOTKEY_DEF);
         SetSaveToDisk(SAVE_TO_DISK_DEF);
+        SetSelect2ndClip(SLCT_2ND_CLIP_DEF);
     }
 }
 
@@ -270,6 +271,20 @@ void UserSettings::SetSaveToDisk(bool saveToDisk)
     }
 }
 
+bool UserSettings::Select2ndClip()
+{
+    return UserSettings::select2ndClip;
+}
+
+void UserSettings::SetSelect2ndClip(bool select2ndClip)
+{
+    if (select2ndClip != UserSettings::select2ndClip)
+    {
+        UserSettings::select2ndClip = select2ndClip;
+        SaveSettingsAsync();
+    }
+}
+
 // Writes a serialized version of the current settings to disk.
 void UserSettings::WriteSettings()
 {
@@ -287,7 +302,8 @@ std::vector<TSTRING> UserSettings::Serialize()
         (TO_TSTRING(MAX_SAVED) + SEPARATOR + TO_TSTRING(MaxSavedClips())),
         (TO_TSTRING(MENU_CHARS) + SEPARATOR + TO_TSTRING(MenuDisplayChars())),
         (TO_TSTRING(CMENU_HOTKEY) + SEPARATOR + TO_TSTRING(ClipsMenuHotkey())),
-        (TO_TSTRING(SAVE_TO_DISK) + SEPARATOR + TO_TSTRING(SaveToDisk()))
+        (TO_TSTRING(SAVE_TO_DISK) + SEPARATOR + TO_TSTRING(SaveToDisk())),
+        (TO_TSTRING(SLCT_2ND_CLIP) + SEPARATOR + TO_TSTRING(Select2ndClip()))
     };
 
     return retVal;
@@ -341,6 +357,12 @@ void UserSettings::Deserialize(std::vector<TSTRING> srData)
                 SetSaveToDisk(result);
             }
             break;
+        case SLCT_2ND_CLIP:
+            {
+                bool result = pair.second.compare(TO_TSTRING(true)) == 0;
+                SetSelect2ndClip(result);
+            }
+        break;
         default:
             break;
         }

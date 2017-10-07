@@ -49,4 +49,5 @@ public:
 
 // Forward declarations of functions included in this code module:
 void				ShowClipsMenu(HWND hWnd, HWND curWin, ClipsManager& cm, bool showExit);
+void				SelectDefaultMenuItem(bool select2ndClip);
 void				SendPasteInput(void);

@@ -19,9 +19,10 @@
 
 #define CHK_RUN_AT_STARTUP      209
 #define CHK_SAVE_TO_DISK        210
+#define CHK_SLCT_2ND_CLIP       211
 
-#define LBL_SHOW_CLIPS_HOTK     211
-#define HKY_SHOW_CLIPS_MENU     212
+#define LBL_SHOW_CLIPS_HOTK     212
+#define HKY_SHOW_CLIPS_MENU     213
 
 // Global Variables:
 HINSTANCE hInst;                                    // current instance

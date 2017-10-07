@@ -24,6 +24,9 @@
 #define SAVE_TO_DISK        5
 #define SAVE_TO_DISK_DEF    true
 
+#define SLCT_2ND_CLIP       6
+#define SLCT_2ND_CLIP_DEF   true
+
 // Save and load user settings to and from disk
 class UserSettings
 {
@@ -36,6 +39,7 @@ private:
     int                 menuDisplayChars;
     WORD                clipsMenuHotkey;
     bool                saveToDisk = SAVE_TO_DISK_DEF;
+    bool                select2ndClip;
 
     void                SaveSettingsAsync();
     static void         IncrementSettingWriterDelay(int* waitCount, UserSettings* us);
@@ -64,6 +68,9 @@ public:
 
     bool                SaveToDisk();
     void                SetSaveToDisk(bool saveToDisk);
+
+    bool                Select2ndClip();
+    void                SetSelect2ndClip(bool select2ndClip);
 };
 
 

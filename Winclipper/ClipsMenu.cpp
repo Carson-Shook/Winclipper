@@ -321,6 +321,7 @@ void ShowClipsMenu(HWND hWnd, HWND curWin, ClipsManager& cm, bool showExit)
             AppendMenu(menu, MF_STRING, EXIT_SELECT, _T("&Exit"));
         }
 		
+
         int menuSelection;
         menuSelection = TrackPopupMenu(
             menu,
@@ -364,6 +365,33 @@ void ShowClipsMenu(HWND hWnd, HWND curWin, ClipsManager& cm, bool showExit)
 		PostMessage(hWnd, WM_NULL, 0, 0);
         delete[] menuText;
 	}
+}
+
+void SelectDefaultMenuItem(bool select2ndClip)
+{
+    INPUT inputDownKey;
+
+    inputDownKey.type = INPUT_KEYBOARD;
+    inputDownKey.ki.wVk = VK_DOWN;
+    inputDownKey.ki.wScan = 0;
+    inputDownKey.ki.time = 0;
+    inputDownKey.ki.dwFlags = 0;
+    inputDownKey.ki.dwExtraInfo = 0;
+
+    SendInput(1, &inputDownKey, sizeof(INPUT));
+    Sleep(50);
+    inputDownKey.ki.dwFlags = KEYEVENTF_KEYUP;
+    SendInput(1, &inputDownKey, sizeof(INPUT));
+
+    if (select2ndClip)
+    {
+        inputDownKey.ki.dwFlags = 0;
+        SendInput(1, &inputDownKey, sizeof(INPUT));
+        Sleep(50);
+        inputDownKey.ki.dwFlags = KEYEVENTF_KEYUP;
+        SendInput(1, &inputDownKey, sizeof(INPUT));
+    }
+    return;
 }
 
 void SendPasteInput(void)
