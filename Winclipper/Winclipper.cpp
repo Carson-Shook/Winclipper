@@ -283,7 +283,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     break;
     case WM_INITMENUPOPUP:
     {
-        SelectDefaultMenuItem(uSettings.Select2ndClip());
+		int size = cManager.GetClips().size();
+        SelectDefaultMenuItem(size > 1 ? uSettings.Select2ndClip() : FALSE);
     }
     break;
     case WM_MENUSELECT:
