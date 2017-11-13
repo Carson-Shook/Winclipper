@@ -15,7 +15,7 @@ private:
     size_t                          displayClips = 20;
     size_t                          maxClips = 200;         // Please keep it below 999
     int                             menuDispChars = 64;
-    bool                            saveToDisk = false;
+    bool                            saveToDisk = true;
 
     int                             clipsWriterWaitCount = 0;
 
@@ -26,7 +26,7 @@ private:
 
 public:
     ClipsManager();
-    ClipsManager(int displayClips, int maxClips, int menuChars);
+    ClipsManager(int displayClips, int maxClips, int menuChars, bool saveToDisk);
     ~ClipsManager();
 
     int                             DisplayClips();

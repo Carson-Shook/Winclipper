@@ -55,7 +55,7 @@ ClipsManager::ClipsManager()
 {
 }
 
-ClipsManager::ClipsManager(int displayClips, int maxClips, int menuChars)
+ClipsManager::ClipsManager(int displayClips, int maxClips, int menuChars, bool saveToDisk)
 {
     PTSTR tempClipsPath;
     if (SUCCEEDED(SHGetKnownFolderPath(FOLDERID_LocalAppData, KF_FLAG_DEFAULT, NULL, &tempClipsPath)))
@@ -65,6 +65,7 @@ ClipsManager::ClipsManager(int displayClips, int maxClips, int menuChars)
         CoTaskMemFree(tempClipsPath);
     }
 
+	ClipsManager::saveToDisk = saveToDisk;
     ReadClips();
     SetDisplayClips(displayClips);
     SetMaxClips(maxClips);
