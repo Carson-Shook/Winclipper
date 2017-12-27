@@ -242,8 +242,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             break;
         case WM_CONTEXTMENU:
         {
-            HWND curWin = GetForegroundWindow();
-            ShowClipsMenu(hWnd, curWin, cManager, TRUE);
+            //HWND curWin = GetForegroundWindow();
+            ShowClipsMenu(hWnd, cManager, TRUE);
         }
         break;
         }
@@ -258,8 +258,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     {
         // When the global hotkey is called, get the current window
         // so we can reactivate it later, and then show the clips menu.
-        HWND curWin = GetForegroundWindow();
-        ShowClipsMenu(hWnd, curWin, cManager, FALSE);
+        //HWND curWin = GetForegroundWindow();
+        ShowClipsMenu(hWnd, cManager, FALSE);
     }
     break;
     case WM_CREATE:

@@ -218,10 +218,18 @@ BOOL ClipsManager::SetClipboardToClipAtIndex(HWND hWnd, int index)
     return TRUE;
 }
 
-void ShowClipsMenu(HWND hWnd, HWND curWin, ClipsManager& cm, bool showExit)
+void ShowClipsMenu(HWND hWnd, ClipsManager& cm, bool showExit)
 {
+	HWND curWin = GetForegroundWindow();
 	if (hWnd != NULL && curWin != NULL)
 	{
+		// Since WindowsNT (I think), it's necessary to attach the process to the thread
+		// that we want to get the active window of, otherwise we get an unspecified value.
+		// GetForegroundWindow was unreliable with UWP applications because it took too long
+		// to restore the active window (the text field) after the foreground window activated.
+		AttachThreadInput(GetWindowThreadProcessId(curWin, NULL), GetWindowThreadProcessId(hWnd, NULL), TRUE);
+		HWND actWin = GetActiveWindow();
+
 		SetForegroundWindow(hWnd);
 
 		LPPOINT cPos = new POINT;
@@ -340,7 +348,7 @@ void ShowClipsMenu(HWND hWnd, HWND curWin, ClipsManager& cm, bool showExit)
             {
             case CLEARCLIPS_SELECT:
                 SendMessage(hWnd, WM_COMMAND, IDM_CLEARCLIPS, 0);
-                SetForegroundWindow(curWin);
+                SetActiveWindow(actWin);
                 break;
             case SETTINGS_SELECT:
                 PostMessage(hWnd, WM_COMMAND, IDM_SETTINGS, 0);
@@ -350,19 +358,31 @@ void ShowClipsMenu(HWND hWnd, HWND curWin, ClipsManager& cm, bool showExit)
                 break;
             default:
                 // for once a program where default actually does something more than error handling
-                SetForegroundWindow(curWin);
+                SetActiveWindow(actWin);
                 Sleep(20);
 
                 // Have to subtract 1 from index because returning 0 in
                 // TrackPopupMenu means cancelation
-                cm.SetClipboardToClipAtIndex(curWin, menuSelection - 1);
+                cm.SetClipboardToClipAtIndex(actWin, menuSelection - 1);
+				
+				// attempts to set the active window. Usually succeeds immediately, but not always 
+				int retries = 10;
+				HWND temp = GetActiveWindow();
+				while (temp != actWin && retries > 0)
+				{
+					temp = GetActiveWindow();
+					retries--;
+					Sleep(20);
+				}
 
-                Sleep(20);
                 SendPasteInput();
-                SetForegroundWindow(curWin);
-                break;
+                SetActiveWindow(actWin);
+				break;
             }
 		}
+		// detatch from thread of the active window
+		AttachThreadInput(GetWindowThreadProcessId(curWin, NULL), GetWindowThreadProcessId(hWnd, NULL), FALSE);
+
 		PostMessage(hWnd, WM_NULL, 0, 0);
         delete[] menuText;
 	}
