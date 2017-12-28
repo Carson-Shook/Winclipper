@@ -10,11 +10,11 @@
 class ClipsManager
 {
 private:
-    TCHAR                           fullClipsPath[MAX_PATH];
-    std::deque<TCHAR *>             clips;
-    size_t                          displayClips = 20;
-    size_t                          maxClips = 200;         // Please keep it below 999
-    int                             menuDispChars = 64;
+    wchar_t                         fullClipsPath[MAX_PATH];
+    std::deque<wchar_t *>           clips;
+    unsigned int                    displayClips = 20;
+    unsigned int                    maxClips = 200;         // Please keep it below 999
+    unsigned int                    menuDispChars = 64;
     bool                            saveToDisk = true;
 
     int                             clipsWriterWaitCount = 0;
@@ -29,14 +29,14 @@ public:
     ClipsManager(int displayClips, int maxClips, int menuChars, bool saveToDisk);
     ~ClipsManager();
 
-    int                             DisplayClips();
-    void                            SetDisplayClips(int displayClips);
+    unsigned int                    DisplayClips();
+    void                            SetDisplayClips(unsigned int displayClips);
 
-    int                             MaxClips();
-    void                            SetMaxClips(int maxClips);
+    unsigned int                    MaxClips();
+    void                            SetMaxClips(unsigned int maxClips);
 
-    int                             MenuDisplayChars();
-    void                            SetMenuDisplayChars(int menuDispChars);
+    unsigned int                    MenuDisplayChars();
+    void                            SetMenuDisplayChars(unsigned int menuDispChars);
 
     bool                            SaveToDisk();
     void                            SetSaveToDisk(bool saveToDisk);
@@ -44,7 +44,7 @@ public:
     void                            ClearClips(void);
     BOOL                            AddToClips(HWND hWnd);
     BOOL                            SetClipboardToClipAtIndex(HWND hWnd, int index);
-    const std::deque<TCHAR *>&      GetClips(void) const { return clips; }
+    const std::deque<wchar_t *>&    GetClips(void) const { return clips; }
 };
 
 // Forward declarations of functions included in this code module:

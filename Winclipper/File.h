@@ -1,16 +1,4 @@
 #pragma once
-#ifndef UNICODE
-typedef std::ofstream TOFSTREAM;
-typedef std::ifstream TIFSTREAM;
-#define TSTRING_ITERATOR_ARGS std::string
-#define TCHAR_ITERATOR_ARGS TCHAR *
-
-#else
-typedef std::wofstream TOFSTREAM;
-typedef std::wifstream TIFSTREAM;
-#define TSTRING_ITERATOR_ARGS std::wstring, wchar_t
-#define TCHAR_ITERATOR_ARGS TCHAR *, wchar_t
-#endif
 
 // Contains a collection of file utilities for easy file management.
 class File
@@ -20,11 +8,11 @@ private:
     ~File() { };
 
 public:
-    static TSTRING File::GetDirName(const TSTRING& fname);
-    static bool Exists(const TCHAR* name);
-    static bool Delete(const TCHAR* name);
-    static void WriteAllLines(const TCHAR* name, std::vector<TSTRING> lines);
-    static std::vector<TSTRING> ReadAllLines(const TCHAR* name);
-    static std::deque<TCHAR *> BinaryReadDeque(const TCHAR * name);
-    static void BinaryWriteDeque(const std::deque<TCHAR *> data, const TCHAR * name);
+    static std::wstring File::GetDirName(const std::wstring& fname);
+    static bool Exists(const wchar_t* name);
+    static bool Delete(const wchar_t* name);
+    static void WriteAllLines(const wchar_t* name, std::vector<std::wstring> lines);
+    static std::vector<std::wstring> ReadAllLines(const wchar_t* name);
+    static std::deque<wchar_t *> BinaryReadDeque(const wchar_t * name);
+    static void BinaryWriteDeque(const std::deque<wchar_t *> data, const wchar_t * name);
 };

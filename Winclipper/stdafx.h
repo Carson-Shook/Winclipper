@@ -21,9 +21,7 @@
 #include <stdlib.h>
 #include <malloc.h>
 #include <memory.h>
-#include <tchar.h>
 #include <deque>
 
 
 // TODO: reference additional headers your program requires here
-#include "tstring.h"

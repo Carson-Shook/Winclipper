@@ -28,9 +28,9 @@
 HINSTANCE hInst;                                    // current instance
 HWND mainWnd;
 HWND settingsWnd;
-WCHAR szTitle[MAX_LOADSTRING];                      // The title bar text
-WCHAR szMainWindowClass[MAX_LOADSTRING];            // the main window class name
-WCHAR szSettingsWindowClass[MAX_LOADSTRING];        // the settings window class name
+wchar_t szTitle[MAX_LOADSTRING];                      // The title bar text
+wchar_t szMainWindowClass[MAX_LOADSTRING];            // the main window class name
+wchar_t szSettingsWindowClass[MAX_LOADSTRING];        // the settings window class name
 UINT const WMAPP_NOTIFYCALLBACK = WM_APP + 1;       // user defined callback for notfiyicon actions
 UserSettings uSettings;                             // user settings manager
 ClipsManager cManager { uSettings.MaxDisplayClips(), uSettings.MaxSavedClips(), uSettings.MenuDisplayChars(), uSettings.SaveToDisk() }; // clips manager
@@ -45,6 +45,6 @@ LRESULT CALLBACK        SettingsWndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK        About(HWND, UINT, WPARAM, LPARAM);
 BOOL                    WriteRegistryRun();
 BOOL                    DeleteRegistryRun();
-BOOL                    QueryKeyForValue(HKEY hKey, TCHAR* checkValue);
+BOOL                    QueryKeyForValue(HKEY hKey, wchar_t* checkValue);
 BOOL                    AddNotificationIcon(HWND hWnd);
 BOOL                    DeleteNotificationIcon();

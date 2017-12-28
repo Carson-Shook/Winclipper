@@ -53,7 +53,7 @@ RECT MeasureString(LPCWSTR text, HFONT font)
 }
 
 // Creates an instance of a label object with a specified font and custom text.
-HWND AddLabel(HWND hWnd, HFONT font, int x, int y, HINSTANCE hIn, LPCWSTR text, int id)
+HWND AddLabel(HWND hWnd, HFONT font, int x, int y, HINSTANCE hIn, LPCWSTR text, UINT_PTR id)
 {
     RECT boxsize = MeasureString(text, font);
     
@@ -74,7 +74,7 @@ HWND AddLabel(HWND hWnd, HFONT font, int x, int y, HINSTANCE hIn, LPCWSTR text, 
 }
 
 // Creates an instance of a checkbox object with a specified font and custom text for the associated label.
-HWND AddCheckbox(HWND hWnd, HFONT font, int x, int y, HINSTANCE hIn, LPCWSTR text, int id)
+HWND AddCheckbox(HWND hWnd, HFONT font, int x, int y, HINSTANCE hIn, LPCWSTR text, UINT_PTR id)
 {
     RECT boxsize = MeasureString(text, font);
 
@@ -95,7 +95,7 @@ HWND AddCheckbox(HWND hWnd, HFONT font, int x, int y, HINSTANCE hIn, LPCWSTR tex
 }
 
 // Creates an instance of an edit control that will be used in a spinner control
-HWND CreateUpDnBuddy(HWND hWnd, HFONT font, int x, int y, HINSTANCE hIn, int id)
+HWND CreateUpDnBuddy(HWND hWnd, HFONT font, int x, int y, HINSTANCE hIn, UINT_PTR id)
 {
     HWND hControl = CreateWindowEx(WS_EX_LEFT | WS_EX_CLIENTEDGE,    //Extended window styles.
         WC_EDIT,
@@ -114,7 +114,7 @@ HWND CreateUpDnBuddy(HWND hWnd, HFONT font, int x, int y, HINSTANCE hIn, int id)
 }
 
 // Creates an instance of an UpDown control that will be used in a spinner control
-HWND CreateUpDnCtl(HWND hWnd, HFONT font, int x, int y, HINSTANCE hIn, int min, int max, int id)
+HWND CreateUpDnCtl(HWND hWnd, HFONT font, int x, int y, HINSTANCE hIn, int min, UINT_PTR max, UINT_PTR id)
 {
     HWND hControl = CreateWindowEx(WS_EX_LEFT | WS_EX_LTRREADING,
         UPDOWN_CLASS,
@@ -134,7 +134,7 @@ HWND CreateUpDnCtl(HWND hWnd, HFONT font, int x, int y, HINSTANCE hIn, int min, 
 }
 
 // Creates an instance of a spinner control with a specified font and range
-VOID AddSpinner(HWND hWnd, HFONT font, int x, int y, HINSTANCE hIn, int min, int max, int udId, int txtId)
+VOID AddSpinner(HWND hWnd, HFONT font, int x, int y, HINSTANCE hIn, int min, int max, UINT_PTR udId, UINT_PTR txtId)
 {
     CreateUpDnBuddy(hWnd, font, x, y, hIn, txtId);
     CreateUpDnCtl(hWnd, font, x, y, hIn, min, max, udId);
@@ -143,7 +143,7 @@ VOID AddSpinner(HWND hWnd, HFONT font, int x, int y, HINSTANCE hIn, int min, int
 }
 
 // Creates an instance of a hotkey control with a specified width and height 
-HWND AddHotkeyCtrl(HWND hWnd, HFONT font, int x, int y, int width, int height, HINSTANCE hIn, int id)
+HWND AddHotkeyCtrl(HWND hWnd, HFONT font, int x, int y, int width, int height, HINSTANCE hIn, UINT_PTR id)
 {
     INITCOMMONCONTROLSEX icex;
     icex.dwSize = sizeof(INITCOMMONCONTROLSEX);
@@ -153,7 +153,7 @@ HWND AddHotkeyCtrl(HWND hWnd, HFONT font, int x, int y, int width, int height, H
 
     HWND hControl = CreateWindowEx(0,    //Extended window styles.
         HOTKEY_CLASS,
-        _T(""),
+        L"",
         WS_CHILD | WS_VISIBLE,
         ScaleX(x), ScaleY(y),
         ScaleX(width), ScaleY(height),

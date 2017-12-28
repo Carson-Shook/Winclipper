@@ -30,6 +30,7 @@ unsigned short stous(std::string str)
     }
     catch(std::exception &e)
     {
+		printf("An exception occured at %p", &e);
         throw;
     }
 }
@@ -55,6 +56,7 @@ unsigned short stous(std::wstring str)
     }
     catch (std::exception &e)
     {
+		printf("An exception occured at %p", &e);
         throw;
     }
 }
@@ -64,17 +66,17 @@ unsigned short stous(std::wstring str)
 // They will only be written to disk once a change has been made.
 UserSettings::UserSettings()
 {
-    TCHAR* tempSettingPath;
+    wchar_t* tempSettingPath;
     if (SUCCEEDED(SHGetKnownFolderPath(FOLDERID_LocalAppData, KF_FLAG_DEFAULT, NULL, &tempSettingPath)))
     {
-        _tcscpy_s(fullSettingPath, tempSettingPath);
-        PathAppend(fullSettingPath, _T("\\Winclipper\\Winclipper\\settings.dat"));
+        wcscpy_s(fullSettingPath, tempSettingPath);
+        PathAppend(fullSettingPath, L"\\Winclipper\\Winclipper\\settings.dat");
         CoTaskMemFree(tempSettingPath);
     }
 
     if (File::Exists(fullSettingPath))
     {
-        std::vector<TSTRING> settings = File::ReadAllLines(fullSettingPath);
+        std::vector<std::wstring> settings = File::ReadAllLines(fullSettingPath);
 
         if (!settings.empty())
         {
@@ -288,39 +290,39 @@ void UserSettings::SetSelect2ndClip(bool select2ndClip)
 // Writes a serialized version of the current settings to disk.
 void UserSettings::WriteSettings()
 {
-    std::vector<TSTRING> settings = this->Serialize();
+    std::vector<std::wstring> settings = this->Serialize();
 
     File::WriteAllLines(fullSettingPath, settings);
 }
 
-// Returns a vector of type TSTRING containing TSTRING
+// Returns a vector of type std::wstring containing std::wstring
 // representations of all current settings.
-std::vector<TSTRING> UserSettings::Serialize()
+std::vector<std::wstring> UserSettings::Serialize()
 {
-    std::vector<TSTRING> retVal = {
-        (TO_TSTRING(MAX_DISPLAY) + SEPARATOR + TO_TSTRING(MaxDisplayClips())),
-        (TO_TSTRING(MAX_SAVED) + SEPARATOR + TO_TSTRING(MaxSavedClips())),
-        (TO_TSTRING(MENU_CHARS) + SEPARATOR + TO_TSTRING(MenuDisplayChars())),
-        (TO_TSTRING(CMENU_HOTKEY) + SEPARATOR + TO_TSTRING(ClipsMenuHotkey())),
-        (TO_TSTRING(SAVE_TO_DISK) + SEPARATOR + TO_TSTRING(SaveToDisk())),
-        (TO_TSTRING(SLCT_2ND_CLIP) + SEPARATOR + TO_TSTRING(Select2ndClip()))
+    std::vector<std::wstring> retVal = {
+        (std::to_wstring(MAX_DISPLAY) + SEPARATOR + std::to_wstring(MaxDisplayClips())),
+        (std::to_wstring(MAX_SAVED) + SEPARATOR + std::to_wstring(MaxSavedClips())),
+        (std::to_wstring(MENU_CHARS) + SEPARATOR + std::to_wstring(MenuDisplayChars())),
+        (std::to_wstring(CMENU_HOTKEY) + SEPARATOR + std::to_wstring(ClipsMenuHotkey())),
+        (std::to_wstring(SAVE_TO_DISK) + SEPARATOR + std::to_wstring(SaveToDisk())),
+        (std::to_wstring(SLCT_2ND_CLIP) + SEPARATOR + std::to_wstring(Select2ndClip()))
     };
 
     return retVal;
 }
 
-// Deserializes a vector of type TSTRING into setting values,
+// Deserializes a vector of type std::wstring into setting values,
 // and then sets them where availble. 
 // Define a constant for each setting, and then add it to the switch. 
 // Expects a format of:
 // 1|settingValue1
 // 2|settingValue2
 // n|settingValueN
-void UserSettings::Deserialize(std::vector<TSTRING> srData)
+void UserSettings::Deserialize(std::vector<std::wstring> srData)
 {
-    std::map<int, TSTRING> store;
+    std::map<int, std::wstring> store;
 
-    for each (TSTRING kvPair in srData)
+    for each (std::wstring kvPair in srData)
     {
         try
         {
@@ -335,7 +337,7 @@ void UserSettings::Deserialize(std::vector<TSTRING> srData)
         }
     }
 
-    for each (std::pair<int, TSTRING> pair in store)
+    for each (std::pair<int, std::wstring> pair in store)
     {
         switch (pair.first)
         {
@@ -353,13 +355,13 @@ void UserSettings::Deserialize(std::vector<TSTRING> srData)
             break;
         case SAVE_TO_DISK:
             {
-                bool result = pair.second.compare(TO_TSTRING(true)) == 0;
+                bool result = pair.second.compare(std::to_wstring(true)) == 0;
                 SetSaveToDisk(result);
             }
             break;
         case SLCT_2ND_CLIP:
             {
-                bool result = pair.second.compare(TO_TSTRING(true)) == 0;
+                bool result = pair.second.compare(std::to_wstring(true)) == 0;
                 SetSelect2ndClip(result);
             }
         break;

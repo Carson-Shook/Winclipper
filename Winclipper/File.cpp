@@ -11,9 +11,9 @@
 #include "File.h"
 
 // Gets the directory path from a given file path.
-TSTRING File::GetDirName(const TSTRING& fname)
+std::wstring File::GetDirName(const std::wstring& fname)
 {
-    TSTRING directory;
+    std::wstring directory;
     const size_t last_slash_idx = fname.rfind('\\');
     if (std::string::npos != last_slash_idx)
     {
@@ -24,7 +24,7 @@ TSTRING File::GetDirName(const TSTRING& fname)
 }
 
 // Determines whether or not a file eixists
-bool File::Exists(const TCHAR *name)
+bool File::Exists(const wchar_t *name)
 {
     int retval = PathFileExists(name);
     if (retval == 1)
@@ -34,7 +34,7 @@ bool File::Exists(const TCHAR *name)
     return false;
 }
 
-bool File::Delete(const TCHAR * name)
+bool File::Delete(const wchar_t * name)
 {
     if (DeleteFile(name) == 0)
     {
@@ -44,40 +44,38 @@ bool File::Delete(const TCHAR * name)
 }
 
 // Writes all lines in a vector to a text file
-void File::WriteAllLines(const TCHAR* name, std::vector<TSTRING> lines)
+void File::WriteAllLines(const wchar_t* name, std::vector<std::wstring> lines)
 {
     if (!File::Exists(name))
     {
         SHCreateDirectoryEx(NULL, (GetDirName(name).c_str()), NULL);
     }
-    TOFSTREAM output_file(name);
-    std::ostream_iterator<TSTRING_ITERATOR_ARGS> output_iterator(output_file, _T("\n"));
+    std::wofstream output_file(name);
+    std::ostream_iterator<std::wstring, wchar_t> output_iterator(output_file, L"\n");
     std::copy(lines.begin(), lines.end(), output_iterator);
 }
 
 // Reads newline delimited values from a file into a vector
-std::vector<TSTRING> File::ReadAllLines(const TCHAR * name)
+std::vector<std::wstring> File::ReadAllLines(const wchar_t * name)
 {
-    std::vector<TSTRING> lines;
-    TIFSTREAM myfile(name);
+    std::vector<std::wstring> lines;
+    std::wifstream myfile(name);
 
-    std::copy(std::istream_iterator<TSTRING_ITERATOR_ARGS>(myfile),
-        std::istream_iterator<TSTRING_ITERATOR_ARGS>(),
+    std::copy(std::istream_iterator<std::wstring, wchar_t>(myfile),
+        std::istream_iterator<std::wstring, wchar_t>(),
         std::back_inserter(lines));
     return lines;
 }
 
-std::deque<TCHAR *> File::BinaryReadDeque(const TCHAR * name)
+std::deque<wchar_t *> File::BinaryReadDeque(const wchar_t * name)
 {
     std::ifstream inFile(name, std::ios::binary);
     if (!inFile) {
         throw std::runtime_error("Could not open file for reading");
     }
 
-    std::deque<TCHAR *> retVal;
+    std::deque<wchar_t *> retVal;
 
-    // Really need to go through all of this and consider what
-    // does and doesn't need to be done to account for UNICODE.
     std::wstring_convert<std::codecvt_utf8<wchar_t>, wchar_t> converter;
 
     while (!inFile.eof())
@@ -99,7 +97,7 @@ std::deque<TCHAR *> File::BinaryReadDeque(const TCHAR * name)
     return retVal;
 }
 
-void File::BinaryWriteDeque(const std::deque<TCHAR *> data, const TCHAR * name)
+void File::BinaryWriteDeque(const std::deque<wchar_t *> data, const wchar_t * name)
 {
     if (!File::Exists(name))
     {
@@ -113,11 +111,11 @@ void File::BinaryWriteDeque(const std::deque<TCHAR *> data, const TCHAR * name)
 
     std::wstring_convert<std::codecvt_utf8<wchar_t>, wchar_t> converter;
 
-    for (int i = 0, j = data.size(); i < j; i++)
+    for (size_t i = 0, j = data.size(); i < j; i++)
     {
         std::string anotherTemp = converter.to_bytes(data.at(i));
         const char * temp = anotherTemp.c_str();
-        outFile << base64_encode((unsigned char *)temp, strlen(temp) + 1);
+        outFile << base64_encode((unsigned char *)temp, (unsigned int)strlen(temp) + 1);
         outFile << "\r\n";
     }
 

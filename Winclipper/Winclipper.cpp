@@ -147,20 +147,20 @@ BOOL InitSettingsWindow(HINSTANCE hInstance, int nCmdShow)
     HFONT font = CreateFontIndirectW(&hfDefault.lfCaptionFont);
 
     // Add controls in tab order
-    AddLabel(hWnd, font, 10, 10, hInstance, _T("Number of clips to display:"), LBL_MAX_CLIPS_DISPLAY);
+    AddLabel(hWnd, font, 10, 10, hInstance, L"Number of clips to display:", LBL_MAX_CLIPS_DISPLAY);
     AddSpinner(hWnd, font, 180, 10, hInstance, MAX_DISPLAY_LOWER, MAX_DISPLAY_UPPER, UD_MAX_CLIPS_DISPLAY, TXT_MAX_CLIPS_DISPLAY);
-    AddLabel(hWnd, font, 10, 40, hInstance, _T("Maximum clips to save:"), LBL_MAX_CLIPS_SAVED);
+    AddLabel(hWnd, font, 10, 40, hInstance, L"Maximum clips to save:", LBL_MAX_CLIPS_SAVED);
     AddSpinner(hWnd, font, 180, 40, hInstance, MAX_SAVED_LOWER, MAX_SAVED_UPPER, UD_MAX_CLIPS_SAVED, TXT_MAX_CLIPS_SAVED);
     
-    AddLabel(hWnd, font, 10, 70, hInstance, _T("Number of preview characters:"), LBL_MENU_DISP_CHARS);
+    AddLabel(hWnd, font, 10, 70, hInstance, L"Number of preview characters:", LBL_MENU_DISP_CHARS);
     AddSpinner(hWnd, font, 180, 70, hInstance, MENU_CHARS_LOWER, MENU_CHARS_UPPER, UD_MENU_DISP_CHARS, TXT_MENU_DISP_CHARS);
 
-    AddLabel(hWnd, font, 10, 100, hInstance, _T("Clips menu shortcut:"), LBL_SHOW_CLIPS_HOTK);
+    AddLabel(hWnd, font, 10, 100, hInstance, L"Clips menu shortcut:", LBL_SHOW_CLIPS_HOTK);
     HWND hHotKey = AddHotkeyCtrl(hWnd, font, 130, 100, 100, 20, hInstance, HKY_SHOW_CLIPS_MENU);
 
-    AddCheckbox(hWnd, font, 10, 130, hInstance, _T("Save clips to disk"), CHK_SAVE_TO_DISK);
-    AddCheckbox(hWnd, font, 10, 154, hInstance, _T("Run Winclipper at startup"), CHK_RUN_AT_STARTUP);
-    AddCheckbox(hWnd, font, 10, 178, hInstance, _T("Auto-select second clip"), CHK_SLCT_2ND_CLIP);
+    AddCheckbox(hWnd, font, 10, 130, hInstance, L"Save clips to disk", CHK_SAVE_TO_DISK);
+    AddCheckbox(hWnd, font, 10, 154, hInstance, L"Run Winclipper at startup", CHK_RUN_AT_STARTUP);
+    AddCheckbox(hWnd, font, 10, 178, hInstance, L"Auto-select second clip", CHK_SLCT_2ND_CLIP);
 
     // Load values from user settings
     SetDlgItemInt(hWnd, TXT_MAX_CLIPS_DISPLAY, uSettings.MaxDisplayClips(), FALSE);
@@ -169,9 +169,9 @@ BOOL InitSettingsWindow(HINSTANCE hInstance, int nCmdShow)
     SetDlgItemInt(hWnd, TXT_MENU_DISP_CHARS, uSettings.MenuDisplayChars(), FALSE);
 
     HKEY hOpened;
-    if (RegOpenKeyEx(HKEY_CURRENT_USER, _T("Software\\Microsoft\\Windows\\CurrentVersion\\Run"), 0, KEY_ALL_ACCESS, &hOpened) == ERROR_SUCCESS)
+    if (RegOpenKeyEx(HKEY_CURRENT_USER, L"Software\\Microsoft\\Windows\\CurrentVersion\\Run", 0, KEY_ALL_ACCESS, &hOpened) == ERROR_SUCCESS)
     {
-        if (QueryKeyForValue(hOpened, _T("Winclipper")) == TRUE)
+        if (QueryKeyForValue(hOpened, L"Winclipper") == TRUE)
         {
             CheckDlgButton(hWnd, CHK_RUN_AT_STARTUP, BST_CHECKED);
         }
@@ -220,6 +220,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
             break;
         case IDM_EXIT:
+
             DestroyWindow(hWnd);
             break;
         default:
@@ -268,8 +269,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         if (!AddNotificationIcon(hWnd))
         {
             MessageBox(hWnd,
-                _T("There was an error adding the notification icon. You might want to try restarting your computer, or reinstalling this application."),
-                _T("Error adding icon"), MB_OK);
+                L"There was an error adding the notification icon. You might want to try restarting your computer, or reinstalling this application.",
+                L"Error adding icon", MB_OK);
             
             return -1;
         }
@@ -283,7 +284,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     break;
     case WM_INITMENUPOPUP:
     {
-		int size = cManager.GetClips().size();
+		size_t size = cManager.GetClips().size();
         SelectDefaultMenuItem(size > 1 ? uSettings.Select2ndClip() : FALSE);
     }
     break;
@@ -544,14 +545,14 @@ INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 BOOL WriteRegistryRun()
 {
     HKEY hOpened;
-    TCHAR pPath[100];
+    wchar_t pPath[100];
 
     GetModuleFileName(0, pPath, 100);
 
     //OpenRegistryRun(hOpened);
-    RegOpenKeyEx(HKEY_CURRENT_USER, _T("Software\\Microsoft\\Windows\\CurrentVersion\\Run"), 0, KEY_ALL_ACCESS, &hOpened);
+    RegOpenKeyEx(HKEY_CURRENT_USER, L"Software\\Microsoft\\Windows\\CurrentVersion\\Run", 0, KEY_ALL_ACCESS, &hOpened);
 
-    if (RegSetValueEx(hOpened, _T("Winclipper"), 0, REG_SZ, (LPBYTE)pPath, sizeof(pPath)) != ERROR_SUCCESS)
+    if (RegSetValueEx(hOpened, L"Winclipper", 0, REG_SZ, (LPBYTE)pPath, sizeof(pPath)) != ERROR_SUCCESS)
     {
         return FALSE;
     }
@@ -565,9 +566,9 @@ BOOL DeleteRegistryRun()
 {
     HKEY hOpened;
 
-    if (RegOpenKeyEx(HKEY_CURRENT_USER, _T("Software\\Microsoft\\Windows\\CurrentVersion\\Run"), 0, KEY_ALL_ACCESS, &hOpened) == ERROR_SUCCESS)
+    if (RegOpenKeyEx(HKEY_CURRENT_USER, L"Software\\Microsoft\\Windows\\CurrentVersion\\Run", 0, KEY_ALL_ACCESS, &hOpened) == ERROR_SUCCESS)
     {
-        RegDeleteValue(hOpened, _T("Winclipper"));
+        RegDeleteValue(hOpened, L"Winclipper");
     }
     else
     {
@@ -579,9 +580,9 @@ BOOL DeleteRegistryRun()
 }
 
 // Get the value of a key in the registry if one exists
-BOOL QueryKeyForValue(HKEY hKey, TCHAR* checkValue)
+BOOL QueryKeyForValue(HKEY hKey, wchar_t* checkValue)
 {
-    TCHAR    achClass[MAX_PATH] = TEXT("");  // buffer for class name 
+    wchar_t    achClass[MAX_PATH] = TEXT("");  // buffer for class name 
     DWORD    cchClassName = MAX_PATH;  // size of class string 
     DWORD    cSubKeys = 0;               // number of subkeys 
     DWORD    cbMaxSubKey;              // longest subkey size 
@@ -594,7 +595,7 @@ BOOL QueryKeyForValue(HKEY hKey, TCHAR* checkValue)
 
     DWORD i, retCode;
 
-    TCHAR  achValue[MAX_VALUE_NAME];
+    wchar_t  achValue[MAX_VALUE_NAME];
     DWORD cchValue = MAX_VALUE_NAME;
 
     // Get the class name and the value count. 
@@ -630,7 +631,7 @@ BOOL QueryKeyForValue(HKEY hKey, TCHAR* checkValue)
 
             if (retCode == ERROR_SUCCESS)
             {
-                if (_tcscmp(checkValue, achValue) == 0)
+                if (wcscmp(checkValue, achValue) == 0)
                 {
                     return TRUE;
                 }

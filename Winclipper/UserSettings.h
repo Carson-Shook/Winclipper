@@ -3,7 +3,7 @@
 // the current users's AppData folder
 // and makes them available to read or change
 #include <vector>
-#define SEPARATOR           _T("|")
+#define SEPARATOR           L"|"
 #define WRITE_DELAY         2000
 
 #define MAX_DISPLAY         1
@@ -31,7 +31,7 @@
 class UserSettings
 {
 private:
-    TCHAR               fullSettingPath[MAX_PATH];
+    wchar_t             fullSettingPath[MAX_PATH];
     int                 settingWriterWaitCount = 0;
 
     int                 maxDisplayClips;
@@ -46,8 +46,8 @@ private:
     void                WriteSettings();
 
 protected:
-    std::vector<TSTRING>  Serialize();
-    void                  Deserialize(std::vector<TSTRING> srData);
+    std::vector<std::wstring>  Serialize();
+    void                  Deserialize(std::vector<std::wstring> srData);
 
 public:
     UserSettings();

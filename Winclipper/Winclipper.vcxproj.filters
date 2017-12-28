@@ -39,9 +39,6 @@
     <ClInclude Include="UserSettings.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="tstring.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="base64.h">
       <Filter>Header Files</Filter>
     </ClInclude>

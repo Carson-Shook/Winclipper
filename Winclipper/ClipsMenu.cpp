@@ -25,7 +25,7 @@ void ClipsManager::SaveClipsAsync()
 void ClipsManager::IncrementClipsWriterDelay(int * waitCount, ClipsManager * cs)
 {
     (*waitCount)++;
-    Sleep(5000);
+    Sleep(2000);
     (*waitCount)--;
 
     if (*waitCount == 0)
@@ -43,7 +43,7 @@ void ClipsManager::ReadClips()
 {
     if (File::Exists(fullClipsPath))
     {
-        std::deque<TCHAR *> tempClips = File::BinaryReadDeque(fullClipsPath);
+        std::deque<wchar_t *> tempClips = File::BinaryReadDeque(fullClipsPath);
 
         clips.assign(tempClips.begin(), tempClips.end());
 
@@ -60,8 +60,8 @@ ClipsManager::ClipsManager(int displayClips, int maxClips, int menuChars, bool s
     PTSTR tempClipsPath;
     if (SUCCEEDED(SHGetKnownFolderPath(FOLDERID_LocalAppData, KF_FLAG_DEFAULT, NULL, &tempClipsPath)))
     {
-        _tcscpy_s(fullClipsPath, tempClipsPath);
-        PathAppend(fullClipsPath, _T("\\Winclipper\\Winclipper\\clips.dat"));
+        wcscpy_s(fullClipsPath, tempClipsPath);
+        PathAppend(fullClipsPath, L"\\Winclipper\\Winclipper\\clips.dat");
         CoTaskMemFree(tempClipsPath);
     }
 
@@ -78,12 +78,12 @@ ClipsManager::~ClipsManager()
 }
 
 
-int ClipsManager::DisplayClips()
+unsigned int ClipsManager::DisplayClips()
 {
     return displayClips;
 }
 
-void ClipsManager::SetDisplayClips(int displayClips)
+void ClipsManager::SetDisplayClips(unsigned int displayClips)
 {
     if (displayClips != ClipsManager::displayClips)
     {
@@ -91,12 +91,12 @@ void ClipsManager::SetDisplayClips(int displayClips)
     }
 }
 
-int ClipsManager::MaxClips()
+unsigned int ClipsManager::MaxClips()
 {
     return maxClips;
 }
 
-void ClipsManager::SetMaxClips(int maxClips)
+void ClipsManager::SetMaxClips(unsigned int maxClips)
 {
     if (maxClips != ClipsManager::maxClips)
     {
@@ -105,7 +105,7 @@ void ClipsManager::SetMaxClips(int maxClips)
         while (clips.size() > ClipsManager::maxClips)
         {
             // get reference to the back object before we pop it
-            TCHAR * back = clips.back();
+            wchar_t * back = clips.back();
             clips.pop_back();
             // dealocate the former back object
             delete[] back;
@@ -114,12 +114,12 @@ void ClipsManager::SetMaxClips(int maxClips)
     }
 }
 
-int ClipsManager::MenuDisplayChars()
+unsigned int ClipsManager::MenuDisplayChars()
 {
     return menuDispChars;
 }
 
-void ClipsManager::SetMenuDisplayChars(int menuDispChars)
+void ClipsManager::SetMenuDisplayChars(unsigned int menuDispChars)
 {
     ClipsManager::menuDispChars = menuDispChars;
 }
@@ -140,9 +140,9 @@ void ClipsManager::SetSaveToDisk(bool saveToDisk)
 
 void ClipsManager::ClearClips()
 {
-    for (int i = 0, j = clips.size(); i < j; i++)
+    for (size_t i = 0, j = clips.size(); i < j; i++)
     {
-        TCHAR * clip = clips.at(i);
+        wchar_t * clip = clips.at(i);
         delete[] clip;
     }
     clips.clear();
@@ -156,16 +156,16 @@ BOOL ClipsManager::AddToClips(HWND hWnd)
     HANDLE psClipboardData = GetClipboardData(CF_UNICODETEXT);
     if (psClipboardData != NULL)
     {
-        TCHAR * data = (TCHAR*)GlobalLock(psClipboardData);
+        wchar_t * data = (wchar_t*)GlobalLock(psClipboardData);
         if (data != NULL)
         {
-            TCHAR * derefData = _wcsdup(data);
+            wchar_t * derefData = _wcsdup(data);
             GlobalUnlock(psClipboardData);
 
             while (clips.size() >= maxClips)
             {
                 // get reference to the back object before we pop it
-                TCHAR * back = clips.back();
+                wchar_t * back = clips.back();
                 clips.pop_back();
                 // dealocate the former back object
                 delete[] back;
@@ -189,15 +189,15 @@ BOOL ClipsManager::SetClipboardToClipAtIndex(HWND hWnd, int index)
 
     EmptyClipboard();
 
-    TCHAR * clip = clips.at(index);
+    wchar_t * clip = clips.at(index);
 
-    HGLOBAL hClipboardData = GlobalAlloc(GMEM_MOVEABLE, (_tcslen(clip) + 1) * sizeof(TCHAR));
+    HGLOBAL hClipboardData = GlobalAlloc(GMEM_MOVEABLE, (wcslen(clip) + 1) * sizeof(wchar_t));
     if (hClipboardData != NULL)
     {
-        TCHAR * pwcData = (TCHAR*)GlobalLock(hClipboardData);
+        wchar_t * pwcData = (wchar_t*)GlobalLock(hClipboardData);
         if (pwcData != NULL)
         {
-            wcscpy_s(pwcData, _tcslen(clip) + 1, clip);
+            wcscpy_s(pwcData, wcslen(clip) + 1, clip);
 
             GlobalUnlock(hClipboardData);
 
@@ -241,21 +241,21 @@ void ShowClipsMenu(HWND hWnd, ClipsManager& cm, bool showExit)
 
 		HMENU menu = CreatePopupMenu();
 
-        int curSize = cm.GetClips().size();
-        int displayCount = cm.DisplayClips();
-        int menuTextLength = cm.MenuDisplayChars();
-        TCHAR* menuText = new TCHAR[menuTextLength];
+        size_t curSize = cm.GetClips().size();
+        unsigned int displayCount = cm.DisplayClips();
+        unsigned int menuTextLength = cm.MenuDisplayChars();
+        wchar_t* menuText = new wchar_t[menuTextLength];
 
         if (curSize > 0)
         {
-            int j = curSize > displayCount ? displayCount : curSize;
+            size_t j = curSize > displayCount ? displayCount : curSize;
 
-            for (int i = 0; i < j; i++)
+            for (unsigned int i = 0; i < j; i++)
             {
-                TCHAR * clip = cm.GetClips().at(i);
+                wchar_t * clip = cm.GetClips().at(i);
                 if (clip != NULL)
                 {
-                    int maxClipSize = _tcslen(clip);
+                    size_t maxClipSize = wcslen(clip);
 
                     // I know this is a little unorthodox, but we can count
                     // on these lengths so long as MENU_TEXT_LENGTH > 5
@@ -273,7 +273,7 @@ void ShowClipsMenu(HWND hWnd, ClipsManager& cm, bool showExit)
                         menuText[maxClipSize] = '\0';
                     }
 
-                    for (int k = 0; k < maxClipSize; k++)
+                    for (unsigned int k = 0; k < maxClipSize; k++)
                     {
                         menuText[k] = clip[k];
                     }
@@ -287,10 +287,10 @@ void ShowClipsMenu(HWND hWnd, ClipsManager& cm, bool showExit)
                 
                 for (/*j is equal to displayCount */; j < curSize; j++)
                 {
-                    TCHAR * clip = cm.GetClips().at(j);
+                    wchar_t * clip = cm.GetClips().at(j);
                     if (clip != NULL)
                     {
-                        int maxClipSize = _tcslen(clip);
+                        size_t maxClipSize = wcslen(clip);
 
                         if (maxClipSize > menuTextLength - 4)
                         {
@@ -305,7 +305,7 @@ void ShowClipsMenu(HWND hWnd, ClipsManager& cm, bool showExit)
                             menuText[maxClipSize] = '\0';
                         }
 
-                        for (int k = 0; k < maxClipSize; k++)
+                        for (unsigned int k = 0; k < maxClipSize; k++)
                         {
                             menuText[k] = clip[k];
                         }
@@ -313,21 +313,21 @@ void ShowClipsMenu(HWND hWnd, ClipsManager& cm, bool showExit)
                         AppendMenu(sMenu, MF_STRING, j + 1, menuText);
                     }
                 }
-                AppendMenu(menu, MF_STRING | MF_POPUP, (UINT_PTR)sMenu, _T("More..."));
+                AppendMenu(menu, MF_STRING | MF_POPUP, (UINT_PTR)sMenu, L"More...");
             }
         }
         else
         {
-            AppendMenu(menu, MF_STRING | MF_DISABLED, 0, _T("Nothing on the clipboard"));
+            AppendMenu(menu, MF_STRING | MF_DISABLED, 0, L"Nothing on the clipboard");
         }
 
         AppendMenu(menu, MF_SEPARATOR, 0, 0);
-        AppendMenu(menu, MF_STRING, CLEARCLIPS_SELECT, _T("&Clear Clips"));
+        AppendMenu(menu, MF_STRING, CLEARCLIPS_SELECT, L"&Clear Clips");
         AppendMenu(menu, MF_SEPARATOR, 0, 0);
-        AppendMenu(menu, MF_STRING, SETTINGS_SELECT, _T("&Settings"));
+        AppendMenu(menu, MF_STRING, SETTINGS_SELECT, L"&Settings");
         if (showExit)
         {
-            AppendMenu(menu, MF_STRING, EXIT_SELECT, _T("&Exit"));
+            AppendMenu(menu, MF_STRING, EXIT_SELECT, L"&Exit");
         }
 		
 
