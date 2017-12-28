@@ -210,18 +210,28 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             cManager.ClearClips();
             break;
         case IDM_SETTINGS:
-            if (!IsWindowVisible(settingsWnd))
-            {
-                ShowWindow(settingsWnd, SW_SHOW);
-            }
-            SetForegroundWindow(settingsWnd);
+			{
+				if (!IsWindowVisible(settingsWnd))
+				{
+					ShowWindow(settingsWnd, SW_SHOW);
+				}
+				SetForegroundWindow(settingsWnd);
+			}
             break;
         case IDM_ABOUT:
             DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
             break;
         case IDM_EXIT:
-
-            DestroyWindow(hWnd);
+			{
+				// wait until finished writing, or give up after 6 seconds (should be long enough)
+				int waitUntilFinishedAttempts = 3;
+				while (!(cManager.NoPendingClipWrites() && uSettings.NoPendingSettingWrites()) && waitUntilFinishedAttempts > 0)
+				{
+					Sleep(2000);
+					waitUntilFinishedAttempts--;
+				}
+				DestroyWindow(hWnd);
+			}
             break;
         default:
             return DefWindowProc(hWnd, message, wParam, lParam);
@@ -323,8 +333,17 @@ LRESULT CALLBACK SettingsWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
             DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
             break;
         case IDM_EXIT:
-            DestroyWindow(mainWnd);
-            break;
+			{
+				// wait until finished writing, or give up after 6 seconds (should be long enough)
+				int waitUntilFinishedAttempts = 3;
+				while (!(cManager.NoPendingClipWrites() && uSettings.NoPendingSettingWrites()) && waitUntilFinishedAttempts > 0)
+				{
+					Sleep(2000);
+					waitUntilFinishedAttempts--;
+				}
+				DestroyWindow(mainWnd);
+			}
+			break;
         case TXT_MAX_CLIPS_DISPLAY:
         {
             if (HIWORD(wParam) == EN_KILLFOCUS)

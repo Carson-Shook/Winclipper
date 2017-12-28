@@ -32,8 +32,6 @@ class UserSettings
 {
 private:
     wchar_t             fullSettingPath[MAX_PATH];
-    int                 settingWriterWaitCount = 0;
-
     int                 maxDisplayClips;
     int                 maxSavedClips;
     int                 menuDisplayChars;
@@ -41,8 +39,11 @@ private:
     bool                saveToDisk = SAVE_TO_DISK_DEF;
     bool                select2ndClip;
 
+	int                 settingWriterWaitCount = 0;
+	BOOL                isWriterFinished = TRUE;
+
     void                SaveSettingsAsync();
-    static void         IncrementSettingWriterDelay(int* waitCount, UserSettings* us);
+    static void         DelaySettingWriter(int* waitCount, UserSettings* us);
     void                WriteSettings();
 
 protected:
@@ -52,6 +53,8 @@ protected:
 public:
     UserSettings();
     ~UserSettings();
+
+	BOOL                NoPendingSettingWrites();
 
     int                 MaxDisplayClips();
     void                SetMaxDisplayClips(int maxDisplayClips);

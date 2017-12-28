@@ -9,9 +9,17 @@
 
 void ClipsManager::SaveClipsAsync()
 {
-    if (SaveToDisk())
-    {
-        std::thread([&]() {IncrementClipsWriterDelay(&clipsWriterWaitCount, this); }).detach();
+	if (SaveToDisk())
+	{
+		if (clipsWriterWaitCount == 0)
+		{
+			clipsWriterWaitCount++;
+			std::thread([&]() {DelayClipsWriter(&clipsWriterWaitCount, this); }).detach();
+		}
+		else
+		{
+			clipsWriterWaitCount++;
+		}
     }
     else
     {
@@ -22,21 +30,25 @@ void ClipsManager::SaveClipsAsync()
     }
 }
 
-void ClipsManager::IncrementClipsWriterDelay(int * waitCount, ClipsManager * cs)
+void ClipsManager::DelayClipsWriter(int * waitCount, ClipsManager * cs)
 {
-    (*waitCount)++;
-    Sleep(2000);
-    (*waitCount)--;
-
-    if (*waitCount == 0)
-    {
-        cs->WriteClips();
-    }
+	while (*waitCount != 0)
+	{
+		// we wait to make sure that no aditional actions
+		// have been taken since we started waiting.
+		(*waitCount) = 1;
+		Sleep(CLIPS_WRITE_DELAY);
+		(*waitCount)--;
+	}
+        
+	cs->WriteClips();
 }
 
 void ClipsManager::WriteClips()
 {
+	isWriterFinished = FALSE;
     File::BinaryWriteDeque(GetClips(), fullClipsPath);
+	isWriterFinished = TRUE;
 }
 
 void ClipsManager::ReadClips()
@@ -75,6 +87,11 @@ ClipsManager::ClipsManager(int displayClips, int maxClips, int menuChars, bool s
 ClipsManager::~ClipsManager()
 {
     ClearClips();
+}
+
+BOOL ClipsManager::NoPendingClipWrites()
+{
+	return clipsWriterWaitCount == 0 && isWriterFinished;
 }
 
 

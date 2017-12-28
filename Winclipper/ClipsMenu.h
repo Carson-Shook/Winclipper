@@ -4,6 +4,7 @@
 #define	SETTINGS_SELECT     2000	// user selected the Settings option
 #define CLEARCLIPS_SELECT   2001    // clear all clips that are currently saved (doesn't clear the actual clipboard)
 #define EXIT_SELECT         2002    // close the application
+#define CLIPS_WRITE_DELAY   2000	
 
 									// ERROR is returned in any other situation
 
@@ -18,9 +19,10 @@ private:
     bool                            saveToDisk = true;
 
     int                             clipsWriterWaitCount = 0;
+	BOOL							isWriterFinished = TRUE;
 
     void                            SaveClipsAsync();
-    static void                     IncrementClipsWriterDelay(int* waitCount, ClipsManager* cs);
+    static void                     DelayClipsWriter(int* waitCount, ClipsManager* cs);
     void                            WriteClips();
     void                            ReadClips();
 
@@ -28,6 +30,8 @@ public:
     ClipsManager();
     ClipsManager(int displayClips, int maxClips, int menuChars, bool saveToDisk);
     ~ClipsManager();
+
+	BOOL							NoPendingClipWrites();
 
     unsigned int                    DisplayClips();
     void                            SetDisplayClips(unsigned int displayClips);

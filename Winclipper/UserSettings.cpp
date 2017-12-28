@@ -100,6 +100,11 @@ UserSettings::~UserSettings()
 {
 }
 
+BOOL UserSettings::NoPendingSettingWrites()
+{
+	return settingWriterWaitCount == 0 && isWriterFinished;
+}
+
 int UserSettings::MaxDisplayClips()
 {
     if (maxDisplayClips < MAX_DISPLAY_LOWER)
@@ -290,9 +295,11 @@ void UserSettings::SetSelect2ndClip(bool select2ndClip)
 // Writes a serialized version of the current settings to disk.
 void UserSettings::WriteSettings()
 {
+	isWriterFinished = FALSE;
     std::vector<std::wstring> settings = this->Serialize();
 
     File::WriteAllLines(fullSettingPath, settings);
+	isWriterFinished = TRUE;
 }
 
 // Returns a vector of type std::wstring containing std::wstring
@@ -374,20 +381,30 @@ void UserSettings::Deserialize(std::vector<std::wstring> srData)
 // Schedules a write operation to the settings file.
 void UserSettings::SaveSettingsAsync()
 {
-    std::thread([&]() {IncrementSettingWriterDelay(&settingWriterWaitCount, this); }).detach();
+	if (settingWriterWaitCount == 0)
+	{
+		settingWriterWaitCount++;
+		std::thread([&]() {DelaySettingWriter(&settingWriterWaitCount, this); }).detach();
+	}
+	else
+	{
+		settingWriterWaitCount++;
+	}
 }
 
-// Increments the value pointed to by waitCount by 1, sleeps for an
-// amount of time, decrements the value by 1, and then tests to see if it
-// has a value of zero. If so, it writes the settings file to disk.
-void UserSettings::IncrementSettingWriterDelay(int* waitCount, UserSettings* us)
+// Sets the value pointed to by waitCount to 1, sleeps for an
+// amount of time, decrements the value by 1, and repeats if it does
+// not have a value of zero. If it does, it writes the settings file to disk.
+void UserSettings::DelaySettingWriter(int* waitCount, UserSettings* us)
 {
-    (*waitCount)++;
-    Sleep(WRITE_DELAY);
-    (*waitCount)--;
+	while (*waitCount != 0)
+	{
+		// we wait to make sure that no aditional actions
+		// have been taken since we started waiting.
+		(*waitCount) = 1;
+		Sleep(WRITE_DELAY);
+		(*waitCount)--;
+	}
 
-    if (*waitCount == 0)
-    {
-        us->WriteSettings();
-    }
+	us->WriteSettings();
 }
