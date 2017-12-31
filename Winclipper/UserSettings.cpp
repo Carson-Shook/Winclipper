@@ -30,7 +30,7 @@ unsigned short stous(std::string str)
     }
     catch(std::exception &e)
     {
-		printf("An exception occured at %p", &e);
+        printf("An exception occured at %p", &e);
         throw;
     }
 }
@@ -56,7 +56,7 @@ unsigned short stous(std::wstring str)
     }
     catch (std::exception &e)
     {
-		printf("An exception occured at %p", &e);
+        printf("An exception occured at %p", &e);
         throw;
     }
 }
@@ -92,6 +92,7 @@ UserSettings::UserSettings()
         SetClipsMenuHotkey(CMENU_HOTKEY_DEF);
         SetSaveToDisk(SAVE_TO_DISK_DEF);
         SetSelect2ndClip(SLCT_2ND_CLIP_DEF);
+        SetShowPreview(SHOW_PREVIEW_DEF);
     }
 }
 
@@ -100,9 +101,9 @@ UserSettings::~UserSettings()
 {
 }
 
-BOOL UserSettings::NoPendingSettingWrites()
+bool UserSettings::NoPendingSettingWrites()
 {
-	return settingWriterWaitCount == 0 && isWriterFinished;
+    return settingWriterWaitCount == 0 && isWriterFinished;
 }
 
 int UserSettings::MaxDisplayClips()
@@ -292,14 +293,28 @@ void UserSettings::SetSelect2ndClip(bool select2ndClip)
     }
 }
 
+bool UserSettings::ShowPreview()
+{
+    return UserSettings::showPreview;
+}
+
+void UserSettings::SetShowPreview(bool showPreview)
+{
+    if (showPreview != UserSettings::showPreview)
+    {
+        UserSettings::showPreview = showPreview;
+        SaveSettingsAsync();
+    }
+}
+
 // Writes a serialized version of the current settings to disk.
 void UserSettings::WriteSettings()
 {
-	isWriterFinished = FALSE;
+    isWriterFinished = false;
     std::vector<std::wstring> settings = this->Serialize();
 
     File::WriteAllLines(fullSettingPath, settings);
-	isWriterFinished = TRUE;
+    isWriterFinished = true;
 }
 
 // Returns a vector of type std::wstring containing std::wstring
@@ -312,7 +327,8 @@ std::vector<std::wstring> UserSettings::Serialize()
         (std::to_wstring(MENU_CHARS) + SEPARATOR + std::to_wstring(MenuDisplayChars())),
         (std::to_wstring(CMENU_HOTKEY) + SEPARATOR + std::to_wstring(ClipsMenuHotkey())),
         (std::to_wstring(SAVE_TO_DISK) + SEPARATOR + std::to_wstring(SaveToDisk())),
-        (std::to_wstring(SLCT_2ND_CLIP) + SEPARATOR + std::to_wstring(Select2ndClip()))
+        (std::to_wstring(SLCT_2ND_CLIP) + SEPARATOR + std::to_wstring(Select2ndClip())),
+        (std::to_wstring(SHOW_PREVIEW) + SEPARATOR + std::to_wstring(ShowPreview()))
     };
 
     return retVal;
@@ -372,6 +388,12 @@ void UserSettings::Deserialize(std::vector<std::wstring> srData)
                 SetSelect2ndClip(result);
             }
         break;
+        case SHOW_PREVIEW:
+            {
+                bool result = pair.second.compare(std::to_wstring(true)) == 0;
+                SetShowPreview(result);
+            }
+            break;
         default:
             break;
         }
@@ -381,15 +403,15 @@ void UserSettings::Deserialize(std::vector<std::wstring> srData)
 // Schedules a write operation to the settings file.
 void UserSettings::SaveSettingsAsync()
 {
-	if (settingWriterWaitCount == 0)
-	{
-		settingWriterWaitCount++;
-		std::thread([&]() {DelaySettingWriter(&settingWriterWaitCount, this); }).detach();
-	}
-	else
-	{
-		settingWriterWaitCount++;
-	}
+    if (settingWriterWaitCount == 0)
+    {
+        settingWriterWaitCount++;
+        std::thread([&]() {DelaySettingWriter(&settingWriterWaitCount, this); }).detach();
+    }
+    else
+    {
+        settingWriterWaitCount++;
+    }
 }
 
 // Sets the value pointed to by waitCount to 1, sleeps for an
@@ -397,14 +419,14 @@ void UserSettings::SaveSettingsAsync()
 // not have a value of zero. If it does, it writes the settings file to disk.
 void UserSettings::DelaySettingWriter(int* waitCount, UserSettings* us)
 {
-	while (*waitCount != 0)
-	{
-		// we wait to make sure that no aditional actions
-		// have been taken since we started waiting.
-		(*waitCount) = 1;
-		Sleep(WRITE_DELAY);
-		(*waitCount)--;
-	}
+    while (*waitCount != 0)
+    {
+        // we wait to make sure that no aditional actions
+        // have been taken since we started waiting.
+        (*waitCount) = 1;
+        Sleep(WRITE_DELAY);
+        (*waitCount)--;
+    }
 
-	us->WriteSettings();
+    us->WriteSettings();
 }

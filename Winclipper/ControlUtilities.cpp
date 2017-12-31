@@ -43,54 +43,99 @@ int ScaleY(int y) { return MulDiv(y, _dpiY, 96); }
 // Draw text to a fit within a rectangle, and then measure
 // the resulting rectangle to determine how much space is
 // required to draw the text in a dialog.
-RECT MeasureString(LPCWSTR text, HFONT font)
+void MeasureString(LPCWSTR text, HFONT font, LPRECT rect)
 {
     HDC hDC = GetDC(NULL);
     SelectObject(hDC, font);
-    RECT r = { 0, 0, 0, 0 };
-    DrawText(hDC, text, -1, &r, DT_CALCRECT);
-    return r;
+    DrawText(hDC, text, -1, rect, DT_CALCRECT);
+    return;
 }
 
 // Creates an instance of a label object with a specified font and custom text.
 HWND AddLabel(HWND hWnd, HFONT font, int x, int y, HINSTANCE hIn, LPCWSTR text, UINT_PTR id)
 {
-    RECT boxsize = MeasureString(text, font);
+    LPRECT boxsize = new RECT();
+    MeasureString(text, font, boxsize);
     
     HWND hControl = CreateWindowExW(WS_EX_LEFT,
         WC_STATIC,
         text,
         WS_CHILD | WS_VISIBLE,
         ScaleX(x), ScaleY(y),
-        boxsize.right, boxsize.bottom,
+        (*boxsize).right, (*boxsize).bottom,
         hWnd,
         (HMENU)id,
         hIn,
         NULL);
-    SendMessage(hControl, WM_SETFONT, (WPARAM)font, MAKELPARAM(FALSE, 0));
+    SendMessage(hControl, WM_SETFONT, (WPARAM)font, MAKELPARAM(false, 0));
     //SetWindowText(hControl, text);
-
+    delete boxsize;
     return hControl;
+}
+
+HWND AddEdit(HWND hWnd, HFONT font, int x, int y, int width, int height, HINSTANCE hIn, LPCWSTR text, UINT_PTR id, bool readOnly, bool multiLine, bool vScroll, bool hScroll)
+{
+    DWORD style = WS_CHILDWINDOW | WS_VISIBLE | WS_TABSTOP | ES_LEFT;
+
+    if (readOnly)
+    {
+        style = style | ES_READONLY;
+    }
+    if (multiLine)
+    {
+        style = style | ES_MULTILINE;
+    }
+    if (vScroll)
+    {
+        style = style | ES_AUTOVSCROLL;
+    }
+    if (hScroll)
+    {
+        style = style | ES_AUTOHSCROLL;
+    }
+
+    HWND hControl = CreateWindowEx(WS_EX_LEFT | WS_EX_CLIENTEDGE,    //Extended window styles.
+        WC_EDIT,
+        text,
+        style,
+        ScaleX(x), ScaleY(y),
+        ScaleX(width), ScaleY(height),
+        hWnd,
+        (HMENU)id,
+        hIn,
+        NULL);
+
+    SendMessage(hControl, WM_SETFONT, (WPARAM)font, MAKELPARAM(false, 0));
+    if (vScroll)
+    {
+        ShowScrollBar(hControl, SB_VERT, true);
+    }
+    if (hScroll)
+    {
+        ShowScrollBar(hControl, SB_HORZ, true);
+    }
+    return (hControl);
 }
 
 // Creates an instance of a checkbox object with a specified font and custom text for the associated label.
 HWND AddCheckbox(HWND hWnd, HFONT font, int x, int y, HINSTANCE hIn, LPCWSTR text, UINT_PTR id)
 {
-    RECT boxsize = MeasureString(text, font);
+    LPRECT boxsize = new RECT();
+    MeasureString(text, font, boxsize);
 
     HWND hControl = CreateWindowExW(WS_EX_LEFT,
         WC_BUTTON,
         text,
         WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_CHECKBOX,
         ScaleX(x), ScaleY(y),
-        boxsize.right + ScaleX(20), boxsize.bottom,
+        (*boxsize).right + ScaleX(20), (*boxsize).bottom,
         hWnd,
         (HMENU)id,
         hIn,
         nullptr);
-    SendMessage(hControl, WM_SETFONT, (WPARAM)font, MAKELPARAM(FALSE, 0));
-    //SetWindowText(hControl, text);
 
+    SendMessage(hControl, WM_SETFONT, (WPARAM)font, MAKELPARAM(false, 0));
+    delete boxsize;
     return hControl;
 }
 
@@ -109,7 +154,7 @@ HWND CreateUpDnBuddy(HWND hWnd, HFONT font, int x, int y, HINSTANCE hIn, UINT_PT
         hIn,
         NULL);
 
-    SendMessage(hControl, WM_SETFONT, (WPARAM)font, MAKELPARAM(FALSE, 0));
+    SendMessage(hControl, WM_SETFONT, (WPARAM)font, MAKELPARAM(false, 0));
     return (hControl);
 }
 
@@ -162,7 +207,7 @@ HWND AddHotkeyCtrl(HWND hWnd, HFONT font, int x, int y, int width, int height, H
         hIn,
         NULL);
 
-    SendMessage(hControl, WM_SETFONT, (WPARAM)font, MAKELPARAM(FALSE, 0));
+    SendMessage(hControl, WM_SETFONT, (WPARAM)font, MAKELPARAM(false, 0));
 
     SetFocus(hControl);
 

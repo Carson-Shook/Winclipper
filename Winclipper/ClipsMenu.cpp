@@ -9,17 +9,17 @@
 
 void ClipsManager::SaveClipsAsync()
 {
-	if (SaveToDisk())
-	{
-		if (clipsWriterWaitCount == 0)
-		{
-			clipsWriterWaitCount++;
-			std::thread([&]() {DelayClipsWriter(&clipsWriterWaitCount, this); }).detach();
-		}
-		else
-		{
-			clipsWriterWaitCount++;
-		}
+    if (SaveToDisk())
+    {
+        if (clipsWriterWaitCount == 0)
+        {
+            clipsWriterWaitCount++;
+            std::thread([&]() {DelayClipsWriter(&clipsWriterWaitCount, this); }).detach();
+        }
+        else
+        {
+            clipsWriterWaitCount++;
+        }
     }
     else
     {
@@ -32,23 +32,23 @@ void ClipsManager::SaveClipsAsync()
 
 void ClipsManager::DelayClipsWriter(int * waitCount, ClipsManager * cs)
 {
-	while (*waitCount != 0)
-	{
-		// we wait to make sure that no aditional actions
-		// have been taken since we started waiting.
-		(*waitCount) = 1;
-		Sleep(CLIPS_WRITE_DELAY);
-		(*waitCount)--;
-	}
+    while (*waitCount != 0)
+    {
+        // we wait to make sure that no aditional actions
+        // have been taken since we started waiting.
+        (*waitCount) = 1;
+        Sleep(CLIPS_WRITE_DELAY);
+        (*waitCount)--;
+    }
         
-	cs->WriteClips();
+    cs->WriteClips();
 }
 
 void ClipsManager::WriteClips()
 {
-	isWriterFinished = FALSE;
+    isWriterFinished = false;
     File::BinaryWriteDeque(GetClips(), fullClipsPath);
-	isWriterFinished = TRUE;
+    isWriterFinished = true;
 }
 
 void ClipsManager::ReadClips()
@@ -77,7 +77,7 @@ ClipsManager::ClipsManager(int displayClips, int maxClips, int menuChars, bool s
         CoTaskMemFree(tempClipsPath);
     }
 
-	ClipsManager::saveToDisk = saveToDisk;
+    ClipsManager::saveToDisk = saveToDisk;
     ReadClips();
     SetDisplayClips(displayClips);
     SetMaxClips(maxClips);
@@ -89,9 +89,9 @@ ClipsManager::~ClipsManager()
     ClearClips();
 }
 
-BOOL ClipsManager::NoPendingClipWrites()
+bool ClipsManager::NoPendingClipWrites()
 {
-	return clipsWriterWaitCount == 0 && isWriterFinished;
+    return clipsWriterWaitCount == 0 && isWriterFinished;
 }
 
 
@@ -166,10 +166,10 @@ void ClipsManager::ClearClips()
     SaveClipsAsync();
 }
 
-BOOL ClipsManager::AddToClips(HWND hWnd)
+bool ClipsManager::AddToClips(HWND hWnd)
 {
     if (!OpenClipboard(hWnd))
-        return FALSE;
+        return false;
     HANDLE psClipboardData = GetClipboardData(CF_UNICODETEXT);
     if (psClipboardData != NULL)
     {
@@ -196,13 +196,13 @@ BOOL ClipsManager::AddToClips(HWND hWnd)
     }
     CloseClipboard();
     SaveClipsAsync();
-    return TRUE;
+    return true;
 }
 
-BOOL ClipsManager::SetClipboardToClipAtIndex(HWND hWnd, int index)
+bool ClipsManager::SetClipboardToClipAtIndex(HWND hWnd, int index)
 {
     if (!OpenClipboard(hWnd))
-        return FALSE;
+        return false;
 
     EmptyClipboard();
 
@@ -232,31 +232,31 @@ BOOL ClipsManager::SetClipboardToClipAtIndex(HWND hWnd, int index)
     // and the clip will be added to the front of the deque with AddToClips
     CloseClipboard();
     SaveClipsAsync();
-    return TRUE;
+    return true;
 }
 
 void ShowClipsMenu(HWND hWnd, ClipsManager& cm, bool showExit)
 {
-	HWND curWin = GetForegroundWindow();
-	if (hWnd != NULL && curWin != NULL)
-	{
-		// Since WindowsNT (I think), it's necessary to attach the process to the thread
-		// that we want to get the active window of, otherwise we get an unspecified value.
-		// GetForegroundWindow was unreliable with UWP applications because it took too long
-		// to restore the active window (the text field) after the foreground window activated.
-		AttachThreadInput(GetWindowThreadProcessId(curWin, NULL), GetWindowThreadProcessId(hWnd, NULL), TRUE);
-		HWND actWin = GetActiveWindow();
+    HWND curWin = GetForegroundWindow();
+    if (hWnd != NULL && curWin != NULL)
+    {
+        // Since WindowsNT (I think), it's necessary to attach the process to the thread
+        // that we want to get the active window of, otherwise we get an unspecified value.
+        // GetForegroundWindow was unreliable with UWP applications because it took too long
+        // to restore the active window (the text field) after the foreground window activated.
+        AttachThreadInput(GetWindowThreadProcessId(curWin, NULL), GetWindowThreadProcessId(hWnd, NULL), true);
+        HWND actWin = GetActiveWindow();
 
-		SetForegroundWindow(hWnd);
+        SetForegroundWindow(hWnd);
 
-		LPPOINT cPos = new POINT;
-		if (!GetCursorPos(cPos))
-		{
+        LPPOINT cPos = new POINT;
+        if (!GetCursorPos(cPos))
+        {
             (*cPos).x = 10;
             (*cPos).y = 10;
-		}
+        }
 
-		HMENU menu = CreatePopupMenu();
+        HMENU menu = CreatePopupMenu();
 
         size_t curSize = cm.GetClips().size();
         unsigned int displayCount = cm.DisplayClips();
@@ -292,7 +292,7 @@ void ShowClipsMenu(HWND hWnd, ClipsManager& cm, bool showExit)
 
                     for (unsigned int k = 0; k < maxClipSize; k++)
                     {
-                        menuText[k] = clip[k];
+                        menuText[k] = clip[k] == '\t' || clip[k] == '\r' || clip[k] == '\n' ? ' ' : clip[k];
                     }
 
                     AppendMenu(menu, MF_STRING, i + 1, menuText);
@@ -324,7 +324,7 @@ void ShowClipsMenu(HWND hWnd, ClipsManager& cm, bool showExit)
 
                         for (unsigned int k = 0; k < maxClipSize; k++)
                         {
-                            menuText[k] = clip[k];
+                            menuText[k] = clip[k] == '\t' || clip[k] == '\r' || clip[k] == '\n' ? ' ' : clip[k];
                         }
 
                         AppendMenu(sMenu, MF_STRING, j + 1, menuText);
@@ -346,7 +346,7 @@ void ShowClipsMenu(HWND hWnd, ClipsManager& cm, bool showExit)
         {
             AppendMenu(menu, MF_STRING, EXIT_SELECT, L"&Exit");
         }
-		
+        
 
         int menuSelection;
         menuSelection = TrackPopupMenu(
@@ -359,8 +359,8 @@ void ShowClipsMenu(HWND hWnd, ClipsManager& cm, bool showExit)
             NULL
         );
 
-		if (menuSelection)
-		{
+        if (menuSelection)
+        {
             switch (menuSelection)
             {
             case CLEARCLIPS_SELECT:
@@ -381,28 +381,28 @@ void ShowClipsMenu(HWND hWnd, ClipsManager& cm, bool showExit)
                 // Have to subtract 1 from index because returning 0 in
                 // TrackPopupMenu means cancelation
                 cm.SetClipboardToClipAtIndex(actWin, menuSelection - 1);
-				
-				// attempts to set the active window. Usually succeeds immediately, but not always 
-				int retries = 10;
-				HWND temp = GetActiveWindow();
-				while (temp != actWin && retries > 0)
-				{
-					temp = GetActiveWindow();
-					retries--;
-					Sleep(20);
-				}
+                
+                // attempts to set the active window. Usually succeeds immediately, but not always 
+                int retries = 10;
+                HWND temp = GetActiveWindow();
+                while (temp != actWin && retries > 0)
+                {
+                    temp = GetActiveWindow();
+                    retries--;
+                    Sleep(20);
+                }
 
                 SendPasteInput();
                 SetActiveWindow(actWin);
-				break;
+                break;
             }
-		}
-		// detatch from thread of the active window
-		AttachThreadInput(GetWindowThreadProcessId(curWin, NULL), GetWindowThreadProcessId(hWnd, NULL), FALSE);
+        }
+        // detatch from thread of the active window
+        AttachThreadInput(GetWindowThreadProcessId(curWin, NULL), GetWindowThreadProcessId(hWnd, NULL), false);
 
-		PostMessage(hWnd, WM_NULL, 0, 0);
+        PostMessage(hWnd, WM_NULL, 0, 0);
         delete[] menuText;
-	}
+    }
 }
 
 void SelectDefaultMenuItem(bool select2ndClip)
@@ -434,22 +434,22 @@ void SelectDefaultMenuItem(bool select2ndClip)
 
 void SendPasteInput(void)
 {
-	INPUT inputCtrlKey;
-	INPUT inputVKey;
+    INPUT inputCtrlKey;
+    INPUT inputVKey;
 
-	inputCtrlKey.type = INPUT_KEYBOARD;
-	inputCtrlKey.ki.wVk = VK_CONTROL;
-	inputCtrlKey.ki.wScan = 0;
-	inputCtrlKey.ki.time = 0;
-	inputCtrlKey.ki.dwFlags = 0;
-	inputCtrlKey.ki.dwExtraInfo = 0;
+    inputCtrlKey.type = INPUT_KEYBOARD;
+    inputCtrlKey.ki.wVk = VK_CONTROL;
+    inputCtrlKey.ki.wScan = 0;
+    inputCtrlKey.ki.time = 0;
+    inputCtrlKey.ki.dwFlags = 0;
+    inputCtrlKey.ki.dwExtraInfo = 0;
 
-	inputVKey.type = INPUT_KEYBOARD;
-	inputVKey.ki.wVk = 0x56;
-	inputVKey.ki.wScan = 0;
-	inputVKey.ki.time = 0;
-	inputVKey.ki.dwFlags = 0;
-	inputVKey.ki.dwExtraInfo = 0;
+    inputVKey.type = INPUT_KEYBOARD;
+    inputVKey.ki.wVk = 0x56;
+    inputVKey.ki.wScan = 0;
+    inputVKey.ki.time = 0;
+    inputVKey.ki.dwFlags = 0;
+    inputVKey.ki.dwExtraInfo = 0;
 
     SendInput(1, &inputCtrlKey, sizeof(INPUT));
     SendInput(1, &inputVKey, sizeof(INPUT));
@@ -461,5 +461,5 @@ void SendPasteInput(void)
     SendInput(1, &inputVKey, sizeof(INPUT));
     SendInput(1, &inputCtrlKey, sizeof(INPUT));
 
-	return;
+    return;
 }

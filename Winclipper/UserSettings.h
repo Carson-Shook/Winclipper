@@ -27,6 +27,9 @@
 #define SLCT_2ND_CLIP       6
 #define SLCT_2ND_CLIP_DEF   true
 
+#define SHOW_PREVIEW        7
+#define SHOW_PREVIEW_DEF    true
+
 // Save and load user settings to and from disk
 class UserSettings
 {
@@ -38,9 +41,10 @@ private:
     WORD                clipsMenuHotkey;
     bool                saveToDisk = SAVE_TO_DISK_DEF;
     bool                select2ndClip;
+    bool                showPreview;
 
-	int                 settingWriterWaitCount = 0;
-	BOOL                isWriterFinished = TRUE;
+    int                 settingWriterWaitCount = 0;
+    bool                isWriterFinished = true;
 
     void                SaveSettingsAsync();
     static void         DelaySettingWriter(int* waitCount, UserSettings* us);
@@ -54,7 +58,7 @@ public:
     UserSettings();
     ~UserSettings();
 
-	BOOL                NoPendingSettingWrites();
+    bool                NoPendingSettingWrites();
 
     int                 MaxDisplayClips();
     void                SetMaxDisplayClips(int maxDisplayClips);
@@ -74,6 +78,9 @@ public:
 
     bool                Select2ndClip();
     void                SetSelect2ndClip(bool select2ndClip);
+
+    bool                ShowPreview();
+    void                SetShowPreview(bool showPreview);
 };
 
 

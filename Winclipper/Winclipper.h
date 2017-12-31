@@ -1,8 +1,8 @@
 #pragma once
 
-#define MAX_LOADSTRING	        100
+#define MAX_LOADSTRING            100
 #define MAX_VALUE_NAME          16383
-#define ID_REG_HOTKEY	        100
+#define ID_REG_HOTKEY            100
 #define UID_NOTIFYICON          2180847866      // random UID for the notifyicon
 
 #define LBL_MAX_CLIPS_DISPLAY   200
@@ -20,31 +20,46 @@
 #define CHK_RUN_AT_STARTUP      209
 #define CHK_SAVE_TO_DISK        210
 #define CHK_SLCT_2ND_CLIP       211
+#define CHK_SHOW_PREVIEW        212
 
-#define LBL_SHOW_CLIPS_HOTK     212
-#define HKY_SHOW_CLIPS_MENU     213
+#define LBL_SHOW_CLIPS_HOTK     213
+#define HKY_SHOW_CLIPS_MENU     214
+
+#define TXT_CLIP_PREVIEW        215
 
 // Global Variables:
 HINSTANCE hInst;                                    // current instance
 HWND mainWnd;
+HWND previewWnd;
+HWND previewTextBox;
 HWND settingsWnd;
-wchar_t szTitle[MAX_LOADSTRING];                      // The title bar text
-wchar_t szMainWindowClass[MAX_LOADSTRING];            // the main window class name
-wchar_t szSettingsWindowClass[MAX_LOADSTRING];        // the settings window class name
+HMENU topPopupMenu;
+HMENU activePopupMenu;
+wchar_t szTitle[MAX_LOADSTRING];                    // The title bar text
+wchar_t szMainWindowClass[MAX_LOADSTRING];          // the main window class name
+wchar_t szPreviewWindowClass[MAX_LOADSTRING];       // the text preview window
+wchar_t szSettingsWindowClass[MAX_LOADSTRING];      // the settings window class name
 UINT const WMAPP_NOTIFYCALLBACK = WM_APP + 1;       // user defined callback for notfiyicon actions
 UserSettings uSettings;                             // user settings manager
 ClipsManager cManager { uSettings.MaxDisplayClips(), uSettings.MaxSavedClips(), uSettings.MenuDisplayChars(), uSettings.SaveToDisk() }; // clips manager
 
+HBRUSH hbrBkgnd;
+HFONT hFontStd;
+
 // Forward declarations of functions included in this code module:
 ATOM                    RegisterMainClass(HINSTANCE hInstance);
+ATOM                    RegisterPreviewWindowClass(HINSTANCE hInstance);
 ATOM                    RegisterSettingsWindowClass(HINSTANCE hInstance);
-BOOL                    InitMainWindow(HINSTANCE, int);
-BOOL                    InitSettingsWindow(HINSTANCE, int);
+bool                    InitMainWindow(HINSTANCE, int);
+bool                    InitPreviewWindow(HINSTANCE, int);
+bool                    InitSettingsWindow(HINSTANCE, int);
 LRESULT CALLBACK        WndProc(HWND, UINT, WPARAM, LPARAM);
+LRESULT CALLBACK        PreviewWndProc(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK        SettingsWndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK        About(HWND, UINT, WPARAM, LPARAM);
-BOOL                    WriteRegistryRun();
-BOOL                    DeleteRegistryRun();
-BOOL                    QueryKeyForValue(HKEY hKey, wchar_t* checkValue);
-BOOL                    AddNotificationIcon(HWND hWnd);
-BOOL                    DeleteNotificationIcon();
+bool                    WriteRegistryRun();
+bool                    DeleteRegistryRun();
+bool                    QueryKeyForValue(HKEY hKey, wchar_t* checkValue);
+bool                    AddNotificationIcon(HWND hWnd);
+bool                    DeleteNotificationIcon();
+void                    MeasureStringWithRect(LPCWSTR text, LPRECT rect);
