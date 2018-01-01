@@ -16,4 +16,4 @@ Still looking for a good update system, but once I do, current users will need t
 
 ## Changelog
 
-**1.0**		2018-01-01		Initial Release!
+**1.0**      2018-01-01      Initial Release!
