@@ -422,14 +422,23 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                         // These two if's account for the preview going off screen.
                         // their position is precalculated, and if they would move out
                         // of the desktop area, they are recalculated to appear on
-                        // the other side of the popupmenu.
+                        // the other side of the popupmenu, unless this would make
+                        // them go off screen.
                         if (xLoc + width > (*desktop).right)
                         {
-                            xLoc = (*menuItemDims).left - (width + ScaleX(32));
+                            int xLocTemp = (*menuItemDims).left - (width + ScaleX(32));
+                            if (xLocTemp > 0)
+                            {
+                                xLoc = xLocTemp;
+                            }
                         }
                         if (yLoc + height > (*desktop).bottom)
                         {
-                            yLoc = (*menuItemDims).bottom - (height + ScaleY(20));
+                            int yLocTemp = (*menuItemDims).bottom - (height + ScaleY(20));
+                            if (yLocTemp > 0)
+                            {
+                                yLoc = yLocTemp;
+                            }
                         }
 
                         // The magic numbers used here are corrections for miscalculation of the measure string claculation.
