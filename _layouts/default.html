@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8" name="viewport" content="width=device-width, initial-scale=1">
+		<title>{{ page.title }}</title>
+		<link rel="stylesheet" href="/style1.css">
+			</head>
+	<body id="blog">
+		{% include navigation.html %}
+		<main>
+			<div class="content-wrap">
+				{{ content }}
+			</div>
+		</main>
+		{% include footer.html %}
+	</body>
+</html>
