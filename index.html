@@ -7,6 +7,7 @@
 		<meta charset="UTF-8" name="viewport" content="width=device-width, initial-scale=1">
         <title>Winclipper</title>
         {% include head.html %}
+        <link rel="stylesheet" href="/stylewinclipper.css">
     </head>
     <body id="projects">
 		{% include navigation.html %}
@@ -14,9 +15,9 @@
       <div class="centering" style="background-color:#90bbff;">
           <br>
           <br>
-          <h1 style="color:white;font-size:4em;">Winclipper</h1>
+          <h1 style="color:white;">Winclipper</h1>
           <br>
-          <img src="WinclipperSvg.svg" style="Height:300px;Width:300px;" alt="Image of Night Mode for Adium"/>
+          <img id="logo" src="WinclipperSvg.svg" alt="The Winclipper Logo"/>
           <br>
           <br>
           <br>
@@ -29,8 +30,37 @@
                     <a href="https://github.com/Carson-Shook/Winclipper/releases/download/v1.0/WinclipperSetup-x86.zip" download><span class="button">Download 32-bit</span></a>
                     </h4>
                     <br>
-                    <p>Winclipper is a better clipboard for Windows with Unicode support and a built in preview so that you always know what you're pasting.</p>
-                    <br><br>
+                    <p>Winclipper is a better clipboard manager for Windows with Unicode support and a built-in preview so that you always know exactly what you're pasting.</p>
+                    <br>
+                    <hr>
+                    <br>
+                    <div class="twocol">
+                      <div class="txtrightcol col-63" id="menutext">
+                        <h2>Save it for later</h2>
+                        <p>View all of your recently copied text, links, code, and more, and paste what you want, whenever you want. Clips are saved to your computer so that you can keep them, even when you power down.</p>
+                      </div>
+                      <div class="imgleftcol col-33">
+                        <img class="screenshots" id="menu" src="Menu.png"/>
+                      </div>
+                    </div>
+                    <div class="twocol">
+                      <div class="txtleftcol col-48" id="emojipreviewtext">
+                        <h2>Yes, it can do emoji</h2>
+                        <p>If you love emoji, you can copy and paste with confidence. Winclipper is Unicode compliant and can paste anything you throw at it, including emoji, or any font-supported Unicode character. On Windows 8.1 and higher, you can preview any emoji you copy to ensure your meaning is always clear!</p>
+                      </div>
+                      <div class="imgrightcol col-48">
+                        <img class="screenshots" id="emojipreview" src="EmojiPreview.png"/>
+                      </div>
+                    </div>
+                    <div class="twocol">
+                      <div>
+                        <h2>A built-in preview makes programming painless</h2>
+                        <p>Winclipper is designed with software development in mind. A large, responsive preview window makes it easy to distinguish similar blocks of code from one another.</p>
+                      </div>
+                      <div>
+                        <img class="screenshots" id="codepreview" src="CodePreview.png"/>
+                      </div>
+                    </div>
                 </div>
             </div>
         </main>
