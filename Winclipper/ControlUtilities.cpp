@@ -48,6 +48,19 @@ void MeasureString(LPCWSTR text, HFONT font, LPRECT rect)
     HDC hDC = GetDC(NULL);
     SelectObject(hDC, font);
     DrawText(hDC, text, -1, rect, DT_CALCRECT);
+    ReleaseDC(NULL, hDC);
+    return;
+}
+
+// Measure text in a rectangle and allow for wrapping
+// to multiple lines. Appropriate for calculating size
+// of large edit controls and similar.
+void MeasureStringMultilineWrap(LPCWSTR text, HFONT font, LPRECT rect)
+{
+    HDC hDC = GetDC(NULL);
+    SelectObject(hDC, font);
+    DrawText(hDC, text, -1, rect, DT_CALCRECT | DT_WORDBREAK | DT_EXTERNALLEADING | DT_NOPREFIX | DT_EDITCONTROL);
+    ReleaseDC(NULL, hDC);
     return;
 }
 

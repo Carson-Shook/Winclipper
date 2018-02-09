@@ -92,7 +92,7 @@ ATOM RegisterPreviewWindowClass(HINSTANCE hInstance)
 
     wcex.cbSize = sizeof(WNDCLASSEX);
 
-    wcex.style = CS_HREDRAW | CS_VREDRAW;
+    wcex.style = CS_DROPSHADOW | CS_HREDRAW | CS_VREDRAW;
     wcex.lpfnWndProc = PreviewWndProc;
     wcex.cbClsExtra = 0;
     wcex.cbWndExtra = 0;
@@ -157,7 +157,7 @@ bool InitMainWindow(HINSTANCE hInstance, int nCmdShow)
 
 bool InitPreviewWindow(HINSTANCE hInstance, int nCmdShow)
 {
-    HWND hWnd = CreateWindowExW(0, szPreviewWindowClass, L"", WS_POPUP,
+    HWND hWnd = CreateWindowExW(0, szPreviewWindowClass, L"", WS_CHILD | WS_POPUP,
         0, 0, ScaleX(400), ScaleY(400), mainWnd, nullptr, hInstance, nullptr);
 
     if (!hWnd)
@@ -166,9 +166,6 @@ bool InitPreviewWindow(HINSTANCE hInstance, int nCmdShow)
     }
 
     previewWnd = hWnd;
-
-    // Add controls in tab order
-    previewTextBox = AddEdit(hWnd, hFontStd, 6, 6, 388, 388, hInstance, L"EXAMPLE TEXT\r\nMore Text that is also really long to see what happens when it clips", TXT_CLIP_PREVIEW, true, true, false, false);
 
     ShowWindow(hWnd, SW_HIDE);
     UpdateWindow(hWnd);
@@ -377,11 +374,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 int i = LOWORD(wParam);
                 if (i != 0 && i <= cManager.GetClips().size())
                 {
-                    wchar_t * fullClipText = cManager.GetClips()[i - 1];
-                    SendDlgItemMessage(previewWnd, TXT_CLIP_PREVIEW, WM_SETTEXT, 0, (LPARAM)fullClipText);
+                    previewClip = cManager.GetClips()[i - 1];
 
-                    LPRECT previewSize = new RECT({ 0, 0, ScaleX(500), 0 });
-                    MeasureStringWithRect(fullClipText, previewSize);
+                    LPRECT previewSize = new RECT({ 0, 0, ScaleX(500), ScaleY(500) });
+                    MeasureStringMultilineWrap(previewClip, hFontStd, previewSize);
 
                     LPRECT desktop = new RECT();
                     HWND hDesktop = GetDesktopWindow();
@@ -399,56 +395,62 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                     if (GetMenuItemRect(hWnd, activePopupMenu, i - offset, menuItemDims))
                     {
                         // Let's let our max size be 500
-                        int width = ScaleX(500);
-                        int height = ScaleY(500);
+                        long width = ScaleX(500);
+                        long height = ScaleY(500);
 
-                        if ((*previewSize).right < width)
+                        if (previewSize->right < width)
                         {
-                            width = (*previewSize).right;
+                            width = previewSize->right;
                         }
-                        if ((*previewSize).bottom < height)
+                        if (previewSize->bottom < height)
                         {
-                            height = (*previewSize).bottom;
-                            ShowScrollBar(previewTextBox, SB_VERT, false);
+                            height = previewSize->bottom;
                         }
                         else
                         {
-                            ShowScrollBar(previewTextBox, SB_VERT, true);
+                            previewSize->bottom = height;
+                        }
+                        CopyRect(previewRect, previewSize);
+
+                        LPPOINT cPos = new POINT;
+                        if (!GetCursorPos(cPos))
+                        {
+                            cPos->x = 10;
+                            cPos->y = 10;
                         }
 
-                        int xLoc = (*menuItemDims).right + ScaleX(5);
-                        int yLoc = (*menuItemDims).top;
+                        int xLoc = menuItemDims->right + ScaleX(5);
+                        int yLoc = cPos->y;
 
                         // These two if's account for the preview going off screen.
                         // their position is precalculated, and if they would move out
                         // of the desktop area, they are recalculated to appear on
                         // the other side of the popupmenu, unless this would make
                         // them go off screen.
-                        if (xLoc + width > (*desktop).right)
+                        if (xLoc + width + ScaleX(30) > desktop->right)
                         {
-                            int xLocTemp = (*menuItemDims).left - (width + ScaleX(32));
+                            int xLocTemp = menuItemDims->left - (width + ScaleX(32));
                             if (xLocTemp > 0)
                             {
                                 xLoc = xLocTemp;
                             }
                         }
-                        if (yLoc + height > (*desktop).bottom)
+                        if (yLoc + height + ScaleX(30) > desktop->bottom)
                         {
-                            int yLocTemp = (*menuItemDims).bottom - (height + ScaleY(20));
+                            int yLocTemp = yLoc - (height + ScaleY(24));
                             if (yLocTemp > 0)
                             {
                                 yLoc = yLocTemp;
                             }
                         }
 
-                        // The magic numbers used here are corrections for miscalculation of the measure string claculation.
-                        MoveWindow(previewTextBox, ScaleX(6), ScaleY(6), width + ScaleX(16), height + ScaleX(8), true);
 
                         // The two flags at the end ensure that we don't loose focus of the popup menu.
-                        SetWindowPos(previewWnd, HWND_TOPMOST, xLoc, yLoc, width + ScaleX(28), height + ScaleY(20), SWP_NOACTIVATE | SWP_NOSENDCHANGING);
-
+                        SetWindowPos(previewWnd, HWND_TOPMOST, xLoc, yLoc, width + ScaleX(26), height + ScaleY(24), SWP_NOACTIVATE | SWP_NOSENDCHANGING);
+                        
                         AnimateWindow(previewWnd, 50, AW_BLEND);
-
+                        UpdateWindow(previewWnd);
+                        delete cPos;
                     }
                     delete previewSize;
                     delete desktop;
@@ -467,6 +469,29 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     }
     break;
     default:
+        // This ensures that if the mouse is moved outside of the popup menu,
+        // then the preview window will be hidden. This is achieved by 
+        // comparing the previous mouse location against the current, and if
+        // they are different, we check to see if they are now selecting a
+        // menuItem. If not, then hide the preview window.
+        if (IsWindowVisible(previewWnd))
+        {
+            LPPOINT cPos = new POINT;
+            if (GetCursorPos(cPos))
+            {
+                if (cPos->x != previousMouseLoc->x || cPos->y != previousMouseLoc->y)
+                {
+                    previousMouseLoc->x = cPos->x;
+                    previousMouseLoc->y = cPos->y;
+
+                    if (MenuItemFromPoint(hWnd, activePopupMenu, *cPos) == -1)
+                    {
+                        AnimateWindow(previewWnd, 50, AW_BLEND | AW_HIDE);
+                    }
+                }
+            }
+            delete cPos;
+        }
         return DefWindowProc(hWnd, message, wParam, lParam);
     }
     return 0;
@@ -481,17 +506,32 @@ LRESULT CALLBACK PreviewWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
         DeleteObject(hbrBkgnd);
     }
     break;
-    case WM_CTLCOLORSTATIC:
+    case WM_PAINT:
     {
-        HDC hdcStatic = (HDC)wParam;
-        SetBkColor(hdcStatic, RGB(255, 255, 255));
-
-        if (hbrBkgnd == NULL)
+        if (previewClip == nullptr)
         {
-            hbrBkgnd = CreateSolidBrush(RGB(255, 255, 255));
+            return 0;
         }
-        return (INT_PTR)hbrBkgnd;
 
+        PAINTSTRUCT ps;
+        HDC hdc;
+
+        hdc = BeginPaint(hWnd, &ps);
+
+        Rectangle(hdc, previewRect->left + ScaleX(6), previewRect->top + ScaleY(6), previewRect->right + ScaleX(20), previewRect->bottom + ScaleY(18));
+
+        LPRECT textRect = new RECT;
+        CopyRect(textRect, previewRect);
+        textRect->top += ScaleY(10);
+        textRect->left += ScaleX(12);
+        textRect->right += ScaleX(12);
+        textRect->bottom += ScaleY(10);
+        SelectObject(hdc, hFontStd);
+        
+        DrawText(hdc, previewClip, -1, textRect, DT_WORDBREAK | DT_EXTERNALLEADING | DT_NOPREFIX | DT_EDITCONTROL);
+        EndPaint(hWnd, &ps);
+        delete textRect;
+        return 0;
     }
     break;
     default:
@@ -890,13 +930,4 @@ bool DeleteNotificationIcon()
     NOTIFYICONDATA nid = { sizeof(nid) };
     nid.uID = UID_NOTIFYICON;
     return Shell_NotifyIcon(NIM_DELETE, &nid);
-}
-
-void MeasureStringWithRect(LPCWSTR text, LPRECT rect)
-{
-    HDC hDC = GetDC(NULL);
-
-    SelectObject(hDC, hFontStd);
-    DrawText(hDC, text, -1, rect, DT_CALCRECT | DT_WORDBREAK);
-    return;
 }

@@ -1,8 +1,8 @@
 #pragma once
 
-#define MAX_LOADSTRING            100
+#define MAX_LOADSTRING          100
 #define MAX_VALUE_NAME          16383
-#define ID_REG_HOTKEY            100
+#define ID_REG_HOTKEY           100
 #define UID_NOTIFYICON          2180847866      // random UID for the notifyicon
 
 #define LBL_MAX_CLIPS_DISPLAY   200
@@ -26,6 +26,7 @@
 #define HKY_SHOW_CLIPS_MENU     214
 
 #define TXT_CLIP_PREVIEW        215
+#define WND_PREVIEW             216
 
 // Global Variables:
 HINSTANCE hInst;                                    // current instance
@@ -45,6 +46,9 @@ ClipsManager cManager { uSettings.MaxDisplayClips(), uSettings.MaxSavedClips(), 
 
 HBRUSH hbrBkgnd;
 HFONT hFontStd;
+LPRECT previewRect = new RECT({ 0, 0, ScaleX(500), ScaleY(500) });
+wchar_t * previewClip = nullptr;
+LPPOINT previousMouseLoc = new POINT;
 
 // Forward declarations of functions included in this code module:
 ATOM                    RegisterMainClass(HINSTANCE hInstance);
@@ -62,4 +66,3 @@ bool                    DeleteRegistryRun();
 bool                    QueryKeyForValue(HKEY hKey, wchar_t* checkValue);
 bool                    AddNotificationIcon(HWND hWnd);
 bool                    DeleteNotificationIcon();
-void                    MeasureStringWithRect(LPCWSTR text, LPRECT rect);

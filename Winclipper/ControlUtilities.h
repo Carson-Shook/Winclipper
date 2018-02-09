@@ -3,6 +3,9 @@
 int ScaleX(int x);
 int ScaleY(int y);
 
+void MeasureString(LPCWSTR text, HFONT font, LPRECT rect);
+void MeasureStringMultilineWrap(LPCWSTR text, HFONT font, LPRECT rect);
+
 HWND AddLabel(HWND hWnd, HFONT font, int x, int y, HINSTANCE hIn, LPCWSTR text, UINT_PTR id);
 HWND AddEdit(HWND hWnd, HFONT font, int x, int y, int width, int height, HINSTANCE hIn, LPCWSTR text, UINT_PTR id, bool readOnly, bool multiLine, bool vScroll, bool hScroll);
 HWND AddCheckbox(HWND hWnd, HFONT font, int x, int y, HINSTANCE hIn, LPCWSTR text, UINT_PTR id);

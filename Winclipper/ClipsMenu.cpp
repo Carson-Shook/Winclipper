@@ -402,6 +402,7 @@ void ShowClipsMenu(HWND hWnd, ClipsManager& cm, bool showExit)
 
         PostMessage(hWnd, WM_NULL, 0, 0);
         delete[] menuText;
+        delete cPos;
     }
 }
 
