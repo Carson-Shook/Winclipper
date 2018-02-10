@@ -86,6 +86,8 @@ HWND AddLabel(HWND hWnd, HFONT font, int x, int y, HINSTANCE hIn, LPCWSTR text, 
     return hControl;
 }
 
+// Creates an instance of an edit object with a specified font and specific dimensions, 
+// as well as the optional styles READONLY, MULTILINE, AUTOVSCROLL, and AUTOHSCROLL.
 HWND AddEdit(HWND hWnd, HFONT font, int x, int y, int width, int height, HINSTANCE hIn, LPCWSTR text, UINT_PTR id, bool readOnly, bool multiLine, bool vScroll, bool hScroll)
 {
     DWORD style = WS_CHILDWINDOW | WS_VISIBLE | WS_TABSTOP | ES_LEFT;

@@ -169,7 +169,10 @@ void ClipsManager::ClearClips()
 bool ClipsManager::AddToClips(HWND hWnd)
 {
     if (!OpenClipboard(hWnd))
+    {
         return false;
+    }
+
     HANDLE psClipboardData = GetClipboardData(CF_UNICODETEXT);
     if (psClipboardData != NULL)
     {
@@ -179,15 +182,18 @@ bool ClipsManager::AddToClips(HWND hWnd)
             wchar_t * derefData = _wcsdup(data);
             GlobalUnlock(psClipboardData);
 
-            while (clips.size() >= maxClips)
+            if (StrCmpW(derefData, clips.front()) != 0)
             {
-                // get reference to the back object before we pop it
-                wchar_t * back = clips.back();
-                clips.pop_back();
-                // dealocate the former back object
-                delete[] back;
+                while (clips.size() >= maxClips)
+                {
+                    // get reference to the back object before we pop it
+                    wchar_t * back = clips.back();
+                    clips.pop_back();
+                    // dealocate the former back object
+                    delete[] back;
+                }
+                clips.push_front(derefData);
             }
-            clips.push_front(derefData);
         }
         else 
         {
@@ -202,7 +208,9 @@ bool ClipsManager::AddToClips(HWND hWnd)
 bool ClipsManager::SetClipboardToClipAtIndex(HWND hWnd, int index)
 {
     if (!OpenClipboard(hWnd))
+    {
         return false;
+    }
 
     EmptyClipboard();
 
