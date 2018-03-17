@@ -60,7 +60,7 @@
     </DirectoryRef>
   
 		<DirectoryRef Id="APPLICATIONROOTDIRECTORY">
-      <Merge Id="SSUP" SourceFile="SSUP_merge_x64.msm" DiskId="1" Language="0"/>
+      <Merge Id="SSUP" SourceFile="SSUP_merge_x86.msm" DiskId="1" Language="0"/>
       <Component Id="SSUPConfig" Guid="07C4054F-38CB-4F4B-9028-F0E9F254A05D">
         <File Id="SSUPConfig" Source="SSUPConfig.xml" KeyPath="yes"/>
       </Component>
