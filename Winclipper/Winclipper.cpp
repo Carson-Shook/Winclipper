@@ -412,24 +412,34 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                         long height = ScaleY(500);
 
                         LPRECT previewSize = new RECT({ 0, 0, width, height });
-                        MeasureStringMultilineWrap(previewClip, hFontStd, previewSize);
 
-                        if (previewSize->right < width)
-                        {
-                            width = previewSize->right;
-                        }
-                        if (previewSize->bottom < height)
-                        {
-                            remainingTextLines = 0;
-                            height = previewSize->bottom;
-                        }
-                        else
-                        {
-                            // Get an approximation of the remaining lines to display.
-                            remainingTextLines = ((previewSize->bottom - height) / textDrawHeight);
+						clipSizeInKb = (wcslen(previewClip) * sizeof(wchar_t)) / 1024;;
 
-                            previewSize->bottom = height;
-                        }
+						if (clipSizeInKb > MAX_LEN_PRV_CLIP_KB)
+						{
+							remainingTextLines = 0;
+						}
+						else
+						{
+							MeasureStringMultilineWrap(previewClip, hFontStd, previewSize);
+
+							if (previewSize->right < width)
+							{
+								width = previewSize->right;
+							}
+							if (previewSize->bottom < height)
+							{
+								remainingTextLines = 0;
+								height = previewSize->bottom;
+							}
+							else
+							{
+								// Get an approximation of the remaining lines to display.
+								remainingTextLines = ((previewSize->bottom - height) / textDrawHeight);
+
+								previewSize->bottom = height;
+							}
+						}
                         
                         CopyRect(previewRect, previewSize);
                         delete previewSize;
@@ -557,7 +567,7 @@ LRESULT CALLBACK PreviewWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
         SelectObject(hdc, hFontStd);
         SetBkMode(hdc, TRANSPARENT);
 
-        if (remainingTextLines > 0)
+        if (remainingTextLines > 0 || clipSizeInKb > MAX_LEN_PRV_CLIP_KB)
         {
             textRect->bottom += ScaleY(10) - textDrawHeight;
             
@@ -573,7 +583,16 @@ LRESULT CALLBACK PreviewWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
             Rectangle(hdc, infoBreakRect->left, infoBreakRect->top, infoBreakRect->right, infoBreakRect->bottom);
 
             SetTextColor(hdc, RGB(100, 100, 120));
-            DrawText(hdc, (L"+ " + std::to_wstring(remainingTextLines) + L" more lines").c_str(), -1, infoBreakRect, DT_WORDBREAK | DT_EXTERNALLEADING | DT_NOPREFIX | DT_EDITCONTROL | DT_CENTER | DT_VCENTER);
+
+			if (remainingTextLines > 0)
+			{
+				DrawText(hdc, ((L"+ " + std::to_wstring(remainingTextLines) + L" more lines / " + std::to_wstring(clipSizeInKb) + L"KB total").c_str()), -1, infoBreakRect, DT_WORDBREAK | DT_EXTERNALLEADING | DT_NOPREFIX | DT_EDITCONTROL | DT_CENTER | DT_VCENTER);
+			}
+			else
+			{
+				DrawText(hdc, ((std::to_wstring(clipSizeInKb) + L"KB total").c_str()), -1, infoBreakRect, DT_WORDBREAK | DT_EXTERNALLEADING | DT_NOPREFIX | DT_EDITCONTROL | DT_CENTER | DT_VCENTER);
+			}
+
             SetTextColor(hdc, BLACK_BRUSH);
             SelectObject(hdc, hbrushInitial);
             delete infoBreakRect;

@@ -2,6 +2,7 @@
 
 #define MAX_LOADSTRING          100
 #define MAX_VALUE_NAME          16383
+#define MAX_LEN_PRV_CLIP_KB		80
 #define ID_REG_HOTKEY           100
 #define UID_NOTIFYICON          2180847866      // random UID for the notifyicon
 
@@ -48,6 +49,7 @@ HBRUSH hbrBkgnd;
 HFONT hFontStd;
 long textDrawHeight;
 unsigned long long remainingTextLines = 0; // need to account for theoretical maximum NTFS file size
+unsigned long long clipSizeInKb = 0;
 LPRECT previewRect = new RECT({ 0, 0, ScaleX(500), ScaleY(500) });
 wchar_t * previewClip = nullptr;
 LPPOINT previousMouseLoc = new POINT;
