@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
-	<Product Id="*" Name="Winclipper" Language="1033" Version="1.0.0.0" Manufacturer="Carson Shook" UpgradeCode="34e3392e-e835-41c9-ac2b-f0c68176f4ca">
+	<Product Id="*" Name="Winclipper" Language="1033" Version="1.1.0.0" Manufacturer="Carson Shook" UpgradeCode="34e3392e-e835-41c9-ac2b-f0c68176f4ca">
 		<Package InstallerVersion="301" Compressed="yes" InstallScope="perMachine" />
 
 		<MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
@@ -29,7 +29,11 @@
       <Feature Id="VCRedist" Title="Visual C++ 14 Runtime" AllowAdvertise="no" Display="hidden" Level="1">
         <MergeRef Id="VCRedist"/>
       </Feature>
-      <ComponentRef Id="Winclipper.exe" />
+      <Feature Id="SSUP" Title="ApplicationUpdater" AllowAdvertise="no" Display="hidden" Level="1">
+        <MergeRef Id="SSUP"/>
+        <ComponentRef Id="SSUPConfig"/>
+      </Feature>
+      <ComponentRef Id="Winclipper.exe"/>
       <ComponentRef Id="license"/>
       <ComponentRef Id="readme"/>
       <ComponentRef Id="ApplicationShortcut"/>
@@ -56,9 +60,13 @@
     </DirectoryRef>
   
 		<DirectoryRef Id="APPLICATIONROOTDIRECTORY">
-			 <Component Id="Winclipper.exe" Guid="D1C47046-027D-44D4-AC53-706794AD1D94">
-         <File Id="Winclipper.exe" Source="$(var.Winclipper.TargetPath)" KeyPath="yes" Checksum="yes" />
-       </Component>
+      <Merge Id="SSUP" SourceFile="SSUP_merge_x64.msm" DiskId="1" Language="0"/>
+      <Component Id="SSUPConfig" Guid="B6DC9C7F-3A15-4191-ACA4-6A92A6BA8DB8">
+        <File Id="SSUPConfig" Source="SSUPConfig.xml" KeyPath="yes"/>
+      </Component>
+			<Component Id="Winclipper.exe" Guid="D1C47046-027D-44D4-AC53-706794AD1D94">
+        <File Id="Winclipper.exe" Source="$(var.Winclipper.TargetPath)" KeyPath="yes" Checksum="yes" />
+      </Component>
       <Component Id="license" Guid="CDDA7A8E-F4F3-45F1-8FA3-4443282ECB4F">
         <File Id="license" Source="..\license.rtf" KeyPath="yes"/>
       </Component>

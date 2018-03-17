@@ -2,6 +2,8 @@
 //
 #include "stdafx.h"
 #include "resource.h"
+#include <Shlwapi.h>
+#include <string>
 #include "string.h"
 #include "UserSettings.h"
 #include "ControlUtilities.h"
@@ -15,6 +17,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 {
     UNREFERENCED_PARAMETER(hPrevInstance);
     UNREFERENCED_PARAMETER(lpCmdLine);
+
+	RunUpdater();
 
     NONCLIENTMETRICS hfDefault;
     hfDefault.cbSize = sizeof(NONCLIENTMETRICS);
@@ -157,7 +161,7 @@ bool InitMainWindow(HINSTANCE hInstance, int nCmdShow)
 
 bool InitPreviewWindow(HINSTANCE hInstance, int nCmdShow)
 {
-    HWND hWnd = CreateWindowExW(0, szPreviewWindowClass, L"", WS_CHILD | WS_POPUP,
+    HWND hWnd = CreateWindowExW(0, szPreviewWindowClass, L"", WS_POPUP,
         0, 0, ScaleX(400), ScaleY(400), mainWnd, nullptr, hInstance, nullptr);
 
     if (!hWnd)
@@ -376,13 +380,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 {
                     previewClip = cManager.GetClips()[i - 1];
 
-                    LPRECT previewSize = new RECT({ 0, 0, ScaleX(500), ScaleY(500) });
-                    MeasureStringMultilineWrap(previewClip, hFontStd, previewSize);
-
-                    LPRECT desktop = new RECT();
-                    HWND hDesktop = GetDesktopWindow();
-                    GetWindowRect(hDesktop, desktop);
-
                     int offset = 1;
 
                     if (activePopupMenu != topPopupMenu)
@@ -390,13 +387,32 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                         offset += cManager.DisplayClips();
                     }
 
+                    /* BLACK MAGIC 0_0 */
+                    // This gets a MenuItemRect for an item position we know (0),
+                    // and then performs a hit-test on the menuItem that sits over.
+                    // This might be the same item, or it could be a different one
+                    // if the menu has been scrolled. That is our delta value that
+                    // can be used to calculate the true offset for the preview.
+                    LPRECT hitTestRect = new RECT();
+                    int hitTestDelta = 0;
+                    if (GetMenuItemRect(hWnd, activePopupMenu, 0, hitTestRect))
+                    {
+                        LPPOINT hitTest = new POINT({ hitTestRect->left + 1, hitTestRect->top + 1 });
+                        hitTestDelta = MenuItemFromPoint(hWnd, activePopupMenu, *hitTest);
+                        delete hitTest;
+                    }
+                    delete hitTestRect;
+
                     LPRECT menuItemDims = new RECT();
 
-                    if (GetMenuItemRect(hWnd, activePopupMenu, i - offset, menuItemDims))
+                    if (GetMenuItemRect(hWnd, activePopupMenu, i - offset - hitTestDelta, menuItemDims))
                     {
                         // Let's let our max size be 500
                         long width = ScaleX(500);
                         long height = ScaleY(500);
+
+                        LPRECT previewSize = new RECT({ 0, 0, width, height });
+                        MeasureStringMultilineWrap(previewClip, hFontStd, previewSize);
 
                         if (previewSize->right < width)
                         {
@@ -404,23 +420,25 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                         }
                         if (previewSize->bottom < height)
                         {
+                            remainingTextLines = 0;
                             height = previewSize->bottom;
                         }
                         else
                         {
+                            // Get an approximation of the remaining lines to display.
+                            remainingTextLines = ((previewSize->bottom - height) / textDrawHeight);
+
                             previewSize->bottom = height;
                         }
+                        
                         CopyRect(previewRect, previewSize);
-
-                        LPPOINT cPos = new POINT;
-                        if (!GetCursorPos(cPos))
-                        {
-                            cPos->x = 10;
-                            cPos->y = 10;
-                        }
+                        delete previewSize;
 
                         int xLoc = menuItemDims->right + ScaleX(5);
-                        int yLoc = cPos->y;
+                        int yLoc = menuItemDims->top;
+
+                        LPRECT desktop = new RECT();
+                        GetWindowRect(GetDesktopWindow(), desktop);
 
                         // These two if's account for the preview going off screen.
                         // their position is precalculated, and if they would move out
@@ -435,35 +453,33 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                                 xLoc = xLocTemp;
                             }
                         }
-                        if (yLoc + height + ScaleX(30) > desktop->bottom)
+                        if (yLoc + height + ScaleX(60) > desktop->bottom)
                         {
-                            int yLocTemp = yLoc - (height + ScaleY(24));
+                            int yLocTemp = menuItemDims->bottom - (height + ScaleY(24));
                             if (yLocTemp > 0)
                             {
                                 yLoc = yLocTemp;
                             }
                         }
 
+                        delete desktop;
 
                         // The two flags at the end ensure that we don't loose focus of the popup menu.
+                        RedrawWindow(previewWnd, NULL, NULL, RDW_INVALIDATE);
                         SetWindowPos(previewWnd, HWND_TOPMOST, xLoc, yLoc, width + ScaleX(26), height + ScaleY(24), SWP_NOACTIVATE | SWP_NOSENDCHANGING);
-                        
-                        AnimateWindow(previewWnd, 50, AW_BLEND);
-                        UpdateWindow(previewWnd);
-                        delete cPos;
+                        ShowWindow(previewWnd, SW_SHOWNA);
+
                     }
-                    delete previewSize;
-                    delete desktop;
                     delete menuItemDims;
                 }
                 else
                 {
-                    AnimateWindow(previewWnd, 50, AW_BLEND | AW_HIDE);
+                    ShowWindow(previewWnd, SW_HIDE);
                 }
             }
             else
             {
-                AnimateWindow(previewWnd, 50, AW_BLEND | AW_HIDE);
+                ShowWindow(previewWnd, SW_HIDE);
             }
         }
     }
@@ -481,13 +497,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             {
                 if (cPos->x != previousMouseLoc->x || cPos->y != previousMouseLoc->y)
                 {
+                    if (MenuItemFromPoint(hWnd, activePopupMenu, *cPos) == -1)
+                    {
+                        ShowWindow(previewWnd, SW_HIDE);
+                    }
+
                     previousMouseLoc->x = cPos->x;
                     previousMouseLoc->y = cPos->y;
 
-                    if (MenuItemFromPoint(hWnd, activePopupMenu, *cPos) == -1)
-                    {
-                        AnimateWindow(previewWnd, 50, AW_BLEND | AW_HIDE);
-                    }
                 }
             }
             delete cPos;
@@ -506,6 +523,16 @@ LRESULT CALLBACK PreviewWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
         DeleteObject(hbrBkgnd);
     }
     break;
+    case WM_CREATE:
+    {
+        // This should use the same text measurement that
+        // we will ultimately use when rendering final text.
+        LPRECT textDims = new RECT({ 0, 0,  ScaleX(800), ScaleY(100) });
+        MeasureStringMultilineWrap(L"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz", hFontStd, textDims);
+        textDrawHeight = textDims->bottom;
+        delete textDims;
+    }
+    break;
     case WM_PAINT:
     {
         if (previewClip == nullptr)
@@ -517,18 +544,48 @@ LRESULT CALLBACK PreviewWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
         HDC hdc;
 
         hdc = BeginPaint(hWnd, &ps);
+        HPEN hpenInitial = static_cast<HPEN>(SelectObject(hdc, CreatePen(PS_SOLID, 1, RGB(180, 180, 180))));
 
         Rectangle(hdc, previewRect->left + ScaleX(6), previewRect->top + ScaleY(6), previewRect->right + ScaleX(20), previewRect->bottom + ScaleY(18));
 
-        LPRECT textRect = new RECT;
+        LPRECT textRect = new RECT();
         CopyRect(textRect, previewRect);
         textRect->top += ScaleY(10);
         textRect->left += ScaleX(12);
         textRect->right += ScaleX(12);
-        textRect->bottom += ScaleY(10);
+
         SelectObject(hdc, hFontStd);
-        
+        SetBkMode(hdc, TRANSPARENT);
+
+        if (remainingTextLines > 0)
+        {
+            textRect->bottom += ScaleY(10) - textDrawHeight;
+            
+            LPRECT infoBreakRect = new RECT();
+            CopyRect(infoBreakRect, previewRect);
+            infoBreakRect->top = infoBreakRect->bottom - textDrawHeight + ScaleY(16);
+            infoBreakRect->left += ScaleX(6);
+            infoBreakRect->right += ScaleX(20);
+            infoBreakRect->bottom += ScaleY(18);
+
+            HBRUSH hbrushInitial = static_cast<HBRUSH>(SelectObject(hdc, CreateSolidBrush(RGB(240, 240, 245))));
+
+            Rectangle(hdc, infoBreakRect->left, infoBreakRect->top, infoBreakRect->right, infoBreakRect->bottom);
+
+            SetTextColor(hdc, RGB(100, 100, 120));
+            DrawText(hdc, (L"+ " + std::to_wstring(remainingTextLines) + L" more lines").c_str(), -1, infoBreakRect, DT_WORDBREAK | DT_EXTERNALLEADING | DT_NOPREFIX | DT_EDITCONTROL | DT_CENTER | DT_VCENTER);
+            SetTextColor(hdc, BLACK_BRUSH);
+            SelectObject(hdc, hbrushInitial);
+            delete infoBreakRect;
+        }
+        else
+        {
+            textRect->bottom += ScaleY(10);
+        }
+
+        SelectObject(hdc, hpenInitial);
         DrawText(hdc, previewClip, -1, textRect, DT_WORDBREAK | DT_EXTERNALLEADING | DT_NOPREFIX | DT_EDITCONTROL);
+
         EndPaint(hWnd, &ps);
         delete textRect;
         return 0;
@@ -803,13 +860,43 @@ INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
     return (INT_PTR)false;
 }
 
+// Execute StupidSimpleUpdater
+bool RunUpdater()
+{
+	const int MAX_CMD = 32767;
+	wchar_t pPath[MAX_PATH];
+	wchar_t commandLine[MAX_CMD];
+
+	GetModuleFileName(0, pPath, MAX_PATH);
+	PathRemoveFileSpec(pPath);
+	PathAppend(pPath, L"\\StupidSimpleUpdater.exe");
+	wcscpy_s(commandLine, pPath);
+	wcscat_s(commandLine, L" -appinv");
+
+	STARTUPINFO si;
+	PROCESS_INFORMATION pi;
+
+	ZeroMemory(&si, sizeof(si));
+	si.cb = sizeof(si);
+	ZeroMemory(&pi, sizeof(pi));
+
+	if (CreateProcess(pPath, commandLine, NULL, NULL, FALSE, CREATE_DEFAULT_ERROR_MODE | CREATE_NEW_PROCESS_GROUP, NULL, NULL, &si, &pi))
+	{
+		return true;
+	}
+	else 
+	{
+		return false;
+	}
+}
+
 // Writes the "run at startup" registry key for Winclipper
 bool WriteRegistryRun()
 {
     HKEY hOpened;
-    wchar_t pPath[100];
+    wchar_t pPath[MAX_PATH];
 
-    GetModuleFileName(0, pPath, 100);
+    GetModuleFileName(0, pPath, MAX_PATH);
 
     //OpenRegistryRun(hOpened);
     RegOpenKeyEx(HKEY_CURRENT_USER, L"Software\\Microsoft\\Windows\\CurrentVersion\\Run", 0, KEY_ALL_ACCESS, &hOpened);
@@ -915,7 +1002,7 @@ bool AddNotificationIcon(HWND hWnd)
     nid.uCallbackMessage = WMAPP_NOTIFYCALLBACK;
     nid.uID = 
     // Load the icon for high DPI.
-    LoadIconMetric(hInst, MAKEINTRESOURCE(IDI_WINCLIPPER), LIM_LARGE, &nid.hIcon);
+    LoadIconMetric(hInst, MAKEINTRESOURCE(IDI_WINCLIPPER), LIM_SMALL, &nid.hIcon);
     
     // Show the notification.
     Shell_NotifyIcon(NIM_ADD, &nid);

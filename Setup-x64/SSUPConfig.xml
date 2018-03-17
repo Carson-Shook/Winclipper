@@ -1,0 +1,7 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Config>
+  <BuildType>X64</BuildType>
+  <Name>Winclipper</Name>
+  <CheckFrequency>Daily</CheckFrequency>
+  <Url>file:///T:/SSUPUpdateManifest.xml</Url>
+</Config>

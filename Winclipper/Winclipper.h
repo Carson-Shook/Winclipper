@@ -46,6 +46,8 @@ ClipsManager cManager { uSettings.MaxDisplayClips(), uSettings.MaxSavedClips(), 
 
 HBRUSH hbrBkgnd;
 HFONT hFontStd;
+long textDrawHeight;
+unsigned long long remainingTextLines = 0; // need to account for theoretical maximum NTFS file size
 LPRECT previewRect = new RECT({ 0, 0, ScaleX(500), ScaleY(500) });
 wchar_t * previewClip = nullptr;
 LPPOINT previousMouseLoc = new POINT;
@@ -61,6 +63,7 @@ LRESULT CALLBACK        WndProc(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK        PreviewWndProc(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK        SettingsWndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK        About(HWND, UINT, WPARAM, LPARAM);
+bool					RunUpdater();
 bool                    WriteRegistryRun();
 bool                    DeleteRegistryRun();
 bool                    QueryKeyForValue(HKEY hKey, wchar_t* checkValue);

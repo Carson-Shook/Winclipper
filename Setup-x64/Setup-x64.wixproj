@@ -51,6 +51,8 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Microsoft_VC141_CRT_x64.msm" />
+    <Content Include="SSUPConfig.xml" />
+    <Content Include="SSUP_merge_x64.msm" />
   </ItemGroup>
   <Import Project="$(WixTargetsPath)" Condition=" '$(WixTargetsPath)' != '' " />
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\WiX\v3.x\Wix.targets" Condition=" '$(WixTargetsPath)' == '' AND Exists('$(MSBuildExtensionsPath32)\Microsoft\WiX\v3.x\Wix.targets') " />

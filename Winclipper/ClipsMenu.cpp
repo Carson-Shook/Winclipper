@@ -182,18 +182,25 @@ bool ClipsManager::AddToClips(HWND hWnd)
             wchar_t * derefData = _wcsdup(data);
             GlobalUnlock(psClipboardData);
 
-            if (StrCmpW(derefData, clips.front()) != 0)
-            {
-                while (clips.size() >= maxClips)
-                {
-                    // get reference to the back object before we pop it
-                    wchar_t * back = clips.back();
-                    clips.pop_back();
-                    // dealocate the former back object
-                    delete[] back;
-                }
-                clips.push_front(derefData);
-            }
+			if (clips.empty())
+			{
+				clips.push_front(derefData);
+			}
+			else
+			{
+				if (StrCmpW(derefData, clips.front()) != 0)
+				{
+					while (clips.size() >= maxClips)
+					{
+						// get reference to the back object before we pop it
+						wchar_t * back = clips.back();
+						clips.pop_back();
+						// dealocate the former back object
+						delete[] back;
+					}
+					clips.push_front(derefData);
+				}
+			}
         }
         else 
         {

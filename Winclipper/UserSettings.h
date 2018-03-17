@@ -16,7 +16,7 @@
 
 #define MENU_CHARS          3
 #define MENU_CHARS_UPPER    200
-#define MENU_CHARS_LOWER    1
+#define MENU_CHARS_LOWER    5
 
 #define CMENU_HOTKEY        4
 #define CMENU_HOTKEY_DEF    MAKEWORD(0x56, HOTKEYF_CONTROL | HOTKEYF_SHIFT)
