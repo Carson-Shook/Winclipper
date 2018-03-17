@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <Config>
-  <BuildType>X64</BuildType>
+  <BuildType>X86</BuildType>
   <Name>Winclipper</Name>
   <CheckFrequency>Daily</CheckFrequency>
   <Url>https://www.carsonshook.com/Winclipper/SSUPUpdateManifest.xml</Url>

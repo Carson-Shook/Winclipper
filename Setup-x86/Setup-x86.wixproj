@@ -33,6 +33,8 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Microsoft_VC141_CRT_x86.msm" />
+    <Content Include="SSUPConfig.xml" />
+    <Content Include="SSUP_merge_x86.msm" />
   </ItemGroup>
   <ItemGroup>
     <WixExtension Include="WixUtilExtension">
