@@ -1,0 +1,15 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Update>
+  <X86>
+    <Name>Winclipper (32-bit)</Name>
+    <CurrentVersion>1.1.0.0</CurrentVersion>
+    <PatchNotesUrl>https://carsonshook.com/Winclipper/PatchNotes.rtf</PatchNotesUrl>
+    <DownloadUrl>https://github.com/Carson-Shook/Winclipper/releases/download/v1.1/WinclipperSetup-x86.msi</DownloadUrl>
+  </X86>
+  <X64>
+    <Name>Winclipper</Name>
+    <CurrentVersion>1.1.0.0</CurrentVersion>
+    <PatchNotesUrl>https://carsonshook.com/Winclipper/PatchNotes.rtf</PatchNotesUrl>
+    <DownloadUrl>https://github.com/Carson-Shook/Winclipper/releases/download/v1.1/WinclipperSetup-x64.msi</DownloadUrl>
+  </X64>
+</Update>
