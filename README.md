@@ -12,6 +12,7 @@ You will need Visual Studio 2017 to build Winclipper. The solution file should c
 
 ## Changelog
 
+**1.1**      2018-18-03
 
 This release of Winclipper includes a rewritten text-preview that now uses GDI. You should find it much faster, and as a bonus, it now includes a count of the number of lines not visible in the preview (when text is not larger than 80KB) and also includes the total size of the text in KB.
 
