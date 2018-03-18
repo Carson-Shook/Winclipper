@@ -10,10 +10,19 @@ The menu is simple and can be summoned with a hotkey of your choice (default: Ct
 
 You will need Visual Studio 2017 to build Winclipper. The solution file should contain everything that you need to build. If you want to build the setup projects, then you will need to install [WiX](http://wixtoolset.org).
 
-## Updates
-
-Still looking for a good update system, but once I do, current users will need to reinstall, so just be prepared for that.
-
 ## Changelog
+
+
+This release of Winclipper includes a rewritten text-preview that now uses GDI. You should find it much faster, and as a bonus, it now includes a count of the number of lines not visible in the preview (when text is not larger than 80KB) and also includes the total size of the text in KB.
+
+It also now has a built in updater! Now updates should appear automatically when they are available. Don't worry though, if you don't want to update for some reason, you can skip it.
+(Developer Note: I plan on releasing the source for the updater in the near future, just as soon as I get the documentation written up.)
+
+It also fixes a number of bugs, including:
+- Substantially improves handling of large amounts of text when displaying the preview. 
+- Fixes the preview appearing in the wrong place when scrolling through a long list of clips.
+- Fixes clip duplication so that contiguous clips with the same content do not create duplicate entries.
+- Fixes a memory leak caused by the text length measurement of the preview.
+- Added missing drop-shadow to the preview window.
 
 **1.0**      2018-01-01      Initial Release!
