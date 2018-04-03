@@ -884,13 +884,13 @@ bool RunUpdater()
 {
 	const int MAX_CMD = 32767;
 	wchar_t pPath[MAX_PATH];
-	wchar_t commandLine[MAX_CMD];
+	wchar_t commandLine[MAX_CMD] = L"\"";
 
 	GetModuleFileName(0, pPath, MAX_PATH);
 	PathRemoveFileSpec(pPath);
 	PathAppend(pPath, L"\\StupidSimpleUpdater.exe");
-	wcscpy_s(commandLine, pPath);
-	wcscat_s(commandLine, L" -appinv");
+	wcscat_s(commandLine, pPath);
+	wcscat_s(commandLine, L"\" -appinv");
 
 	STARTUPINFO si;
 	PROCESS_INFORMATION pi;
