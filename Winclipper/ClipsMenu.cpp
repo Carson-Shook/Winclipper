@@ -374,44 +374,55 @@ void ShowClipsMenu(HWND hWnd, ClipsManager& cm, bool showExit)
             NULL
         );
 
-        if (menuSelection)
+        switch (menuSelection)
         {
-            switch (menuSelection)
-            {
-            case CLEARCLIPS_SELECT:
-                SendMessage(hWnd, WM_COMMAND, IDM_CLEARCLIPS, 0);
-                SetActiveWindow(actWin);
-                break;
-            case SETTINGS_SELECT:
-                PostMessage(hWnd, WM_COMMAND, IDM_SETTINGS, 0);
-                break;
-            case EXIT_SELECT:
-                SendMessage(hWnd, WM_COMMAND, IDM_EXIT, 0);
-                break;
-            default:
-                // for once a program where default actually does something more than error handling
-                SetActiveWindow(actWin);
-                Sleep(20);
+		case CANCELED_SELECTION:
+			{
+				SetActiveWindow(actWin); 
+				int retries = 10;
+				HWND temp = GetActiveWindow();
+				while (temp != actWin && retries > 0)
+				{
+					temp = GetActiveWindow();
+					retries--;
+					Sleep(20);
+				}
+			}
+			break;
+        case CLEARCLIPS_SELECT:
+            SendMessage(hWnd, WM_COMMAND, IDM_CLEARCLIPS, 0);
+            SetActiveWindow(actWin);
+            break;
+        case SETTINGS_SELECT:
+            PostMessage(hWnd, WM_COMMAND, IDM_SETTINGS, 0);
+            break;
+        case EXIT_SELECT:
+            SendMessage(hWnd, WM_COMMAND, IDM_EXIT, 0);
+            break;
+        default:
+            // for once a program where default actually does something more than error handling
+            SetActiveWindow(actWin);
+            Sleep(20);
 
-                // Have to subtract 1 from index because returning 0 in
-                // TrackPopupMenu means cancelation
-                cm.SetClipboardToClipAtIndex(actWin, menuSelection - 1);
+            // Have to subtract 1 from index because returning 0 in
+            // TrackPopupMenu means cancelation
+            cm.SetClipboardToClipAtIndex(actWin, menuSelection - 1);
                 
-                // attempts to set the active window. Usually succeeds immediately, but not always 
-                int retries = 10;
-                HWND temp = GetActiveWindow();
-                while (temp != actWin && retries > 0)
-                {
-                    temp = GetActiveWindow();
-                    retries--;
-                    Sleep(20);
-                }
-
-                SendPasteInput();
-                SetActiveWindow(actWin);
-                break;
+            // attempts to set the active window. Usually succeeds immediately, but not always 
+            int retries = 10;
+            HWND temp = GetActiveWindow();
+            while (temp != actWin && retries > 0)
+            {
+                temp = GetActiveWindow();
+                retries--;
+                Sleep(20);
             }
+
+            SendPasteInput();
+            SetActiveWindow(actWin);
+            break;
         }
+
         // detatch from thread of the active window
         AttachThreadInput(GetWindowThreadProcessId(curWin, NULL), GetWindowThreadProcessId(hWnd, NULL), false);
 
