@@ -447,32 +447,35 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                         int xLoc = menuItemDims->right + ScaleX(5);
                         int yLoc = menuItemDims->top;
 
-                        LPRECT desktop = new RECT();
-                        GetWindowRect(GetDesktopWindow(), desktop);
+						LPMONITORINFO lpmi = new MONITORINFO;
+						lpmi->cbSize = sizeof(MONITORINFO);
+						HMONITOR currentMonitor = MonitorFromRect(menuItemDims, 0);
+
+						GetMonitorInfo(currentMonitor, lpmi);
 
                         // These two if's account for the preview going off screen.
                         // their position is precalculated, and if they would move out
                         // of the desktop area, they are recalculated to appear on
                         // the other side of the popupmenu, unless this would make
                         // them go off screen.
-                        if (xLoc + width + ScaleX(30) > desktop->right)
+                        if (xLoc + width + ScaleX(32) > (lpmi->rcWork).right)
                         {
                             int xLocTemp = menuItemDims->left - (width + ScaleX(32));
-                            if (xLocTemp > 0)
+                            if (xLocTemp > (lpmi->rcMonitor).left)
                             {
                                 xLoc = xLocTemp;
                             }
                         }
-                        if (yLoc + height + ScaleX(60) > desktop->bottom)
+                        if (yLoc + height + ScaleX(24) > (lpmi->rcWork).bottom)
                         {
                             int yLocTemp = menuItemDims->bottom - (height + ScaleY(24));
-                            if (yLocTemp > 0)
+                            if (yLocTemp > (lpmi->rcMonitor).top)
                             {
                                 yLoc = yLocTemp;
                             }
                         }
 
-                        delete desktop;
+                        delete lpmi;
 
                         // The two flags at the end ensure that we don't loose focus of the popup menu.
                         RedrawWindow(previewWnd, NULL, NULL, RDW_INVALIDATE);
