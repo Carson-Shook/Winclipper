@@ -12,4 +12,16 @@
     <PatchNotesUrl>https://carsonshook.com/Winclipper/PatchNotes.rtf</PatchNotesUrl>
     <DownloadUrl>https://github.com/Carson-Shook/Winclipper/releases/download/v1.1/WinclipperSetup-x64.msi</DownloadUrl>
   </X64>
+  <X86Beta>
+    <Name>Winclipper (32-bit) Beta</Name>
+    <CurrentVersion>1.1.1.0</CurrentVersion>
+    <PatchNotesUrl>https://carsonshook.com/Winclipper/PreReleasePatchNotes.rtf</PatchNotesUrl>
+    <DownloadUrl>https://github.com/Carson-Shook/Winclipper/releases/download/v1.1.1-beta/WinclipperSetup-x86.msi</DownloadUrl>
+  </X86Beta>
+  <X64Beta>
+    <Name>Winclipper Beta</Name>
+    <CurrentVersion>1.1.1.0</CurrentVersion>
+    <PatchNotesUrl>https://carsonshook.com/Winclipper/PreReleasePatchNotes.rtf</PatchNotesUrl>
+    <DownloadUrl>https://github.com/Carson-Shook/Winclipper/releases/download/v1.1.1-beta/WinclipperSetup-x64.msi</DownloadUrl>
+  </X64Beta>
 </Update>
