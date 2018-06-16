@@ -14,13 +14,13 @@
   </X64>
   <X86Beta>
     <Name>Winclipper (32-bit) Beta</Name>
-    <CurrentVersion>1.1.1.0</CurrentVersion>
+    <CurrentVersion>1.1.1.1</CurrentVersion>
     <PatchNotesUrl>https://carsonshook.com/Winclipper/PreReleasePatchNotes.rtf</PatchNotesUrl>
     <DownloadUrl>https://carsonshook.com/Winclipper/WinclipperSetup-x86.msi</DownloadUrl>
   </X86Beta>
   <X64Beta>
     <Name>Winclipper Beta</Name>
-    <CurrentVersion>1.1.1.0</CurrentVersion>
+    <CurrentVersion>1.1.1.1</CurrentVersion>
     <PatchNotesUrl>https://carsonshook.com/Winclipper/PreReleasePatchNotes.rtf</PatchNotesUrl>
     <DownloadUrl>https://carsonshook.com/Winclipper/WinclipperSetup-x64.msi</DownloadUrl>
   </X64Beta>
