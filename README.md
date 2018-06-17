@@ -12,7 +12,16 @@ You will need Visual Studio 2017 to build Winclipper. The solution file should c
 
 ## Changelog
 
-**1.1**      2018-18-03
+**1.1.1**      2018-06-17
+This release of Winclipper includes the following improvements:
+- The last active window now regains focus after dismissing Winclipper without making a selection.
+- Winclipper now works better with multiple monitors, specifically, the preview should appear on the correct side of the menu, and this should help ensure that the preview is the correct size when viewed across monitors with different DPIs (hopefully)
+
+It also includes the following bug fixes:
+- Winclipper now correctly launches StupidSimpleUpdater (SSUP) so that CheckFrequency is respected.
+- Upgraded SSUP to version 1.1 which includes TLS 1.2 support (as a temporary measure, the upgrades will be hosted on my GitHub Pages site so that existing users will be able to receive it without interruption).
+
+**1.1**      2018-03-18
 
 This release of Winclipper includes a rewritten text-preview that now uses GDI. You should find it much faster, and as a bonus, it now includes a count of the number of lines not visible in the preview (when text is not larger than 80KB) and also includes the total size of the text in KB.
 
