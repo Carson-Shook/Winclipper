@@ -13,6 +13,7 @@ You will need Visual Studio 2017 to build Winclipper. The solution file should c
 ## Changelog
 
 **1.1.1**      2018-06-17
+
 This release of Winclipper includes the following improvements:
 - The last active window now regains focus after dismissing Winclipper without making a selection.
 - Winclipper now works better with multiple monitors, specifically, the preview should appear on the correct side of the menu, and this should help ensure that the preview is the correct size when viewed across monitors with different DPIs (hopefully)
