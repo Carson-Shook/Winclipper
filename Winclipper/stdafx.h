@@ -4,6 +4,16 @@
 //
 
 #pragma once
+
+#ifdef _WIN64
+#define AGNOSTIC_USERDATA		GWLP_USERDATA
+#else
+#define AGNOSTIC_USERDATA		GWL_USERDATA
+#endif
+
+#define MAX_LOADSTRING 100
+#define ID_REG_HOTKEY 100
+
 #include "targetver.h"
 #pragma comment(linker,"/manifestdependency:\"type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
 #pragma comment(lib, "comctl32.lib")

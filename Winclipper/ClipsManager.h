@@ -49,9 +49,10 @@ public:
     bool                            AddToClips(HWND hWnd);
     bool                            SetClipboardToClipAtIndex(HWND hWnd, int index);
     const std::deque<wchar_t *>&    GetClips(void) const { return clips; }
+	void							ShowClipsMenu(HWND hWnd, bool showExit);
+
 };
 
 // Forward declarations of functions included in this code module:
-void                ShowClipsMenu(HWND hWnd, ClipsManager& cm, bool showExit);
 void                SelectDefaultMenuItem(bool select2ndClip);
 void                SendPasteInput(void);

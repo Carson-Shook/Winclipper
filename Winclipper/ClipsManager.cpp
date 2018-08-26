@@ -5,7 +5,7 @@
 #include "File.h"
 #include "Shlobj.h"
 #include "Shlwapi.h"
-#include "ClipsMenu.h"
+#include "ClipsManager.h"
 
 void ClipsManager::SaveClipsAsync()
 {
@@ -250,7 +250,7 @@ bool ClipsManager::SetClipboardToClipAtIndex(HWND hWnd, int index)
     return true;
 }
 
-void ShowClipsMenu(HWND hWnd, ClipsManager& cm, bool showExit)
+void ClipsManager::ShowClipsMenu(HWND hWnd, bool showExit)
 {
     HWND curWin = GetForegroundWindow();
     if (hWnd != NULL && curWin != NULL)
@@ -273,9 +273,9 @@ void ShowClipsMenu(HWND hWnd, ClipsManager& cm, bool showExit)
 
         HMENU menu = CreatePopupMenu();
 
-        size_t curSize = cm.GetClips().size();
-        unsigned int displayCount = cm.DisplayClips();
-        unsigned int menuTextLength = cm.MenuDisplayChars();
+        size_t curSize = GetClips().size();
+        unsigned int displayCount = DisplayClips();
+        unsigned int menuTextLength = MenuDisplayChars();
         wchar_t* menuText = new wchar_t[menuTextLength];
 
         if (curSize > 0)
@@ -284,7 +284,7 @@ void ShowClipsMenu(HWND hWnd, ClipsManager& cm, bool showExit)
 
             for (unsigned int i = 0; i < j; i++)
             {
-                wchar_t * clip = cm.GetClips().at(i);
+                wchar_t * clip = GetClips().at(i);
                 if (clip != NULL)
                 {
                     size_t maxClipSize = wcslen(clip);
@@ -319,7 +319,7 @@ void ShowClipsMenu(HWND hWnd, ClipsManager& cm, bool showExit)
                 
                 for (/*j is equal to displayCount */; j < curSize; j++)
                 {
-                    wchar_t * clip = cm.GetClips().at(j);
+                    wchar_t * clip = GetClips().at(j);
                     if (clip != NULL)
                     {
                         size_t maxClipSize = wcslen(clip);
@@ -359,7 +359,8 @@ void ShowClipsMenu(HWND hWnd, ClipsManager& cm, bool showExit)
         AppendMenu(menu, MF_STRING, SETTINGS_SELECT, L"&Settings");
         if (showExit)
         {
-            AppendMenu(menu, MF_STRING, EXIT_SELECT, L"&Exit");
+			AppendMenu(menu, MF_STRING, 2003, L"&About");
+			AppendMenu(menu, MF_STRING, EXIT_SELECT, L"&Exit");
         }
         
 
@@ -396,6 +397,9 @@ void ShowClipsMenu(HWND hWnd, ClipsManager& cm, bool showExit)
         case SETTINGS_SELECT:
             PostMessage(hWnd, WM_COMMAND, IDM_SETTINGS, 0);
             break;
+		case 2003:
+			PostMessage(hWnd, WM_COMMAND, IDM_ABOUT, 0);
+			break;
         case EXIT_SELECT:
             SendMessage(hWnd, WM_COMMAND, IDM_EXIT, 0);
             break;
@@ -406,7 +410,7 @@ void ShowClipsMenu(HWND hWnd, ClipsManager& cm, bool showExit)
 
             // Have to subtract 1 from index because returning 0 in
             // TrackPopupMenu means cancelation
-            cm.SetClipboardToClipAtIndex(actWin, menuSelection - 1);
+            SetClipboardToClipAtIndex(actWin, menuSelection - 1);
                 
             // attempts to set the active window. Usually succeeds immediately, but not always 
             int retries = 10;

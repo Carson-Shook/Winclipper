@@ -2,6 +2,7 @@
 // Reads and writes settings to and from
 // the current users's AppData folder
 // and makes them available to read or change
+#include "Notify.h"
 #include <vector>
 #define SEPARATOR           L"|"
 #define WRITE_DELAY         2000
@@ -31,7 +32,7 @@
 #define SHOW_PREVIEW_DEF    true
 
 // Save and load user settings to and from disk
-class UserSettings
+class UserSettings : public Notify
 {
 private:
     wchar_t             fullSettingPath[MAX_PATH];

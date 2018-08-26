@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include "resource.h"
 #include <string>
 #include <limits>
 #include <vector>
@@ -135,13 +136,13 @@ void UserSettings::SetMaxDisplayClips(int maxDisplayClips)
         {
             UserSettings::maxDisplayClips = maxDisplayClips;
         }
+		SendNotifcation(NTF_MAXDISPLAY_CHANGED, NULL);
         SaveSettingsAsync();
     }
 }
 
 int UserSettings::MaxSavedClips()
 {
-
     if (maxSavedClips < MAX_SAVED_LOWER)
     {
         maxSavedClips = MAX_SAVED_LOWER;
@@ -169,6 +170,7 @@ void UserSettings::SetMaxSavedClips(int maxSavedClips)
         {
             UserSettings::maxSavedClips = maxSavedClips;
         }
+		SendNotifcation(NTF_MAXSAVED_CHANGED, NULL);
         SaveSettingsAsync();
     }
 }
@@ -202,7 +204,8 @@ void UserSettings::SetMenuDisplayChars(int menuDisplayChars)
         {
             UserSettings::menuDisplayChars = menuDisplayChars;
         }
-        SaveSettingsAsync();
+		SendNotifcation(NTF_MENUCHARS_CHANGED, NULL);
+		SaveSettingsAsync();
     }
 }
 
@@ -261,6 +264,7 @@ void UserSettings::SetClipsMenuHotkey(WORD clipsMenuHotkey)
     if (clipsMenuHotkey != UserSettings::clipsMenuHotkey)
     {
         UserSettings::clipsMenuHotkey = clipsMenuHotkey;
+		SendNotifcation(NTF_CMENUHOTKEY_CHANGED, NULL);
         SaveSettingsAsync();
     }
 }
@@ -275,6 +279,7 @@ void UserSettings::SetSaveToDisk(bool saveToDisk)
     if (saveToDisk != UserSettings::saveToDisk)
     {
         UserSettings::saveToDisk = saveToDisk;
+		SendNotifcation(NTF_SAVETODISK_CHANGED, NULL);
         SaveSettingsAsync();
     }
 }
@@ -289,7 +294,8 @@ void UserSettings::SetSelect2ndClip(bool select2ndClip)
     if (select2ndClip != UserSettings::select2ndClip)
     {
         UserSettings::select2ndClip = select2ndClip;
-        SaveSettingsAsync();
+		SendNotifcation(NTF_SLCTSECONDCLIP_CHANGED, NULL);
+		SaveSettingsAsync();
     }
 }
 
@@ -303,7 +309,8 @@ void UserSettings::SetShowPreview(bool showPreview)
     if (showPreview != UserSettings::showPreview)
     {
         UserSettings::showPreview = showPreview;
-        SaveSettingsAsync();
+		SendNotifcation(NTF_SHOWPREVIEW_CHANGED, NULL);
+		SaveSettingsAsync();
     }
 }
 
