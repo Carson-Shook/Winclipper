@@ -1,10 +1,4 @@
 #include "stdafx.h"
-#include "resource.h"
-#include <thread>
-#include "UserSettings.h"
-#include "File.h"
-#include "Shlobj.h"
-#include "Shlwapi.h"
 #include "ClipsManager.h"
 
 void ClipsManager::SaveClipsAsync()

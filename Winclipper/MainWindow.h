@@ -1,7 +1,5 @@
 #pragma once
 #include "resource.h"
-#include <Shlwapi.h>
-#include <string>
 #include "string.h"
 #include "ClipsManager.h"
 #include "PreviewWindow.h"

@@ -28,10 +28,11 @@
    René Nyffenegger rene.nyffenegger@adp-gmbh.ch
 
 */
+// NOTE: Minor organizational changes have been made, but the overall function
+// of this cpp file and it's respective h file has been unaltered.
 
 #include "stdafx.h"
 #include "base64.h"
-#include <iostream>
 
 static const std::string base64_chars = 
              "ABCDEFGHIJKLMNOPQRSTUVWXYZ"

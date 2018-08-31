@@ -1,4 +1,11 @@
 #pragma once
+#include "resource.h"
+#include "string.h"
+#include "UserSettings.h"
+#include "ControlUtilities.h"
+#include "settingsWindow.h"
+#include "MainWindow.h"
+#include "ClipsManager.h"
 
 // Global Variables:
 HINSTANCE hInst;                                    // current instance

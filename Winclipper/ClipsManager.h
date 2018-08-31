@@ -1,4 +1,9 @@
 #pragma once
+#include "resource.h"
+#include "UserSettings.h"
+#include "File.h"
+#include "Shlobj.h"
+#include "Shlwapi.h"
 
 #define CANCELED_SELECTION     0    // user selected nothing, pressed esc, or clicked outside the window
 #define SETTINGS_SELECT     2000    // user selected the Settings option

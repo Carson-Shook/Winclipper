@@ -26,12 +26,13 @@
 #include <shellapi.h>
 #include <CommCtrl.h>
 
-
-// C RunTime Header Files
 #include <stdlib.h>
 #include <malloc.h>
 #include <memory.h>
+#include <Shlwapi.h>
+#include <string>
+#include <thread>
 #include <deque>
-
-
-// TODO: reference additional headers your program requires here
+#include <vector>
+#include <limits>
+#include <map>

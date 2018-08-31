@@ -1,8 +1,4 @@
 #include "stdafx.h"
-#include "resource.h"
-#include <string>
-#include "string.h"
-#include "ControlUtilities.h"
 #include "PreviewWindow.h"
 
 ATOM PreviewWindow::RegisterPreviewWindowClass(HINSTANCE hInstance)

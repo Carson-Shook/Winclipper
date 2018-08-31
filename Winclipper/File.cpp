@@ -1,13 +1,4 @@
 #include "stdafx.h"
-#include "Shlwapi.h"
-#include "Shlobj.h"
-#include <codecvt>
-#include <fstream>
-#include <iterator>
-#include <string>
-#include <vector>
-#include <deque>
-#include "base64.h"
 #include "File.h"
 
 // Gets the directory path from a given file path.

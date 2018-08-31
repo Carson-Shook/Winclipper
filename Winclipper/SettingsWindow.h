@@ -1,4 +1,9 @@
 #pragma once
+#include "resource.h"
+#include "string.h"
+#include "ControlUtilities.h"
+#include "RegistryUtilities.h"
+#include "Notify.h"
 #include "UserSettings.h"
 
 #define LBL_MAX_CLIPS_DISPLAY   200

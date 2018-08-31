@@ -3,7 +3,10 @@
 // the current users's AppData folder
 // and makes them available to read or change
 #include "Notify.h"
-#include <vector>
+#include "resource.h"
+#include "Shlobj.h"
+#include "Shlwapi.h"
+#include "File.h"
 #define SEPARATOR           L"|"
 #define WRITE_DELAY         2000
 

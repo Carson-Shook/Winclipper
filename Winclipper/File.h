@@ -1,4 +1,11 @@
 #pragma once
+#include "stdafx.h"
+#include "Shlwapi.h"
+#include "Shlobj.h"
+#include <codecvt>
+#include <fstream>
+#include <iterator>
+#include "base64.h"
 
 // Contains a collection of file utilities for easy file management.
 class File

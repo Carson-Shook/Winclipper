@@ -1,10 +1,4 @@
 #include "stdafx.h"
-#include "resource.h"
-#include <string>
-#include "string.h"
-#include "ControlUtilities.h"
-#include "RegistryUtilities.h"
-#include "Notify.h"
 #include "SettingsWindow.h"
 
 

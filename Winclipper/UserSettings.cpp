@@ -1,13 +1,4 @@
 #include "stdafx.h"
-#include "resource.h"
-#include <string>
-#include <limits>
-#include <vector>
-#include <map>
-#include <thread>
-#include "Shlobj.h"
-#include "Shlwapi.h"
-#include "File.h"
 #include "UserSettings.h"
 
 // stous - string to unsigned short

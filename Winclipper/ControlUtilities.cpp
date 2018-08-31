@@ -1,5 +1,4 @@
 #include "stdafx.h"
-#include "resource.h"
 #include "ControlUtilities.h"
 
 int _InitX()

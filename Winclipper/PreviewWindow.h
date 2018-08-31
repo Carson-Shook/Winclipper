@@ -1,5 +1,8 @@
 #pragma once
 #include "ControlUtilities.h"
+#include "resource.h"
+#include "string.h"
+#include "ControlUtilities.h"
 
 #define MAX_LEN_PRV_CLIP_KB		80
 

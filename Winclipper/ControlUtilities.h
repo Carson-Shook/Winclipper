@@ -1,4 +1,5 @@
 #pragma once
+#include "resource.h"
 
 int ScaleX(int x);
 int ScaleY(int y);

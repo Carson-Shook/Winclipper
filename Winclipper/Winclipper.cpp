@@ -1,15 +1,5 @@
-// Winclipper.cpp : Defines the entry point for the application.
-//
+// Entry point for the application.
 #include "stdafx.h"
-#include "resource.h"
-#include <Shlwapi.h>
-#include <string>
-#include "string.h"
-#include "UserSettings.h"
-#include "ControlUtilities.h"
-#include "settingsWindow.h"
-#include "MainWindow.h"
-#include "ClipsManager.h"
 #include "Winclipper.h"
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
