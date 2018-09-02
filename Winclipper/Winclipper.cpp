@@ -19,9 +19,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
     hInst = hInstance; // Store instance handle in our global variable
 
-	mainWindow.InitMainWindow(hInstance);
-	settingsWindow.InitSettingsWindow(hInstance, nullptr);
-
     HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_WINCSETTINGS));
 
     MSG msg;
@@ -62,13 +59,12 @@ bool RunUpdater()
 	si.cb = sizeof(si);
 	ZeroMemory(&pi, sizeof(pi));
 
-	if (CreateProcess(pPath, commandLine, NULL, NULL, FALSE, CREATE_DEFAULT_ERROR_MODE | CREATE_NEW_PROCESS_GROUP, NULL, NULL, &si, &pi))
-	{
-		return true;
-	}
-	else 
+	if (!CreateProcess(pPath, commandLine, NULL, NULL, FALSE, CREATE_DEFAULT_ERROR_MODE | CREATE_NEW_PROCESS_GROUP, NULL, NULL, &si, &pi))
 	{
 		return false;
 	}
+	CloseHandle(pi.hProcess);
+	CloseHandle(pi.hThread);
+	return true;
 }
 

@@ -30,6 +30,7 @@ private:
     static void                     DelayClipsWriter(int* waitCount, ClipsManager* cs);
     void                            WriteClips();
     void                            ReadClips();
+	void							SendPasteInput(void);
 
 public:
     ClipsManager();
@@ -55,9 +56,5 @@ public:
     bool                            SetClipboardToClipAtIndex(HWND hWnd, int index);
     const std::deque<wchar_t *>&    GetClips(void) const { return clips; }
 	void							ShowClipsMenu(HWND hWnd, bool showExit);
-
+	void							SelectDefaultMenuItem(bool select2ndClip);
 };
-
-// Forward declarations of functions included in this code module:
-void                SelectDefaultMenuItem(bool select2ndClip);
-void                SendPasteInput(void);

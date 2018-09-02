@@ -57,6 +57,38 @@ void ClipsManager::ReadClips()
     }
 }
 
+void ClipsManager::SendPasteInput(void)
+{
+	INPUT inputCtrlKey;
+	INPUT inputVKey;
+
+	inputCtrlKey.type = INPUT_KEYBOARD;
+	inputCtrlKey.ki.wVk = VK_CONTROL;
+	inputCtrlKey.ki.wScan = 0;
+	inputCtrlKey.ki.time = 0;
+	inputCtrlKey.ki.dwFlags = 0;
+	inputCtrlKey.ki.dwExtraInfo = 0;
+
+	inputVKey.type = INPUT_KEYBOARD;
+	inputVKey.ki.wVk = 0x56;
+	inputVKey.ki.wScan = 0;
+	inputVKey.ki.time = 0;
+	inputVKey.ki.dwFlags = 0;
+	inputVKey.ki.dwExtraInfo = 0;
+
+	SendInput(1, &inputCtrlKey, sizeof(INPUT));
+	SendInput(1, &inputVKey, sizeof(INPUT));
+
+	Sleep(50);
+
+	inputCtrlKey.ki.dwFlags = KEYEVENTF_KEYUP;
+	inputVKey.ki.dwFlags = KEYEVENTF_KEYUP;
+	SendInput(1, &inputVKey, sizeof(INPUT));
+	SendInput(1, &inputCtrlKey, sizeof(INPUT));
+
+	return;
+}
+
 ClipsManager::ClipsManager()
 {
 }
@@ -430,7 +462,7 @@ void ClipsManager::ShowClipsMenu(HWND hWnd, bool showExit)
     }
 }
 
-void SelectDefaultMenuItem(bool select2ndClip)
+void ClipsManager::SelectDefaultMenuItem(bool select2ndClip)
 {
     INPUT inputDownKey;
 
@@ -454,37 +486,5 @@ void SelectDefaultMenuItem(bool select2ndClip)
         inputDownKey.ki.dwFlags = KEYEVENTF_KEYUP;
         SendInput(1, &inputDownKey, sizeof(INPUT));
     }
-    return;
-}
-
-void SendPasteInput(void)
-{
-    INPUT inputCtrlKey;
-    INPUT inputVKey;
-
-    inputCtrlKey.type = INPUT_KEYBOARD;
-    inputCtrlKey.ki.wVk = VK_CONTROL;
-    inputCtrlKey.ki.wScan = 0;
-    inputCtrlKey.ki.time = 0;
-    inputCtrlKey.ki.dwFlags = 0;
-    inputCtrlKey.ki.dwExtraInfo = 0;
-
-    inputVKey.type = INPUT_KEYBOARD;
-    inputVKey.ki.wVk = 0x56;
-    inputVKey.ki.wScan = 0;
-    inputVKey.ki.time = 0;
-    inputVKey.ki.dwFlags = 0;
-    inputVKey.ki.dwExtraInfo = 0;
-
-    SendInput(1, &inputCtrlKey, sizeof(INPUT));
-    SendInput(1, &inputVKey, sizeof(INPUT));
-
-    Sleep(50);
-
-    inputCtrlKey.ki.dwFlags = KEYEVENTF_KEYUP;
-    inputVKey.ki.dwFlags = KEYEVENTF_KEYUP;
-    SendInput(1, &inputVKey, sizeof(INPUT));
-    SendInput(1, &inputCtrlKey, sizeof(INPUT));
-
     return;
 }

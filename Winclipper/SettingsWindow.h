@@ -35,7 +35,7 @@ private:
 	UserSettings &				uSettings;
 	
 	HFONT						hFontStd;
-	HWND						windowHandle;
+	HWND						windowHandle = nullptr;
 
 	ATOM						RegisterSettingsWindowClass(HINSTANCE hInstance);
 	static LRESULT CALLBACK		SettingsWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
@@ -58,7 +58,7 @@ public:
 								SettingsWindow(HINSTANCE hInstance, UserSettings & userSettings);
 								~SettingsWindow();
 
-	bool						InitSettingsWindow(HINSTANCE, HWND);
+	bool						InitSettingsWindow(HINSTANCE hInstance);
 	HWND						GetHandle();
 };
 

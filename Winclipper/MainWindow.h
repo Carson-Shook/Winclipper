@@ -77,7 +77,7 @@ private:
 	LRESULT						WmMenuSelect(HWND hWnd, WPARAM wParam, LPARAM lParam);
 	LRESULT						WndProcDefault(HWND hWnd, WPARAM wParam, LPARAM lParam);
 
-	bool						AddNotificationIcon(HWND hWnd);
+	bool						AddNotificationIcon(HWND hWnd, HINSTANCE hInstance);
 	bool						DeleteNotificationIcon();
 public:
 								MainWindow(HINSTANCE hInstance, UserSettings & userSettings, SettingsWindow & settingsWindow);

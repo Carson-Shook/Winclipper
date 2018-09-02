@@ -361,34 +361,34 @@ bool SettingsWindow::DeleteRegistryRun()
 SettingsWindow::SettingsWindow(HINSTANCE hInstance, UserSettings & userSettings)
 	:uSettings(userSettings)
 {
+	NONCLIENTMETRICS hfDefault;
+	hfDefault.cbSize = sizeof(NONCLIENTMETRICS);
+	SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(NONCLIENTMETRICS), &hfDefault, 0);
+	hFontStd = CreateFontIndirectW(&hfDefault.lfCaptionFont);
+
 	LoadStringW(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
 	LoadStringW(hInstance, IDC_WINCSETTINGS, szSettingsWindowClass, MAX_LOADSTRING);
 
 	RegisterSettingsWindowClass(hInstance);
+
+	InitSettingsWindow(hInstance);
 }
 
 SettingsWindow::~SettingsWindow()
 {
 }
 
-bool SettingsWindow::InitSettingsWindow(HINSTANCE hInstance, HWND parentWnd)
+bool SettingsWindow::InitSettingsWindow(HINSTANCE hInstance)
 {
-
 	HWND hWnd = CreateWindowEx(0, szSettingsWindowClass, szTitle, WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU,
-		CW_USEDEFAULT, CW_USEDEFAULT, ScaleX(260), ScaleY(284), parentWnd, nullptr, hInstance, this);
+		CW_USEDEFAULT, CW_USEDEFAULT, ScaleX(260), ScaleY(284), nullptr, nullptr, hInstance, this);
 
 	if (!hWnd)
 	{
 		return false;
 	}
 
-	// Still trying to figure out how to not do this.
 	windowHandle = hWnd;
-
-	NONCLIENTMETRICS hfDefault;
-	hfDefault.cbSize = sizeof(NONCLIENTMETRICS);
-	SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(NONCLIENTMETRICS), &hfDefault, 0);
-	hFontStd = CreateFontIndirectW(&hfDefault.lfCaptionFont);
 
 	// Add controls in tab order
 	AddLabel(hWnd, hFontStd, 10, 10, hInstance, L"Number of clips to display:", LBL_MAX_CLIPS_DISPLAY);

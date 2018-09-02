@@ -6,7 +6,6 @@
 
 #define MAX_LEN_PRV_CLIP_KB		80
 
-
 class PreviewWindow
 {
 private:
@@ -24,6 +23,7 @@ private:
 	LRESULT						WmCreate();
 	LRESULT						WmDestroy();
 	LRESULT						WmPaint(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
+
 public:
 								PreviewWindow(HINSTANCE hInstance);
 								~PreviewWindow();
@@ -35,8 +35,5 @@ public:
 	void						MoveRelativeToRect(LPRECT rect);
 	void						Show();
 	void						Hide();
-
-
-
 };
 

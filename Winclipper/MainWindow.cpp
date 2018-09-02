@@ -267,7 +267,7 @@ LRESULT MainWindow::WmHotkey(HWND hWnd, WPARAM wParam, LPARAM lParam)
 LRESULT MainWindow::WmCreate(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
 	// Add the notification icon
-	if (!AddNotificationIcon(hWnd))
+	if (!AddNotificationIcon(hWnd, ((LPCREATESTRUCT) lParam)->hInstance))
 	{
 		MessageBox(hWnd,
 			L"There was an error adding the notification icon. You might want to try restarting your computer, or reinstalling this application.",
@@ -281,8 +281,8 @@ LRESULT MainWindow::WmCreate(HWND hWnd, WPARAM wParam, LPARAM lParam)
 
 	cManager = new ClipsManager(uSettings.MaxDisplayClips(), uSettings.MaxSavedClips(), uSettings.MenuDisplayChars(), uSettings.SaveToDisk());
 
-	previewWindow = new PreviewWindow(hInst);
-	previewWindow->InitPreviewWindow(hInst, hWnd);
+	previewWindow = new PreviewWindow(((LPCREATESTRUCT)lParam)->hInstance);
+	previewWindow->InitPreviewWindow(((LPCREATESTRUCT)lParam)->hInstance, hWnd);
 
 	return 0;
 }
@@ -302,7 +302,7 @@ LRESULT MainWindow::WmInitMenu(HWND hWnd, WPARAM wParam, LPARAM lParam)
 	// keep track of the top level menu to differentiate for display purposes
 	topPopupMenu = (HMENU)wParam;
 	size_t size = cManager->GetClips().size();
-	SelectDefaultMenuItem(size > 1 ? uSettings.Select2ndClip() : false);
+	cManager->SelectDefaultMenuItem(size > 1 ? uSettings.Select2ndClip() : false);
 	return 0;
 }
 
@@ -407,7 +407,7 @@ LRESULT MainWindow::WndProcDefault(HWND hWnd, WPARAM wParam, LPARAM lParam)
 }
 
 // Adds the application notification icon to the notifcation area
-bool MainWindow::AddNotificationIcon(HWND hWnd)
+bool MainWindow::AddNotificationIcon(HWND hWnd, HINSTANCE hInstance)
 {
 	NOTIFYICONDATA nid = { sizeof(nid) };
 	nid.hWnd = hWnd;
@@ -415,7 +415,7 @@ bool MainWindow::AddNotificationIcon(HWND hWnd)
 	nid.uCallbackMessage = WMAPP_NOTIFYCALLBACK;
 	nid.uID =
 		// Load the icon for high DPI.
-		LoadIconMetric(hInst, MAKEINTRESOURCE(IDI_WINCLIPPER), LIM_SMALL, &nid.hIcon);
+		LoadIconMetric(hInstance, MAKEINTRESOURCE(IDI_WINCLIPPER), LIM_SMALL, &nid.hIcon);
 
 	// Show the notification.
 	Shell_NotifyIcon(NIM_ADD, &nid);
@@ -435,11 +435,18 @@ bool MainWindow::DeleteNotificationIcon()
 MainWindow::MainWindow(HINSTANCE hInstance, UserSettings & userSettings, SettingsWindow & settingsWindow)
 	:uSettings(userSettings), settingsWindow(settingsWindow)
 {
+	NONCLIENTMETRICS hfDefault;
+	hfDefault.cbSize = sizeof(NONCLIENTMETRICS);
+	SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(NONCLIENTMETRICS), &hfDefault, 0);
+	hFontStd = CreateFontIndirectW(&hfDefault.lfCaptionFont);
+
 	LoadStringW(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
 	LoadStringW(hInstance, IDC_WINCLIPPER, szMainWindowClass, MAX_LOADSTRING);
 
 	RegisterMainWindowClass(hInstance);
+	InitMainWindow(hInstance);
 
+	// used for the dialog box.
 	hInst = hInstance;
 }
 
@@ -458,11 +465,6 @@ bool MainWindow::InitMainWindow(HINSTANCE hInstance)
 	}
 
 	windowHandle = hWnd;
-
-	NONCLIENTMETRICS hfDefault;
-	hfDefault.cbSize = sizeof(NONCLIENTMETRICS);
-	SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(NONCLIENTMETRICS), &hfDefault, 0);
-	hFontStd = CreateFontIndirectW(&hfDefault.lfCaptionFont);
 
 	// Adds the main window to the clipboard format listener list.
 	AddClipboardFormatListener(hWnd);
