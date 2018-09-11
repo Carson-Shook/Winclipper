@@ -276,26 +276,34 @@ bool ClipsManager::SetClipboardToClipAtIndex(HWND hWnd, int index)
     return true;
 }
 
-void ClipsManager::ShowClipsMenu(HWND hWnd, bool showExit)
+void ClipsManager::ShowClipsMenu(HWND hWnd, LPPOINT cPos, bool showExit)
 {
     HWND curWin = GetForegroundWindow();
+	HWND taskbarWnd = FindWindow(L"Shell_TrayWnd", NULL);
+
+	// Ensures that the last *real* active window is selected
+	// when the user tries to paste using the shell_notifyicon.
+	if (curWin == taskbarWnd || IsChild(taskbarWnd, curWin))
+	{
+		curWin = taskbarWnd; // just in case isChild instead of equal.
+		do
+		{
+			curWin = GetWindow(curWin, GW_HWNDNEXT);
+		} while (!IsWindowVisible(curWin));
+	}
+
     if (hWnd != NULL && curWin != NULL)
     {
+		SetForegroundWindow(curWin);
+
         // Since WindowsNT (I think), it's necessary to attach the process to the thread
         // that we want to get the active window of, otherwise we get an unspecified value.
         // GetForegroundWindow was unreliable with UWP applications because it took too long
         // to restore the active window (the text field) after the foreground window activated.
         AttachThreadInput(GetWindowThreadProcessId(curWin, NULL), GetWindowThreadProcessId(hWnd, NULL), true);
-        HWND actWin = GetActiveWindow();
+		HWND actWin = GetActiveWindow();
 
         SetForegroundWindow(hWnd);
-
-        LPPOINT cPos = new POINT;
-        if (!GetCursorPos(cPos))
-        {
-            (*cPos).x = 10;
-            (*cPos).y = 10;
-        }
 
         HMENU menu = CreatePopupMenu();
 
@@ -394,13 +402,13 @@ void ClipsManager::ShowClipsMenu(HWND hWnd, bool showExit)
         menuSelection = TrackPopupMenu(
             menu,
             TPM_LEFTALIGN | TPM_TOPALIGN | TPM_RETURNCMD,
-            (*cPos).x,
-            (*cPos).y,
+            cPos->x,
+            cPos->y,
             0,
             hWnd,
             NULL
         );
-
+		PostMessage(hWnd, WM_USER, 0, 0);
         switch (menuSelection)
         {
 		case CANCELED_SELECTION:
@@ -423,7 +431,7 @@ void ClipsManager::ShowClipsMenu(HWND hWnd, bool showExit)
         case SETTINGS_SELECT:
             PostMessage(hWnd, WM_COMMAND, IDM_SETTINGS, 0);
             break;
-		case 2003:
+		case ABOUT_SELECT:
 			PostMessage(hWnd, WM_COMMAND, IDM_ABOUT, 0);
 			break;
         case EXIT_SELECT:

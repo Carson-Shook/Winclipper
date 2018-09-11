@@ -38,6 +38,8 @@ int _dpiY = _InitY();
 
 int ScaleX(int x) { return MulDiv(x, _dpiX, 96); }
 int ScaleY(int y) { return MulDiv(y, _dpiY, 96); }
+float ScaleX(float x) { return (x * _dpiX) / 96.0F; }
+float ScaleY(float y) { return (y * _dpiY) / 96.0F; }
 
 // Draw text to a fit within a rectangle, and then measure
 // the resulting rectangle to determine how much space is
@@ -47,18 +49,6 @@ void MeasureString(LPCWSTR text, HFONT font, LPRECT rect)
     HDC hDC = GetDC(NULL);
     SelectObject(hDC, font);
     DrawText(hDC, text, -1, rect, DT_CALCRECT);
-    ReleaseDC(NULL, hDC);
-    return;
-}
-
-// Measure text in a rectangle and allow for wrapping
-// to multiple lines. Appropriate for calculating size
-// of large edit controls and similar.
-void MeasureStringMultilineWrap(LPCWSTR text, HFONT font, LPRECT rect)
-{
-    HDC hDC = GetDC(NULL);
-    SelectObject(hDC, font);
-    DrawText(hDC, text, -1, rect, DT_CALCRECT | DT_WORDBREAK | DT_EXTERNALLEADING | DT_NOPREFIX | DT_EDITCONTROL);
     ReleaseDC(NULL, hDC);
     return;
 }

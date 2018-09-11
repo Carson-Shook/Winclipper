@@ -4,14 +4,12 @@
 
 ATOM SettingsWindow::RegisterSettingsWindowClass(HINSTANCE hInstance)
 {
-	WNDCLASSEXW wcex;
-
-	wcex.cbSize = sizeof(WNDCLASSEX);
+	WNDCLASSEXW wcex = { sizeof(WNDCLASSEXW) };
 
 	wcex.style = CS_HREDRAW | CS_VREDRAW;
 	wcex.lpfnWndProc = SettingsWindow::SettingsWndProc;
 	wcex.cbClsExtra = 0;
-	wcex.cbWndExtra = 0;
+	wcex.cbWndExtra = sizeof(LONG_PTR);
 	wcex.hInstance = hInstance;
 	wcex.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_WINCLIPPER));
 	wcex.hCursor = LoadCursor(nullptr, IDC_ARROW);
@@ -27,7 +25,7 @@ LRESULT SettingsWindow::SettingsWndProc(HWND hWnd, UINT message, WPARAM wParam, 
 {
 	// We want to capture a pointer to the current instance of the class
 	// so we can call non-static methods from a static context.
-	SettingsWindow * pThis;
+	SettingsWindow * pThis = nullptr;
 
 	if (message == WM_NCCREATE)
 	{
@@ -38,6 +36,7 @@ LRESULT SettingsWindow::SettingsWndProc(HWND hWnd, UINT message, WPARAM wParam, 
 			if (GetLastError() != 0)
 				return FALSE;
 		}
+		return TRUE;
 	}
 	else
 	{
@@ -380,13 +379,15 @@ SettingsWindow::~SettingsWindow()
 
 bool SettingsWindow::InitSettingsWindow(HINSTANCE hInstance)
 {
-	HWND hWnd = CreateWindowEx(0, szSettingsWindowClass, szTitle, WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU,
+	HWND hWnd = CreateWindowExW(0, szSettingsWindowClass, szTitle, WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU,
 		CW_USEDEFAULT, CW_USEDEFAULT, ScaleX(260), ScaleY(284), nullptr, nullptr, hInstance, this);
 
 	if (!hWnd)
 	{
 		return false;
 	}
+
+	SetWindowTextW(hWnd, szTitle);
 
 	windowHandle = hWnd;
 

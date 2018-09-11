@@ -34,6 +34,7 @@
 class MainWindow
 {
 private:
+	bool						ninKeypressLocked = false;
 	HINSTANCE					hInst;										// current instance
 	wchar_t						szMainWindowClass[MAX_LOADSTRING];          // the main window class name
 	wchar_t						szTitle[MAX_LOADSTRING];                    // The title bar text
@@ -41,7 +42,6 @@ private:
 	SettingsWindow &			settingsWindow;
 	ClipsManager * 				cManager;
 	PreviewWindow * 			previewWindow;
-	HWND 						previewWnd;
 	HMENU						topPopupMenu;
 	HMENU						activePopupMenu;
 	static UINT	const			WMAPP_NOTIFYCALLBACK = WM_APP + 1;			// user defined callback for notfiyicon actions
@@ -65,6 +65,7 @@ private:
 	LRESULT						WmCommandNtfSaveToDiskChanged(HWND hWnd, WPARAM wParam, LPARAM lParam);
 	//LRESULT						WmCommandNtfShowPreviewChanged(HWND hWnd, WPARAM wParam, LPARAM lParam); // don't really need this yet.
 	//LRESULT						WmCommandNtfSlctSecondClipChanged(HWND hWnd, WPARAM wParam, LPARAM lParam); // same
+	LRESULT						WmappNCallNinKeySelect(HWND hWnd, WPARAM wParam, LPARAM lParam);
 	LRESULT						WmappNCallWmLButtonDblClk(HWND hWnd, WPARAM wParam, LPARAM lParam);
 	LRESULT						WmappNCallWmContextMenu(HWND hWnd, WPARAM wParam, LPARAM lParam);
 	LRESULT						WmClipboardUpdate(HWND hWnd, WPARAM wParam, LPARAM lParam);

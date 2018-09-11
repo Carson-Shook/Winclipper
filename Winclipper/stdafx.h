@@ -17,10 +17,14 @@
 #include "targetver.h"
 #pragma comment(linker,"/manifestdependency:\"type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
 #pragma comment(lib, "comctl32.lib")
+#pragma comment(lib, "D2d1.lib")
+#pragma comment(lib, "D3d11.lib")
+#pragma comment(lib, "DWrite.lib")
 
 #define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
 // Windows Header Files:
 #include <windows.h>
+#include <windowsx.h>
 #undef _WIN32_IE
 #define _WIN32_IE 0x0600
 #include <shellapi.h>

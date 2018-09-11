@@ -4,19 +4,17 @@
 
 ATOM MainWindow::RegisterMainWindowClass(HINSTANCE hInstance)
 {
-	WNDCLASSEXW wcex;
-
-	wcex.cbSize = sizeof(WNDCLASSEX);
+	WNDCLASSEXW wcex = { sizeof(WNDCLASSEXW) };
 
 	wcex.style = CS_HREDRAW | CS_VREDRAW;
 	wcex.lpfnWndProc = MainWindow::MainWndProc;
 	wcex.cbClsExtra = 0;
-	wcex.cbWndExtra = 0;
+	wcex.cbWndExtra = sizeof(LONG_PTR);
 	wcex.hInstance = hInstance;
 	wcex.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_WINCLIPPER));
 	wcex.hCursor = LoadCursor(nullptr, IDC_ARROW);
 	wcex.hbrBackground = (HBRUSH)(COLOR_WINDOW);
-	wcex.lpszMenuName = 0;
+	wcex.lpszMenuName = NULL;
 	wcex.lpszClassName = szMainWindowClass;
 	wcex.hIconSm = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_WINCLIPPER));
 
@@ -27,7 +25,7 @@ LRESULT MainWindow::MainWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
 {
 	// We want to capture a pointer to the current instance of the class
 	// so we can call non-static methods from a static context.
-	MainWindow * pThis;
+	MainWindow * pThis = nullptr;
 
 	if (message == WM_NCCREATE)
 	{
@@ -38,6 +36,7 @@ LRESULT MainWindow::MainWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
 			if (GetLastError() != 0)
 				return FALSE;
 		}
+		return TRUE;
 	}
 	else
 	{
@@ -84,12 +83,6 @@ LRESULT MainWindow::MainWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
 		case NTF_SAVETODISK_CHANGED:
 			pThis->WmCommandNtfSaveToDiskChanged(hWnd, wParam, lParam);
 			break;
-		//case NTF_SHOWPREVIEW_CHANGED:
-		//	pThis->WmCommandNtfShowPreviewChanged(hWnd, wParam, lParam);
-		//	break;
-		//case NTF_SLCTSECONDCLIP_CHANGED:
-		//	pThis->WmCommandNtfSlctSecondClipChanged(hWnd, wParam, lParam);
-		//	break;
 		default:
 			return DefWindowProc(hWnd, message, wParam, lParam);
 		}
@@ -99,6 +92,9 @@ LRESULT MainWindow::MainWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
 		// React to clicks on the notify icon
 		switch (LOWORD(lParam))
 		{
+		case NIN_KEYSELECT:
+			pThis->WmappNCallNinKeySelect(hWnd, wParam, lParam);
+			break;
 		case WM_LBUTTONDBLCLK:
 			pThis->WmappNCallWmLButtonDblClk(hWnd, wParam, lParam);
 			break;
@@ -229,6 +225,33 @@ LRESULT MainWindow::WmCommandNtfSaveToDiskChanged(HWND hWnd, WPARAM wParam, LPAR
 	return 0;
 }
 
+LRESULT MainWindow::WmappNCallNinKeySelect(HWND hWnd, WPARAM wParam, LPARAM lParam)
+{
+	// This prevents any additional keypresses from being 
+	// interpreted until after ShowClipsMenu has finished.
+	if (!ninKeypressLocked)
+	{
+		ninKeypressLocked = true;
+		int xCoord GET_X_LPARAM(wParam);
+		int yCoord GET_Y_LPARAM(wParam);
+
+		LPPOINT cPos = new POINT;
+		if (xCoord != NULL && yCoord != NULL)
+		{
+			cPos->x = xCoord;
+			cPos->y = yCoord;
+		}
+		else
+		{
+			cPos->x = 10;
+			cPos->y = 10;
+		}
+		cManager->ShowClipsMenu(GetHandle(), cPos, true);
+		ninKeypressLocked = false;
+	}
+	return 0;
+}
+
 LRESULT MainWindow::WmappNCallWmLButtonDblClk(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
 	HWND settingsHwnd = settingsWindow.GetHandle();
@@ -244,7 +267,13 @@ LRESULT MainWindow::WmappNCallWmLButtonDblClk(HWND hWnd, WPARAM wParam, LPARAM l
 
 LRESULT MainWindow::WmappNCallWmContextMenu(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
-	cManager->ShowClipsMenu(hWnd, true);
+	LPPOINT cPos = new POINT;
+	if (!GetCursorPos(cPos))
+	{
+		(*cPos).x = 10;
+		(*cPos).y = 10;
+	}
+	cManager->ShowClipsMenu(GetHandle(), cPos, true);
 
 	return 0;
 }
@@ -260,7 +289,13 @@ LRESULT MainWindow::WmHotkey(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
 	// When the global hotkey is called, get the current window
 	// so we can reactivate it later, and then show the clips menu.
-	cManager->ShowClipsMenu(hWnd, false);
+	LPPOINT cPos = new POINT;
+	if (!GetCursorPos(cPos))
+	{
+		(*cPos).x = 10;
+		(*cPos).y = 10;
+	}
+	cManager->ShowClipsMenu(GetHandle(), cPos, false);
 	return 0;
 }
 
@@ -280,10 +315,6 @@ LRESULT MainWindow::WmCreate(HWND hWnd, WPARAM wParam, LPARAM lParam)
 	settingsWindow.Subscribe(hWnd);
 
 	cManager = new ClipsManager(uSettings.MaxDisplayClips(), uSettings.MaxSavedClips(), uSettings.MenuDisplayChars(), uSettings.SaveToDisk());
-
-	previewWindow = new PreviewWindow(((LPCREATESTRUCT)lParam)->hInstance);
-	previewWindow->InitPreviewWindow(((LPCREATESTRUCT)lParam)->hInstance, hWnd);
-
 	return 0;
 }
 
@@ -300,7 +331,7 @@ LRESULT MainWindow::WmDestroy(HWND hWnd, WPARAM wParam, LPARAM lParam)
 LRESULT MainWindow::WmInitMenu(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
 	// keep track of the top level menu to differentiate for display purposes
-	topPopupMenu = (HMENU)wParam;
+	activePopupMenu = topPopupMenu = (HMENU)wParam;
 	size_t size = cManager->GetClips().size();
 	cManager->SelectDefaultMenuItem(size > 1 ? uSettings.Select2ndClip() : false);
 	return 0;
@@ -308,7 +339,7 @@ LRESULT MainWindow::WmInitMenu(HWND hWnd, WPARAM wParam, LPARAM lParam)
 
 LRESULT MainWindow::WmInitMenuPopup(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
-	// whenever a submenu appears, we savte it the active popup
+	// whenever a submenu appears, we save it the active popup
 	activePopupMenu = (HMENU)wParam;
 	return 0;
 }
@@ -384,7 +415,7 @@ LRESULT MainWindow::WmMenuSelect(HWND hWnd, WPARAM wParam, LPARAM lParam)
 // menuItem. If not, then hide the preview window.
 LRESULT MainWindow::WndProcDefault(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
-	if (IsWindowVisible(previewWnd))
+	if (previewWindow != nullptr && IsWindowVisible(previewWindow->GetHandle()))
 	{
 		LPPOINT cPos = new POINT;
 		if (GetCursorPos(cPos))
@@ -416,7 +447,6 @@ bool MainWindow::AddNotificationIcon(HWND hWnd, HINSTANCE hInstance)
 	nid.uID =
 		// Load the icon for high DPI.
 		LoadIconMetric(hInstance, MAKEINTRESOURCE(IDI_WINCLIPPER), LIM_SMALL, &nid.hIcon);
-
 	// Show the notification.
 	Shell_NotifyIcon(NIM_ADD, &nid);
 
@@ -444,7 +474,10 @@ MainWindow::MainWindow(HINSTANCE hInstance, UserSettings & userSettings, Setting
 	LoadStringW(hInstance, IDC_WINCLIPPER, szMainWindowClass, MAX_LOADSTRING);
 
 	RegisterMainWindowClass(hInstance);
-	InitMainWindow(hInstance);
+	if (InitMainWindow(hInstance))
+	{
+		previewWindow = new PreviewWindow(hInstance, GetHandle());
+	}
 
 	// used for the dialog box.
 	hInst = hInstance;
@@ -456,7 +489,7 @@ MainWindow::~MainWindow()
 
 bool MainWindow::InitMainWindow(HINSTANCE hInstance)
 {
-	HWND hWnd = CreateWindowEx(0, szMainWindowClass, szTitle, WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU,
+	HWND hWnd = CreateWindowExW(0, szMainWindowClass, szTitle, WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU,
 		0, 0, 100, 100, nullptr, nullptr, hInstance, this);
 
 	if (!hWnd)
