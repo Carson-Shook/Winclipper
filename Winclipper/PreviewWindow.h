@@ -2,6 +2,7 @@
 #include "ControlUtilities.h"
 #include "resource.h"
 #include "string.h"
+#include <map>
 #include <VersionHelpers.h>
 #include <d2d1.h>
 #include <d2d1helper.h>
@@ -9,7 +10,7 @@
 #include <d3d11.h>
 #include "ControlUtilities.h"
 
-#define MAX_LEN_PRV_CLIP_KB		30
+#define MAX_LEN_PRV_CLIP_KB		60
 
 class PreviewWindow
 {
@@ -21,30 +22,30 @@ private:
 	const float					textMarginHeight = 3.5f;
 	const float					infoBreakHeight = 18.0f;
 
-	ID2D1Factory *				pD2DFactory = NULL;
-	IDWriteFactory *			pDWriteFactory = NULL;
-	ID2D1HwndRenderTarget *		pRT = NULL;
-	IDWriteTextFormat *			pDWriteTextFormat = NULL;
-	IDWriteTextFormat *			pDWriteInfoBreakFormat = NULL;
-	IDWriteRenderingParams *	pDWriteRenderingParams = NULL;
+	ID2D1Factory *				pD2DFactory = nullptr;
+	IDWriteFactory *			pDWriteFactory = nullptr;
+	ID2D1HwndRenderTarget *		pRT = nullptr;
+	IDWriteTextFormat *			pDWriteTextFormat = nullptr;
+	IDWriteTextFormat *			pDWriteInfoBreakFormat = nullptr;
+	IDWriteTextLayout *			pDWriteTextLayout = nullptr;
+	IDWriteRenderingParams *	pDWriteRenderingParams = nullptr;
+
+	ID2D1SolidColorBrush *		pLightGrayBrush = nullptr;
+	ID2D1SolidColorBrush *		pWhiteBrush = nullptr;
+	ID2D1SolidColorBrush *		pBlackBrush = nullptr;
+	ID2D1SolidColorBrush *		pLabelTextBrush = nullptr;
+	ID2D1SolidColorBrush *		pBlueGrayBrush = nullptr;
+
+	D2D1_DRAW_TEXT_OPTIONS		textDrawOptions = D2D1_DRAW_TEXT_OPTIONS_NONE;
+	DWRITE_FONT_WEIGHT			weight = DWRITE_FONT_WEIGHT_NORMAL;
 	D2D1::ColorF				WindowColor = D2D1::ColorF(0xF0F0F5);
 
-	ID2D1SolidColorBrush *		pLightGrayBrush = NULL;
-	ID2D1SolidColorBrush *		pWhiteBrush = NULL;
-	ID2D1SolidColorBrush *		pBlackBrush = NULL;
-	ID2D1SolidColorBrush *		pLabelTextBrush = NULL;
-	ID2D1SolidColorBrush *		pBlueGrayBrush = NULL;
-	D2D1_DRAW_TEXT_OPTIONS		textDrawOptions = D2D1_DRAW_TEXT_OPTIONS_NONE;
-
-	IDWriteTextLayout *			pDWriteTextLayout = NULL;
-	DWRITE_FONT_WEIGHT			weight;
+	std::map<unsigned int, IDWriteTextLayout *> layoutCache;
 
 	wchar_t *					previewClip = nullptr;
 	unsigned long long			remainingTextLines = 0; // need to account for theoretical maximum NTFS file size
 	unsigned long long			clipSizeInKb = 0;
 	wchar_t						szPreviewWindowClass[MAX_LOADSTRING];       // the text preview window
-	LPRECT						previewRect = new RECT({ 0, 0, ScaleX(500), ScaleY(500) });
-	HFONT						hFontStd;
 	HWND						windowHandle;
 
 	ATOM						RegisterPreviewWindowClass(HINSTANCE);
@@ -53,7 +54,7 @@ private:
 	LRESULT						WmDestroy();
 	LRESULT						WmPaint(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 	HRESULT						CreateDeviceIndependentResources();
-	HRESULT						CreateDeviceDependentResources(HWND hWnd);
+	HRESULT						CreateDeviceDependentResources(HWND hWnd) noexcept;
 	void						DestroyDeviceIndependentResources();
 	void						DestroyDeviceDependentResources();
 
@@ -62,7 +63,7 @@ private:
 		if (*ppT)
 		{
 			(*ppT)->Release();
-			*ppT = NULL;
+			*ppT = nullptr;
 		}
 	}
 
@@ -72,10 +73,11 @@ public:
 
 	bool						InitPreviewWindow(HINSTANCE hInstance, HWND parentWnd);
 
-	HWND						GetHandle();
-	void						SetPreviewClip(wchar_t * clip);
-	void						MoveRelativeToRect(LPRECT rect);
-	void						Show();
-	void						Hide();
+	HWND						GetHandle() noexcept;
+	void						SetPreviewClip(wchar_t * clip) noexcept;
+	void						MoveRelativeToRect(LPRECT rect, unsigned int index);
+	void						Show() noexcept;
+	void						Hide() noexcept;
+	void						ClearCache();
 };
 

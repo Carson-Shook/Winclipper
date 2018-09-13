@@ -41,7 +41,7 @@ void ClipsManager::DelayClipsWriter(int * waitCount, ClipsManager * cs)
 void ClipsManager::WriteClips()
 {
     isWriterFinished = false;
-    File::BinaryWriteDeque(GetClips(), fullClipsPath);
+    File::BinaryWriteDeque(clips, fullClipsPath);
     isWriterFinished = true;
 }
 
@@ -183,7 +183,7 @@ void ClipsManager::SetSaveToDisk(bool saveToDisk)
 
 void ClipsManager::ClearClips()
 {
-    for (size_t i = 0, j = clips.size(); i < j; i++)
+    for (size_t i = 0; i < GetSize(); i++)
     {
         wchar_t * clip = clips.at(i);
         delete[] clip;
@@ -200,10 +200,10 @@ bool ClipsManager::AddToClips(HWND hWnd)
     }
 
     HANDLE psClipboardData = GetClipboardData(CF_UNICODETEXT);
-    if (psClipboardData != NULL)
+    if (psClipboardData != nullptr)
     {
         wchar_t * data = (wchar_t*)GlobalLock(psClipboardData);
-        if (data != NULL)
+        if (data != nullptr)
         {
             wchar_t * derefData = _wcsdup(data);
             GlobalUnlock(psClipboardData);
@@ -250,10 +250,10 @@ bool ClipsManager::SetClipboardToClipAtIndex(HWND hWnd, int index)
     wchar_t * clip = clips.at(index);
 
     HGLOBAL hClipboardData = GlobalAlloc(GMEM_MOVEABLE, (wcslen(clip) + 1) * sizeof(wchar_t));
-    if (hClipboardData != NULL)
+    if (hClipboardData != nullptr)
     {
         wchar_t * pwcData = (wchar_t*)GlobalLock(hClipboardData);
-        if (pwcData != NULL)
+        if (pwcData != nullptr)
         {
             wcscpy_s(pwcData, wcslen(clip) + 1, clip);
 
@@ -276,10 +276,30 @@ bool ClipsManager::SetClipboardToClipAtIndex(HWND hWnd, int index)
     return true;
 }
 
+const size_t ClipsManager::GetSize() noexcept
+{
+	return clips.size();
+}
+
+// Guarantees to return a pointer to wchar_t 
+// or nullptr if clip doesn't exist at index
+wchar_t * ClipsManager::GetClipAt(size_t index) noexcept
+{
+	try
+	{
+#pragma warning( suppress : 26447 )
+		return clips.at(index);
+	}
+	catch (const std::exception e)
+	{
+		return nullptr;
+	}
+}
+
 void ClipsManager::ShowClipsMenu(HWND hWnd, LPPOINT cPos, bool showExit)
 {
     HWND curWin = GetForegroundWindow();
-	HWND taskbarWnd = FindWindow(L"Shell_TrayWnd", NULL);
+	HWND taskbarWnd = FindWindow(L"Shell_TrayWnd", nullptr);
 
 	// Ensures that the last *real* active window is selected
 	// when the user tries to paste using the shell_notifyicon.
@@ -292,7 +312,7 @@ void ClipsManager::ShowClipsMenu(HWND hWnd, LPPOINT cPos, bool showExit)
 		} while (!IsWindowVisible(curWin));
 	}
 
-    if (hWnd != NULL && curWin != NULL)
+    if (hWnd != nullptr && curWin != nullptr)
     {
 		SetForegroundWindow(curWin);
 
@@ -300,101 +320,104 @@ void ClipsManager::ShowClipsMenu(HWND hWnd, LPPOINT cPos, bool showExit)
         // that we want to get the active window of, otherwise we get an unspecified value.
         // GetForegroundWindow was unreliable with UWP applications because it took too long
         // to restore the active window (the text field) after the foreground window activated.
-        AttachThreadInput(GetWindowThreadProcessId(curWin, NULL), GetWindowThreadProcessId(hWnd, NULL), true);
+        AttachThreadInput(GetWindowThreadProcessId(curWin, nullptr), GetWindowThreadProcessId(hWnd, nullptr), true);
 		HWND actWin = GetActiveWindow();
 
         SetForegroundWindow(hWnd);
 
         HMENU menu = CreatePopupMenu();
 
-        size_t curSize = GetClips().size();
-        unsigned int displayCount = DisplayClips();
-        unsigned int menuTextLength = MenuDisplayChars();
-        wchar_t* menuText = new wchar_t[menuTextLength];
+        const size_t curSize = GetSize();
 
         if (curSize > 0)
         {
-            size_t j = curSize > displayCount ? displayCount : curSize;
+            size_t j = curSize > DisplayClips() ? DisplayClips() : curSize;
 
-            for (unsigned int i = 0; i < j; i++)
+            for (size_t i = 0; i < j; i++)
             {
-                wchar_t * clip = GetClips().at(i);
-                if (clip != NULL)
+                const wchar_t * clip = GetClipAt(i);
+                if (clip != nullptr)
                 {
-                    size_t maxClipSize = wcslen(clip);
+                    const size_t clipSize = wcslen(clip);
+					
+					std::wstring menuItemText;
 
-                    // I know this is a little unorthodox, but we can count
-                    // on these lengths so long as MENU_TEXT_LENGTH > 5
-                    // and I really want these ellipses.
-                    if (maxClipSize > menuTextLength - 4)
-                    {
-                        maxClipSize = menuTextLength - 4;
-                        menuText[menuTextLength - 4] = '.';
-                        menuText[menuTextLength - 3] = '.';
-                        menuText[menuTextLength - 2] = '.';
-                        menuText[menuTextLength - 1] = '\0';
-                    }
-                    else
-                    {
-                        menuText[maxClipSize] = '\0';
-                    }
+					if (clipSize > MenuDisplayChars())
+					{
+						menuItemText.assign(clip, 0, MenuDisplayChars() - 3);
+						menuItemText.append(L"...\0");
+					}
+					else
+					{
+						menuItemText.assign(clip);
+					}
 
-                    for (unsigned int k = 0; k < maxClipSize; k++)
-                    {
-                        menuText[k] = clip[k] == '\t' || clip[k] == '\r' || clip[k] == '\n' ? ' ' : clip[k];
-                    }
+					for (size_t k = 0; k < menuItemText.size(); k++)
+					{
+						switch (menuItemText.at(k))
+						{
+						case '\t':
+						case '\r':
+						case '\n':
+							menuItemText.at(k) = ' ';
+						}
+					}
 
-                    AppendMenu(menu, MF_STRING, i + 1, menuText);
+					AppendMenuW(menu, MF_STRING, UINT_PTR{ i } + 1, menuItemText.c_str());
                 }
             }
-            if (curSize > displayCount)
+            if (curSize > DisplayClips())
             {
                 HMENU sMenu = CreatePopupMenu();
                 
                 for (/*j is equal to displayCount */; j < curSize; j++)
                 {
-                    wchar_t * clip = GetClips().at(j);
-                    if (clip != NULL)
+                    const wchar_t * clip = GetClipAt(j);
+                    if (clip != nullptr)
                     {
-                        size_t maxClipSize = wcslen(clip);
+						const size_t clipSize = wcslen(clip);
 
-                        if (maxClipSize > menuTextLength - 4)
-                        {
-                            maxClipSize = menuTextLength - 4;
-                            menuText[menuTextLength - 4] = '.';
-                            menuText[menuTextLength - 3] = '.';
-                            menuText[menuTextLength - 2] = '.';
-                            menuText[menuTextLength - 1] = '\0';
-                        }
-                        else
-                        {
-                            menuText[maxClipSize] = '\0';
-                        }
+						std::wstring menuItemText;
 
-                        for (unsigned int k = 0; k < maxClipSize; k++)
-                        {
-                            menuText[k] = clip[k] == '\t' || clip[k] == '\r' || clip[k] == '\n' ? ' ' : clip[k];
-                        }
+						if (clipSize > MenuDisplayChars())
+						{
+							menuItemText.assign(clip, 0, MenuDisplayChars() - 3);
+							menuItemText.append(L"...\0");
+						}
+						else
+						{
+							menuItemText.assign(clip);
+						}
 
-                        AppendMenu(sMenu, MF_STRING, j + 1, menuText);
+						for (size_t k = 0; k < menuItemText.size(); k++)
+						{
+							switch (menuItemText.at(k))
+							{
+							case '\t':
+							case '\r':
+							case '\n':
+								menuItemText.at(k) = ' ';
+							}
+						}
+
+						AppendMenuW(sMenu, MF_STRING, UINT_PTR{ j } + 1, menuItemText.c_str());
                     }
                 }
-                AppendMenu(menu, MF_STRING | MF_POPUP, (UINT_PTR)sMenu, L"More...");
+                AppendMenuW(menu, MF_STRING | MF_POPUP, reinterpret_cast<UINT_PTR>(sMenu), L"More...");
             }
         }
         else
         {
-            AppendMenu(menu, MF_STRING | MF_DISABLED, 0, L"Nothing on the clipboard");
+            AppendMenuW(menu, MF_STRING | MF_DISABLED, 0, L"Nothing on the clipboard");
         }
 
-        AppendMenu(menu, MF_SEPARATOR, 0, 0);
-        AppendMenu(menu, MF_STRING, CLEARCLIPS_SELECT, L"&Clear Clips");
-        AppendMenu(menu, MF_SEPARATOR, 0, 0);
-        AppendMenu(menu, MF_STRING, SETTINGS_SELECT, L"&Settings");
+        AppendMenuW(menu, MF_SEPARATOR, 0, nullptr);
+        AppendMenuW(menu, MF_STRING, CLEARCLIPS_SELECT, L"&Clear Clips");
+        AppendMenuW(menu, MF_SEPARATOR, 0, nullptr);
+        AppendMenuW(menu, MF_STRING, SETTINGS_SELECT, L"&Settings");
         if (showExit)
         {
-			AppendMenu(menu, MF_STRING, 2003, L"&About");
-			AppendMenu(menu, MF_STRING, EXIT_SELECT, L"&Exit");
+			AppendMenuW(menu, MF_STRING, EXIT_SELECT, L"&Exit");
         }
         
 
@@ -408,7 +431,9 @@ void ClipsManager::ShowClipsMenu(HWND hWnd, LPPOINT cPos, bool showExit)
             hWnd,
             NULL
         );
-		PostMessage(hWnd, WM_USER, 0, 0);
+		// apparently this line is needed to ensure
+		// consistent popup menu behavior.
+		PostMessageW(hWnd, WM_USER, 0, 0);
         switch (menuSelection)
         {
 		case CANCELED_SELECTION:
@@ -425,17 +450,14 @@ void ClipsManager::ShowClipsMenu(HWND hWnd, LPPOINT cPos, bool showExit)
 			}
 			break;
         case CLEARCLIPS_SELECT:
-            SendMessage(hWnd, WM_COMMAND, IDM_CLEARCLIPS, 0);
+            PostMessageW(hWnd, WM_COMMAND, IDM_CLEARCLIPS, 0);
             SetActiveWindow(actWin);
             break;
         case SETTINGS_SELECT:
-            PostMessage(hWnd, WM_COMMAND, IDM_SETTINGS, 0);
+            PostMessageW(hWnd, WM_COMMAND, IDM_SETTINGS, 0);
             break;
-		case ABOUT_SELECT:
-			PostMessage(hWnd, WM_COMMAND, IDM_ABOUT, 0);
-			break;
         case EXIT_SELECT:
-            SendMessage(hWnd, WM_COMMAND, IDM_EXIT, 0);
+			PostMessageW(hWnd, WM_COMMAND, IDM_EXIT, 0);
             break;
         default:
             // for once a program where default actually does something more than error handling
@@ -462,15 +484,13 @@ void ClipsManager::ShowClipsMenu(HWND hWnd, LPPOINT cPos, bool showExit)
         }
 
         // detatch from thread of the active window
-        AttachThreadInput(GetWindowThreadProcessId(curWin, NULL), GetWindowThreadProcessId(hWnd, NULL), false);
+        AttachThreadInput(GetWindowThreadProcessId(curWin, nullptr), GetWindowThreadProcessId(hWnd, nullptr), false);
 
-        PostMessage(hWnd, WM_NULL, 0, 0);
-        delete[] menuText;
-        delete cPos;
+        PostMessageW(hWnd, WM_NULL, 0, 0);
     }
 }
 
-void ClipsManager::SelectDefaultMenuItem(bool select2ndClip)
+void ClipsManager::SelectDefaultMenuItem(bool select2ndClip) noexcept
 {
     INPUT inputDownKey;
 

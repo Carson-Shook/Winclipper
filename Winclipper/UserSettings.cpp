@@ -7,7 +7,7 @@ unsigned short stous(std::string str)
 {
     try
     {
-        int convint = stoi(str);
+        const int convint = stoi(str);
 
         if (convint < (std::numeric_limits<unsigned short>::min)())
         {
@@ -20,7 +20,7 @@ unsigned short stous(std::string str)
 
         return (unsigned short)convint;
     }
-    catch(std::exception &e)
+    catch(const std::exception e)
     {
         printf("An exception occured at %p", &e);
         throw;
@@ -33,7 +33,7 @@ unsigned short stous(std::wstring str)
 {
     try
     {
-        int convint = stoi(str);
+        const int convint = stoi(str);
 
         if (convint < (std::numeric_limits<unsigned short>::min)())
         {
@@ -46,7 +46,7 @@ unsigned short stous(std::wstring str)
 
         return (unsigned short)convint;
     }
-    catch (std::exception &e)
+    catch (const std::exception e)
     {
         printf("An exception occured at %p", &e);
         throw;
@@ -127,7 +127,7 @@ void UserSettings::SetMaxDisplayClips(int maxDisplayClips)
         {
             UserSettings::maxDisplayClips = maxDisplayClips;
         }
-		SendNotifcation(NTF_MAXDISPLAY_CHANGED, NULL);
+		SendNotifcation(NTF_MAXDISPLAY_CHANGED, nullptr);
         SaveSettingsAsync();
     }
 }
@@ -161,7 +161,7 @@ void UserSettings::SetMaxSavedClips(int maxSavedClips)
         {
             UserSettings::maxSavedClips = maxSavedClips;
         }
-		SendNotifcation(NTF_MAXSAVED_CHANGED, NULL);
+		SendNotifcation(NTF_MAXSAVED_CHANGED, nullptr);
         SaveSettingsAsync();
     }
 }
@@ -195,7 +195,7 @@ void UserSettings::SetMenuDisplayChars(int menuDisplayChars)
         {
             UserSettings::menuDisplayChars = menuDisplayChars;
         }
-		SendNotifcation(NTF_MENUCHARS_CHANGED, NULL);
+		SendNotifcation(NTF_MENUCHARS_CHANGED, nullptr);
 		SaveSettingsAsync();
     }
 }
@@ -223,8 +223,8 @@ WORD UserSettings::ClipsMenuHotkeyTrl()
         clipsMenuHotkey = CMENU_HOTKEY_DEF;
     }
 
-    BYTE lByte = LOBYTE(clipsMenuHotkey);
-    BYTE hByte = HIBYTE(clipsMenuHotkey);
+    const BYTE lByte = LOBYTE(clipsMenuHotkey);
+    const BYTE hByte = HIBYTE(clipsMenuHotkey);
 
     BYTE hByteAdjusted = 0;
 
@@ -245,9 +245,7 @@ WORD UserSettings::ClipsMenuHotkeyTrl()
         hByteAdjusted |= MOD_WIN;
     }
 
-    WORD retVal = MAKEWORD(lByte, hByteAdjusted);
-
-    return retVal;
+    return MAKEWORD(lByte, hByteAdjusted);;
 }
 
 void UserSettings::SetClipsMenuHotkey(WORD clipsMenuHotkey)
@@ -255,7 +253,7 @@ void UserSettings::SetClipsMenuHotkey(WORD clipsMenuHotkey)
     if (clipsMenuHotkey != UserSettings::clipsMenuHotkey)
     {
         UserSettings::clipsMenuHotkey = clipsMenuHotkey;
-		SendNotifcation(NTF_CMENUHOTKEY_CHANGED, NULL);
+		SendNotifcation(NTF_CMENUHOTKEY_CHANGED, nullptr);
         SaveSettingsAsync();
     }
 }
@@ -270,7 +268,7 @@ void UserSettings::SetSaveToDisk(bool saveToDisk)
     if (saveToDisk != UserSettings::saveToDisk)
     {
         UserSettings::saveToDisk = saveToDisk;
-		SendNotifcation(NTF_SAVETODISK_CHANGED, NULL);
+		SendNotifcation(NTF_SAVETODISK_CHANGED, nullptr);
         SaveSettingsAsync();
     }
 }
@@ -285,7 +283,7 @@ void UserSettings::SetSelect2ndClip(bool select2ndClip)
     if (select2ndClip != UserSettings::select2ndClip)
     {
         UserSettings::select2ndClip = select2ndClip;
-		SendNotifcation(NTF_SLCTSECONDCLIP_CHANGED, NULL);
+		SendNotifcation(NTF_SLCTSECONDCLIP_CHANGED, nullptr);
 		SaveSettingsAsync();
     }
 }
@@ -300,7 +298,7 @@ void UserSettings::SetShowPreview(bool showPreview)
     if (showPreview != UserSettings::showPreview)
     {
         UserSettings::showPreview = showPreview;
-		SendNotifcation(NTF_SHOWPREVIEW_CHANGED, NULL);
+		SendNotifcation(NTF_SHOWPREVIEW_CHANGED, nullptr);
 		SaveSettingsAsync();
     }
 }
@@ -343,22 +341,22 @@ void UserSettings::Deserialize(std::vector<std::wstring> srData)
 {
     std::map<int, std::wstring> store;
 
-    for each (std::wstring kvPair in srData)
+    for (std::wstring value : srData)
     {
         try
         {
             store.emplace(
-                stoi(kvPair.substr(0, kvPair.find(SEPARATOR))),
-                kvPair.substr(kvPair.find(SEPARATOR) + 1)
+                stoi(value.substr(0, value.find(SEPARATOR))),
+                value.substr(value.find(SEPARATOR) + 1)
             );
         }
-        catch (const std::exception&)
+        catch (const std::exception e)
         {
             // do nothing
         }
     }
 
-    for each (std::pair<int, std::wstring> pair in store)
+    for (std::pair<int, std::wstring> pair : store)
     {
         switch (pair.first)
         {

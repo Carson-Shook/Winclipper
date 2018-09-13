@@ -42,24 +42,35 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 // Execute StupidSimpleUpdater
 bool RunUpdater()
 {
-	const int MAX_CMD = 32767;
-	wchar_t pPath[MAX_PATH];
-	wchar_t commandLine[MAX_CMD] = L"\"";
+	const size_t MAX_CMD = 32767;
+	wchar_t path[MAX_PATH];
+	wchar_t * commandLine = new wchar_t[MAX_CMD];
 
-	GetModuleFileName(0, pPath, MAX_PATH);
-	PathRemoveFileSpec(pPath);
-	PathAppend(pPath, L"\\StupidSimpleUpdater.exe");
-	wcscat_s(commandLine, pPath);
-	wcscat_s(commandLine, L"\" -appinv");
+	if (!GetModuleFileNameW(nullptr, path, MAX_PATH))
+	{
+		// Since we're targeting Win7, if MAX_PATH is
+		// exceeded then there isn't much else we can do.
+		return false;
+	}
+
+	PathRemoveFileSpecW(path);
+	
+	if (!PathAppendW(path, L"\\StupidSimpleUpdater.exe"))
+	{
+		// Same as above
+		return false;
+	}
+
+	wcscpy_s(commandLine, MAX_CMD, (L"\"" + std::wstring(path) + L"\" -appinv").c_str());
 
 	STARTUPINFO si;
 	PROCESS_INFORMATION pi;
 
-	ZeroMemory(&si, sizeof(si));
+	SecureZeroMemory(&si, sizeof(si));
 	si.cb = sizeof(si);
-	ZeroMemory(&pi, sizeof(pi));
+	SecureZeroMemory(&pi, sizeof(pi));
 
-	if (!CreateProcess(pPath, commandLine, NULL, NULL, FALSE, CREATE_DEFAULT_ERROR_MODE | CREATE_NEW_PROCESS_GROUP, NULL, NULL, &si, &pi))
+	if (!CreateProcessW(path, commandLine, nullptr, nullptr, FALSE, CREATE_DEFAULT_ERROR_MODE | CREATE_NEW_PROCESS_GROUP, nullptr, nullptr, &si, &pi))
 	{
 		return false;
 	}

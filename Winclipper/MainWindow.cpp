@@ -14,7 +14,7 @@ ATOM MainWindow::RegisterMainWindowClass(HINSTANCE hInstance)
 	wcex.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_WINCLIPPER));
 	wcex.hCursor = LoadCursor(nullptr, IDC_ARROW);
 	wcex.hbrBackground = (HBRUSH)(COLOR_WINDOW);
-	wcex.lpszMenuName = NULL;
+	wcex.lpszMenuName = nullptr;
 	wcex.lpszClassName = szMainWindowClass;
 	wcex.hIconSm = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_WINCLIPPER));
 
@@ -29,9 +29,11 @@ LRESULT MainWindow::MainWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
 
 	if (message == WM_NCCREATE)
 	{
+#pragma warning( suppress : 26490 )
 		pThis = static_cast<MainWindow*>(reinterpret_cast<CREATESTRUCT*>(lParam)->lpCreateParams);
 		SetLastError(0);
-		if (!SetWindowLongPtr(hWnd, AGNOSTIC_USERDATA, reinterpret_cast<LONG_PTR>(pThis)))
+#pragma warning( suppress : 26490 )
+		if (!SetWindowLongPtrW(hWnd, AGNOSTIC_USERDATA, reinterpret_cast<LONG_PTR>(pThis)))
 		{
 			if (GetLastError() != 0)
 				return FALSE;
@@ -40,12 +42,13 @@ LRESULT MainWindow::MainWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
 	}
 	else
 	{
-		pThis = reinterpret_cast<MainWindow*>(GetWindowLongPtr(hWnd, AGNOSTIC_USERDATA));
+#pragma warning( suppress : 26490 )
+		pThis = reinterpret_cast<MainWindow*>(GetWindowLongPtrW(hWnd, AGNOSTIC_USERDATA));
 	}
 
 	if (!pThis)
 	{
-		return DefWindowProc(hWnd, message, wParam, lParam);
+		return DefWindowProcW(hWnd, message, wParam, lParam);
 	}
 
 	switch (message)
@@ -84,7 +87,7 @@ LRESULT MainWindow::MainWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
 			pThis->WmCommandNtfSaveToDiskChanged(hWnd, wParam, lParam);
 			break;
 		default:
-			return DefWindowProc(hWnd, message, wParam, lParam);
+			return DefWindowProcW(hWnd, message, wParam, lParam);
 		}
 	}
 	break;
@@ -129,7 +132,7 @@ LRESULT MainWindow::MainWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
 		break;
 	default:
 		pThis->WndProcDefault(hWnd, wParam, lParam);
-		return DefWindowProc(hWnd, message, wParam, lParam);
+		return DefWindowProcW(hWnd, message, wParam, lParam);
 	}
 	return 0;
 }
@@ -247,6 +250,7 @@ LRESULT MainWindow::WmappNCallNinKeySelect(HWND hWnd, WPARAM wParam, LPARAM lPar
 			cPos->y = 10;
 		}
 		cManager->ShowClipsMenu(GetHandle(), cPos, true);
+		previewWindow->ClearCache();
 		ninKeypressLocked = false;
 	}
 	return 0;
@@ -274,6 +278,7 @@ LRESULT MainWindow::WmappNCallWmContextMenu(HWND hWnd, WPARAM wParam, LPARAM lPa
 		(*cPos).y = 10;
 	}
 	cManager->ShowClipsMenu(GetHandle(), cPos, true);
+	previewWindow->ClearCache();
 
 	return 0;
 }
@@ -296,6 +301,8 @@ LRESULT MainWindow::WmHotkey(HWND hWnd, WPARAM wParam, LPARAM lParam)
 		(*cPos).y = 10;
 	}
 	cManager->ShowClipsMenu(GetHandle(), cPos, false);
+	previewWindow->ClearCache();
+
 	return 0;
 }
 
@@ -332,8 +339,7 @@ LRESULT MainWindow::WmInitMenu(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
 	// keep track of the top level menu to differentiate for display purposes
 	activePopupMenu = topPopupMenu = (HMENU)wParam;
-	size_t size = cManager->GetClips().size();
-	cManager->SelectDefaultMenuItem(size > 1 ? uSettings.Select2ndClip() : false);
+	cManager->SelectDefaultMenuItem(cManager->GetSize() > 1 ? uSettings.Select2ndClip() : false);
 	return 0;
 }
 
@@ -359,12 +365,12 @@ LRESULT MainWindow::WmMenuSelect(HWND hWnd, WPARAM wParam, LPARAM lParam)
 		DWORD flags = HIWORD(wParam);
 		if ((flags & MF_HILITE) && !(flags & MF_POPUP))
 		{
-			int i = LOWORD(wParam);
-			if (i != 0 && i <= cManager->GetClips().size())
+			unsigned int i = LOWORD(wParam);
+			if (i != 0 && i <= cManager->GetSize())
 			{
-				previewWindow->SetPreviewClip(cManager->GetClips()[i - 1]);
+				previewWindow->SetPreviewClip(cManager->GetClipAt(i - 1));
 
-				int offset = 1;
+				unsigned int offset = 1;
 
 				if (activePopupMenu != topPopupMenu)
 				{
@@ -391,7 +397,7 @@ LRESULT MainWindow::WmMenuSelect(HWND hWnd, WPARAM wParam, LPARAM lParam)
 
 				if (GetMenuItemRect(hWnd, activePopupMenu, i - offset - hitTestDelta, menuItemDims))
 				{
-					previewWindow->MoveRelativeToRect(menuItemDims);
+					previewWindow->MoveRelativeToRect(menuItemDims, i);
 					previewWindow->Show();
 				}
 				delete menuItemDims;

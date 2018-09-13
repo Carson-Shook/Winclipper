@@ -9,7 +9,6 @@
 #define SETTINGS_SELECT     2000    // user selected the Settings option
 #define CLEARCLIPS_SELECT   2001    // clear all clips that are currently saved (doesn't clear the actual clipboard)
 #define EXIT_SELECT         2002    // close the application
-#define ABOUT_SELECT        2003    // Show the about box
 #define CLIPS_WRITE_DELAY   2000    
 
                                     // ERROR is returned in any other situation
@@ -55,7 +54,8 @@ public:
     void                            ClearClips(void);
     bool                            AddToClips(HWND hWnd);
     bool                            SetClipboardToClipAtIndex(HWND hWnd, int index);
-    const std::deque<wchar_t *>&    GetClips(void) const { return clips; }
+	const size_t					GetSize() noexcept;
+	wchar_t *						GetClipAt(size_t index) noexcept;
 	void							ShowClipsMenu(HWND hWnd, LPPOINT cPos, bool showExit);
-	void							SelectDefaultMenuItem(bool select2ndClip);
+	void							SelectDefaultMenuItem(bool select2ndClip) noexcept;
 };

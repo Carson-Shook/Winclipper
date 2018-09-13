@@ -29,9 +29,11 @@ LRESULT SettingsWindow::SettingsWndProc(HWND hWnd, UINT message, WPARAM wParam, 
 
 	if (message == WM_NCCREATE)
 	{
+#pragma warning( suppress : 26490 )
 		pThis = static_cast<SettingsWindow*>(reinterpret_cast<CREATESTRUCT*>(lParam)->lpCreateParams);
 		SetLastError(0);
-		if (!SetWindowLongPtr(hWnd, AGNOSTIC_USERDATA, reinterpret_cast<LONG_PTR>(pThis)))
+#pragma warning( suppress : 26490 )
+		if (!SetWindowLongPtrW(hWnd, AGNOSTIC_USERDATA, reinterpret_cast<LONG_PTR>(pThis)))
 		{
 			if (GetLastError() != 0)
 				return FALSE;
@@ -40,19 +42,20 @@ LRESULT SettingsWindow::SettingsWndProc(HWND hWnd, UINT message, WPARAM wParam, 
 	}
 	else
 	{
-		pThis = reinterpret_cast<SettingsWindow*>(GetWindowLongPtr(hWnd, AGNOSTIC_USERDATA));
+#pragma warning( suppress : 26490 )
+		pThis = reinterpret_cast<SettingsWindow*>(GetWindowLongPtrW(hWnd, AGNOSTIC_USERDATA));
 	}
 
 	if (!pThis)
 	{
-		return DefWindowProc(hWnd, message, wParam, lParam);
+		return DefWindowProcW(hWnd, message, wParam, lParam);
 	}
 
 	switch (message)
 	{
 	case WM_COMMAND:
 	{
-		int wmId = LOWORD(wParam);
+		const int wmId = LOWORD(wParam);
 		// Parse the menu selections:
 		switch (wmId)
 		{
@@ -87,7 +90,7 @@ LRESULT SettingsWindow::SettingsWndProc(HWND hWnd, UINT message, WPARAM wParam, 
 			pThis->WmCommandHkyShowClipsMenu(hWnd, wParam, lParam);
 			break;
 		default:
-			return DefWindowProc(hWnd, message, wParam, lParam);
+			return DefWindowProcW(hWnd, message, wParam, lParam);
 		}
 	}
 	break;
@@ -98,7 +101,7 @@ LRESULT SettingsWindow::SettingsWndProc(HWND hWnd, UINT message, WPARAM wParam, 
 		pThis->WmClose(hWnd);
 		break;
 	default:
-		return DefWindowProc(hWnd, message, wParam, lParam);
+		return DefWindowProcW(hWnd, message, wParam, lParam);
 	}
 	return 0;
 }
@@ -119,7 +122,7 @@ LRESULT SettingsWindow::WmCommandTxtMaxClipsDisplay(HWND hWnd, WPARAM wParam, LP
 {
 	if (HIWORD(wParam) == EN_KILLFOCUS)
 	{
-		int value = GetDlgItemInt(hWnd, TXT_MAX_CLIPS_DISPLAY, NULL, false);
+		const int value = GetDlgItemInt(hWnd, TXT_MAX_CLIPS_DISPLAY, NULL, false);
 
 		if (value < MAX_DISPLAY_LOWER)
 		{
@@ -134,7 +137,7 @@ LRESULT SettingsWindow::WmCommandTxtMaxClipsDisplay(HWND hWnd, WPARAM wParam, LP
 	}
 	else if (HIWORD(wParam) == EN_CHANGE)
 	{
-		int value = GetDlgItemInt(hWnd, TXT_MAX_CLIPS_DISPLAY, NULL, false);
+		const int value = GetDlgItemInt(hWnd, TXT_MAX_CLIPS_DISPLAY, NULL, false);
 
 		if (value >= MAX_DISPLAY_LOWER && value <= MAX_DISPLAY_UPPER)
 		{
@@ -143,7 +146,7 @@ LRESULT SettingsWindow::WmCommandTxtMaxClipsDisplay(HWND hWnd, WPARAM wParam, LP
 			{
 				SetDlgItemInt(hWnd, TXT_MAX_CLIPS_SAVED, value, false);
 			}
-			SendDlgItemMessage(hWnd, UD_MAX_CLIPS_SAVED, UDM_SETRANGE, 0, MAKELPARAM(MAX_SAVED_UPPER, value));
+			SendDlgItemMessageW(hWnd, UD_MAX_CLIPS_SAVED, UDM_SETRANGE, 0, MAKELPARAM(MAX_SAVED_UPPER, value));
 		}
 	}
 	return 0;
@@ -153,7 +156,7 @@ LRESULT SettingsWindow::WmCommandTxtMaxClipsSaved(HWND hWnd, WPARAM wParam, LPAR
 {
 	if (HIWORD(wParam) == EN_KILLFOCUS)
 	{
-		int value = GetDlgItemInt(hWnd, TXT_MAX_CLIPS_SAVED, NULL, false);
+		const int value = GetDlgItemInt(hWnd, TXT_MAX_CLIPS_SAVED, NULL, false);
 
 		if (value < uSettings.MaxDisplayClips())
 		{
@@ -168,7 +171,7 @@ LRESULT SettingsWindow::WmCommandTxtMaxClipsSaved(HWND hWnd, WPARAM wParam, LPAR
 	}
 	else if (HIWORD(wParam) == EN_CHANGE)
 	{
-		int value = GetDlgItemInt(hWnd, TXT_MAX_CLIPS_SAVED, NULL, false);
+		const int value = GetDlgItemInt(hWnd, TXT_MAX_CLIPS_SAVED, NULL, false);
 
 		if (value <= MAX_SAVED_UPPER && value >= uSettings.MaxDisplayClips())
 		{
@@ -182,7 +185,7 @@ LRESULT SettingsWindow::WmCommandTxtMenuDispChars(HWND hWnd, WPARAM wParam, LPAR
 {
 	if (HIWORD(wParam) == EN_KILLFOCUS)
 	{
-		int value = GetDlgItemInt(hWnd, TXT_MENU_DISP_CHARS, NULL, false);
+		const int value = GetDlgItemInt(hWnd, TXT_MENU_DISP_CHARS, NULL, false);
 
 		if (value < MENU_CHARS_LOWER)
 		{
@@ -197,7 +200,7 @@ LRESULT SettingsWindow::WmCommandTxtMenuDispChars(HWND hWnd, WPARAM wParam, LPAR
 	}
 	else if (HIWORD(wParam) == EN_CHANGE)
 	{
-		int value = GetDlgItemInt(hWnd, TXT_MENU_DISP_CHARS, NULL, false);
+		const int value = GetDlgItemInt(hWnd, TXT_MENU_DISP_CHARS, NULL, false);
 
 		if (value >= MENU_CHARS_LOWER && value <= MENU_CHARS_UPPER)
 		{
@@ -286,12 +289,12 @@ LRESULT SettingsWindow::WmCommandHkyShowClipsMenu(HWND hWnd, WPARAM wParam, LPAR
 		WORD wHotkey;
 
 		// Retrieve the hot key (virtual key code and modifiers). 
-		wHotkey = (WORD)SendMessage(GetDlgItem(hWnd, HKY_SHOW_CLIPS_MENU), HKM_GETHOTKEY, 0, 0);
+		wHotkey = (WORD)SendMessageW(GetDlgItem(hWnd, HKY_SHOW_CLIPS_MENU), HKM_GETHOTKEY, 0, 0);
 
 		// Resets to the default hotkey if the combo is cleared.
 		if (wHotkey == 0)
 		{
-			SendMessage(GetDlgItem(hWnd, HKY_SHOW_CLIPS_MENU), HKM_SETHOTKEY, CMENU_HOTKEY_DEF, 0);
+			SendMessageW(GetDlgItem(hWnd, HKY_SHOW_CLIPS_MENU), HKM_SETHOTKEY, CMENU_HOTKEY_DEF, 0);
 			uSettings.SetClipsMenuHotkey(CMENU_HOTKEY_DEF);
 		}
 		else
@@ -325,12 +328,12 @@ bool SettingsWindow::WriteRegistryRun()
 	HKEY hOpened;
 	wchar_t pPath[MAX_PATH];
 
-	GetModuleFileName(0, pPath, MAX_PATH);
+	GetModuleFileNameW(0, pPath, MAX_PATH);
 
 	//OpenRegistryRun(hOpened);
-	RegOpenKeyEx(HKEY_CURRENT_USER, L"Software\\Microsoft\\Windows\\CurrentVersion\\Run", 0, KEY_ALL_ACCESS, &hOpened);
+	RegOpenKeyExW(HKEY_CURRENT_USER, L"Software\\Microsoft\\Windows\\CurrentVersion\\Run", 0, KEY_ALL_ACCESS, &hOpened);
 
-	if (RegSetValueEx(hOpened, L"Winclipper", 0, REG_SZ, (LPBYTE)pPath, sizeof(pPath)) != ERROR_SUCCESS)
+	if (RegSetValueExW(hOpened, L"Winclipper", 0, REG_SZ, (LPBYTE)pPath, sizeof(pPath)) != ERROR_SUCCESS)
 	{
 		return false;
 	}
@@ -346,7 +349,7 @@ bool SettingsWindow::DeleteRegistryRun()
 
 	if (RegOpenKeyEx(HKEY_CURRENT_USER, L"Software\\Microsoft\\Windows\\CurrentVersion\\Run", 0, KEY_ALL_ACCESS, &hOpened) == ERROR_SUCCESS)
 	{
-		RegDeleteValue(hOpened, L"Winclipper");
+		RegDeleteValueW(hOpened, L"Winclipper");
 	}
 	else
 	{
@@ -362,7 +365,7 @@ SettingsWindow::SettingsWindow(HINSTANCE hInstance, UserSettings & userSettings)
 {
 	NONCLIENTMETRICS hfDefault;
 	hfDefault.cbSize = sizeof(NONCLIENTMETRICS);
-	SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(NONCLIENTMETRICS), &hfDefault, 0);
+	SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, sizeof(NONCLIENTMETRICS), &hfDefault, 0);
 	hFontStd = CreateFontIndirectW(&hfDefault.lfCaptionFont);
 
 	LoadStringW(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
@@ -415,7 +418,7 @@ bool SettingsWindow::InitSettingsWindow(HINSTANCE hInstance)
 	SetDlgItemInt(hWnd, TXT_MENU_DISP_CHARS, uSettings.MenuDisplayChars(), false);
 
 	HKEY hOpened;
-	if (RegOpenKeyEx(HKEY_CURRENT_USER, L"Software\\Microsoft\\Windows\\CurrentVersion\\Run", 0, KEY_ALL_ACCESS, &hOpened) == ERROR_SUCCESS)
+	if (RegOpenKeyExW(HKEY_CURRENT_USER, L"Software\\Microsoft\\Windows\\CurrentVersion\\Run", 0, KEY_ALL_ACCESS, &hOpened) == ERROR_SUCCESS)
 	{
 		if (RegistryUtilities::QueryKeyForValue(hOpened, L"Winclipper") == true)
 		{
@@ -436,7 +439,7 @@ bool SettingsWindow::InitSettingsWindow(HINSTANCE hInstance)
 		CheckDlgButton(hWnd, CHK_SHOW_PREVIEW, BST_CHECKED);
 	}
 
-	SendMessage(hHotKey, HKM_SETHOTKEY, uSettings.ClipsMenuHotkey(), 0);
+	SendMessageW(hHotKey, HKM_SETHOTKEY, uSettings.ClipsMenuHotkey(), 0);
 
 	// Hide the window and update the layout
 	ShowWindow(hWnd, SW_HIDE);
@@ -445,7 +448,7 @@ bool SettingsWindow::InitSettingsWindow(HINSTANCE hInstance)
 	return true;
 }
 
-HWND SettingsWindow::GetHandle()
+HWND SettingsWindow::GetHandle() noexcept
 {
 	return windowHandle;
 }

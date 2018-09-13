@@ -48,7 +48,7 @@ void MeasureString(LPCWSTR text, HFONT font, LPRECT rect)
 {
     HDC hDC = GetDC(NULL);
     SelectObject(hDC, font);
-    DrawText(hDC, text, -1, rect, DT_CALCRECT);
+    DrawTextW(hDC, text, -1, rect, DT_CALCRECT);
     ReleaseDC(NULL, hDC);
     return;
 }
@@ -69,7 +69,7 @@ HWND AddLabel(HWND hWnd, HFONT font, int x, int y, HINSTANCE hIn, LPCWSTR text, 
         (HMENU)id,
         hIn,
         NULL);
-    SendMessage(hControl, WM_SETFONT, (WPARAM)font, MAKELPARAM(false, 0));
+    SendMessageW(hControl, WM_SETFONT, (WPARAM)font, MAKELPARAM(false, 0));
     //SetWindowText(hControl, text);
     delete boxsize;
     return hControl;
@@ -109,7 +109,7 @@ HWND AddEdit(HWND hWnd, HFONT font, int x, int y, int width, int height, HINSTAN
         hIn,
         NULL);
 
-    SendMessage(hControl, WM_SETFONT, (WPARAM)font, MAKELPARAM(false, 0));
+    SendMessageW(hControl, WM_SETFONT, (WPARAM)font, MAKELPARAM(false, 0));
     if (vScroll)
     {
         ShowScrollBar(hControl, SB_VERT, true);
@@ -138,7 +138,7 @@ HWND AddCheckbox(HWND hWnd, HFONT font, int x, int y, HINSTANCE hIn, LPCWSTR tex
         hIn,
         nullptr);
 
-    SendMessage(hControl, WM_SETFONT, (WPARAM)font, MAKELPARAM(false, 0));
+    SendMessageW(hControl, WM_SETFONT, (WPARAM)font, MAKELPARAM(false, 0));
     delete boxsize;
     return hControl;
 }
@@ -158,7 +158,7 @@ HWND CreateUpDnBuddy(HWND hWnd, HFONT font, int x, int y, HINSTANCE hIn, UINT_PT
         hIn,
         NULL);
 
-    SendMessage(hControl, WM_SETFONT, (WPARAM)font, MAKELPARAM(false, 0));
+    SendMessageW(hControl, WM_SETFONT, (WPARAM)font, MAKELPARAM(false, 0));
     return (hControl);
 }
 
@@ -177,7 +177,7 @@ HWND CreateUpDnCtl(HWND hWnd, HFONT font, int x, int y, HINSTANCE hIn, int min, 
         NULL,
         NULL);
 
-    SendMessage(hControl, UDM_SETRANGE, 0, MAKELPARAM(max, min));    // Sets the controls direction 
+    SendMessageW(hControl, UDM_SETRANGE, 0, MAKELPARAM(max, min));    // Sets the controls direction 
                                                                      // and range.
     return (hControl);
 }
@@ -211,16 +211,16 @@ HWND AddHotkeyCtrl(HWND hWnd, HFONT font, int x, int y, int width, int height, H
         hIn,
         NULL);
 
-    SendMessage(hControl, WM_SETFONT, (WPARAM)font, MAKELPARAM(false, 0));
+    SendMessageW(hControl, WM_SETFONT, (WPARAM)font, MAKELPARAM(false, 0));
 
     SetFocus(hControl);
 
-    SendMessage(hControl,
+    SendMessageW(hControl,
         HKM_SETRULES,
         (WPARAM)HKCOMB_NONE | HKCOMB_S,   // invalid key combinations 
         MAKELPARAM(HOTKEYF_ALT, 0));       // add ALT to invalid 
 
-    SendMessage(hControl,
+    SendMessageW(hControl,
         HKM_SETHOTKEY,
         MAKEWORD(0x41, HOTKEYF_CONTROL | HOTKEYF_ALT),
         0);

@@ -22,7 +22,7 @@ bool RegistryUtilities::QueryKeyForValue(HKEY hKey, wchar_t* checkValue)
 	DWORD cchValue = MAX_REG_VALUE_NAME;
 
 	// Get the class name and the value count. 
-	retCode = RegQueryInfoKey(
+	retCode = RegQueryInfoKeyW(
 		hKey,                    // key handle 
 		achClass,                // buffer for class name 
 		&cchClassName,           // size of class string 
@@ -44,7 +44,7 @@ bool RegistryUtilities::QueryKeyForValue(HKEY hKey, wchar_t* checkValue)
 		{
 			cchValue = MAX_REG_VALUE_NAME;
 			achValue[0] = '\0';
-			retCode = RegEnumValue(hKey, i,
+			retCode = RegEnumValueW(hKey, i,
 				achValue,
 				&cchValue,
 				NULL,

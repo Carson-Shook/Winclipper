@@ -59,6 +59,6 @@ public:
 								~SettingsWindow();
 
 	bool						InitSettingsWindow(HINSTANCE hInstance);
-	HWND						GetHandle();
+	HWND						GetHandle() noexcept;
 };
 

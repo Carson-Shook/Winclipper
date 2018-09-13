@@ -11,8 +11,8 @@ ATOM PreviewWindow::RegisterPreviewWindowClass(HINSTANCE hInstance)
 	wcex.cbWndExtra = sizeof(LONG_PTR);
 	wcex.hInstance = hInstance;
 	wcex.hCursor = LoadCursor(nullptr, IDC_ARROW);
-	wcex.hbrBackground = NULL;
-	wcex.lpszMenuName = NULL;
+	wcex.hbrBackground = nullptr;
+	wcex.lpszMenuName = nullptr;
 	wcex.lpszClassName = szPreviewWindowClass;
 
 	return RegisterClassExW(&wcex);
@@ -26,9 +26,11 @@ LRESULT CALLBACK PreviewWindow::PreviewWndProc(HWND hWnd, UINT message, WPARAM w
 
 	if (message == WM_NCCREATE)
 	{
+#pragma warning( suppress : 26490 )
 		pThis = static_cast<PreviewWindow*>(reinterpret_cast<CREATESTRUCT*>(lParam)->lpCreateParams);
 		SetLastError(0);
-		if (!SetWindowLongPtr(hWnd, AGNOSTIC_USERDATA, reinterpret_cast<LONG_PTR>(pThis)))
+#pragma warning( suppress : 26490 )
+		if (!SetWindowLongPtrW(hWnd, AGNOSTIC_USERDATA, reinterpret_cast<LONG_PTR>(pThis)))
 		{
 			if (GetLastError() != 0)
 				return FALSE;
@@ -37,12 +39,13 @@ LRESULT CALLBACK PreviewWindow::PreviewWndProc(HWND hWnd, UINT message, WPARAM w
 	}
 	else
 	{
-		pThis = reinterpret_cast<PreviewWindow*>(GetWindowLongPtr(hWnd, AGNOSTIC_USERDATA));
+#pragma warning( suppress : 26490 )
+		pThis = reinterpret_cast<PreviewWindow*>(GetWindowLongPtrW(hWnd, AGNOSTIC_USERDATA));
 	}
 
 	if (!pThis)
 	{
-		return DefWindowProc(hWnd, message, wParam, lParam);
+		return DefWindowProcW(hWnd, message, wParam, lParam);
 	}
 
 	switch (message)
@@ -55,12 +58,14 @@ LRESULT CALLBACK PreviewWindow::PreviewWndProc(HWND hWnd, UINT message, WPARAM w
 		break;
 	case WM_PAINT:
 		{
-			pThis->WmPaint(hWnd, message, wParam, lParam);
-			ValidateRect(hWnd, NULL);
+			if (SUCCEEDED(pThis->WmPaint(hWnd, message, wParam, lParam)))
+			{
+				ValidateRect(hWnd, nullptr);
+			}
 		}
 		break;
 	default:
-		return DefWindowProc(hWnd, message, wParam, lParam);
+		return DefWindowProcW(hWnd, message, wParam, lParam);
 	}
 	return 0;
 }
@@ -77,11 +82,6 @@ LRESULT PreviewWindow::WmDestroy()
 
 LRESULT PreviewWindow::WmPaint(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-	if (previewClip == nullptr)
-	{
-		return 0;
-	}
-
 	HRESULT hr = S_OK;
 
 	hr = CreateDeviceDependentResources(hWnd);
@@ -97,12 +97,12 @@ LRESULT PreviewWindow::WmPaint(HWND hWnd, UINT message, WPARAM wParam, LPARAM lP
 		infoBreakText = std::to_wstring(clipSizeInKb) + L"KB total";
 	}
 
-	IDWriteTextLayout * pDWriteInfoBreakLayout = NULL;
+	IDWriteTextLayout * pDWriteInfoBreakLayout = nullptr;
 	if (SUCCEEDED(hr))
 	{
 		hr = pDWriteFactory->CreateTextLayout(
 			infoBreakText.c_str(),
-			infoBreakText.length(),
+			static_cast<UINT32>(infoBreakText.length()),
 			pDWriteInfoBreakFormat,
 			pRT->GetSize().width - (windowBorderWidth * 2.0f),
 			infoBreakHeight,
@@ -177,7 +177,7 @@ LRESULT PreviewWindow::WmPaint(HWND hWnd, UINT message, WPARAM wParam, LPARAM lP
 		hr = pRT->EndDraw();
 	}
 	SafeRelease(&pDWriteInfoBreakLayout);
-	SafeRelease(&pDWriteTextLayout);
+	//SafeRelease(&pDWriteTextLayout);
 
 	if (hr == D2DERR_RECREATE_TARGET)
 	{
@@ -218,11 +218,11 @@ HRESULT PreviewWindow::CreateDeviceIndependentResources()
 	{
 		/******** This section gets the system font ********/
 
-		IDWriteGdiInterop * pGdiInterop = NULL;
-		IDWriteFont * pDWriteSysFont = NULL;
+		IDWriteGdiInterop * pGdiInterop = nullptr;
+		IDWriteFont * pDWriteSysFont = nullptr;
 		IDWriteFontFamily * pFontFamily = nullptr;
-		IDWriteLocalizedStrings* pFontFamilyName = NULL;
-		NONCLIENTMETRICS hfDefault;
+		IDWriteLocalizedStrings* pFontFamilyName = nullptr;
+		NONCLIENTMETRICS hfDefault = NONCLIENTMETRICS();
 
 		if (SUCCEEDED(hr))
 		{
@@ -284,8 +284,8 @@ HRESULT PreviewWindow::CreateDeviceIndependentResources()
 		}
 
 		// The array that will eventually contain our font fontName.
-		wchar_t * fontName = new (std::nothrow) wchar_t[length + 1];
-		if (fontName == NULL)
+		wchar_t * fontName = new (std::nothrow) wchar_t[long long{ length } +1];
+		if (fontName == nullptr)
 		{
 			hr = E_OUTOFMEMORY;
 		}
@@ -314,7 +314,7 @@ HRESULT PreviewWindow::CreateDeviceIndependentResources()
 		{
 			hr = pDWriteFactory->CreateTextFormat(
 				fontName,
-				NULL,
+				nullptr,
 				weight,
 				DWRITE_FONT_STYLE_NORMAL,
 				DWRITE_FONT_STRETCH_NORMAL,
@@ -328,7 +328,7 @@ HRESULT PreviewWindow::CreateDeviceIndependentResources()
 		{
 			hr = pDWriteFactory->CreateTextFormat(
 				fontName,
-				NULL,
+				nullptr,
 				weight,
 				DWRITE_FONT_STYLE_NORMAL,
 				DWRITE_FONT_STRETCH_NORMAL,
@@ -337,19 +337,21 @@ HRESULT PreviewWindow::CreateDeviceIndependentResources()
 				&pDWriteInfoBreakFormat
 			);
 		}
+
+		delete[] fontName;
 	}
 
 	return hr;
 }
 
-HRESULT PreviewWindow::CreateDeviceDependentResources(HWND hWnd)
+HRESULT PreviewWindow::CreateDeviceDependentResources(HWND hWnd) noexcept
 {
 	HRESULT hr = S_OK;
 
 	RECT rc;
 	GetClientRect(hWnd, &rc);
 
-	if (pRT == NULL)
+	if (pRT == nullptr)
 	{
 		hr = pD2DFactory->CreateHwndRenderTarget(
 			D2D1::RenderTargetProperties(),
@@ -376,45 +378,40 @@ HRESULT PreviewWindow::CreateDeviceDependentResources(HWND hWnd)
 		);
 	}
 
-	if (SUCCEEDED(hr) && pLightGrayBrush == NULL)
+	if (SUCCEEDED(hr) && pLightGrayBrush == nullptr)
 	{
-
 		pRT->CreateSolidColorBrush(
 			D2D1::ColorF(0xB4B4B4),
 			&pLightGrayBrush
 		);
 	}
 
-	if (SUCCEEDED(hr) && pWhiteBrush == NULL)
+	if (SUCCEEDED(hr) && pWhiteBrush == nullptr)
 	{
-
 		pRT->CreateSolidColorBrush(
 			D2D1::ColorF(D2D1::ColorF::White),
 			&pWhiteBrush
 		);
 	}
 
-	if (SUCCEEDED(hr) && pBlackBrush == NULL)
+	if (SUCCEEDED(hr) && pBlackBrush == nullptr)
 	{
-
 		pRT->CreateSolidColorBrush(
 			D2D1::ColorF(D2D1::ColorF::Black),
 			&pBlackBrush
 		);
 	}
 
-	if (SUCCEEDED(hr) && pLabelTextBrush == NULL)
+	if (SUCCEEDED(hr) && pLabelTextBrush == nullptr)
 	{
-
 		pRT->CreateSolidColorBrush(
 			D2D1::ColorF(0x646478),
 			&pLabelTextBrush
 		);
 	}
 
-	if (SUCCEEDED(hr) && pBlueGrayBrush == NULL)
+	if (SUCCEEDED(hr) && pBlueGrayBrush == nullptr)
 	{
-
 		pRT->CreateSolidColorBrush(
 			D2D1::ColorF(0xF0F0F5),
 			&pBlueGrayBrush
@@ -440,6 +437,7 @@ void PreviewWindow::DestroyDeviceDependentResources()
 	SafeRelease(&pBlackBrush);
 	SafeRelease(&pLabelTextBrush);
 	SafeRelease(&pRT);
+	return;
 }
 
 PreviewWindow::PreviewWindow(HINSTANCE hInstance, HWND hWndParent)
@@ -455,6 +453,7 @@ PreviewWindow::PreviewWindow(HINSTANCE hInstance, HWND hWndParent)
 
 PreviewWindow::~PreviewWindow()
 {
+	DestroyDeviceDependentResources();
 	DestroyDeviceIndependentResources();
 }
 
@@ -476,72 +475,89 @@ bool PreviewWindow::InitPreviewWindow(HINSTANCE hInstance, HWND hWndParent)
 	return true;
 }
 
-HWND PreviewWindow::GetHandle()
+HWND PreviewWindow::GetHandle() noexcept
 {
 	return windowHandle;
 }
 
-void PreviewWindow::SetPreviewClip(wchar_t * clip)
+void PreviewWindow::SetPreviewClip(wchar_t * clip) noexcept
 {
 	previewClip = clip;
 }
 
-void PreviewWindow::MoveRelativeToRect(LPRECT rect)
+void PreviewWindow::MoveRelativeToRect(const LPRECT rect, unsigned int index)
 {
-	if (pDWriteTextFormat == NULL)
+	if (previewClip == nullptr)
 	{
+		return;
+	}
+
+	if (pDWriteTextFormat == nullptr)
+	{
+		DestroyDeviceDependentResources();
 		return;
 	}
 
 	HRESULT hr = S_OK;
 
 	// this will make more sense once max preview size is configurable;
-	float layoutMaxWidth = windowMaxWidth - (windowBorderWidth * 2.0f) - (textMarginWidth * 2.0f);
-	float layoutMaxHeight = windowMaxHeight - (windowBorderWidth * 2.0f) - (textMarginHeight * 2.0f);
+	const float layoutMaxWidth = windowMaxWidth - (windowBorderWidth * 2.0f) - (textMarginWidth * 2.0f);
+	const float layoutMaxHeight = windowMaxHeight - (windowBorderWidth * 2.0f) - (textMarginHeight * 2.0f);
 
 	float renderingWidth = 0.0f;
 	float renderingHeight = 0.0f;
 
-	size_t clipLength = wcslen(previewClip);
+	const size_t clipLength = wcslen(previewClip);
 	
 	clipSizeInKb = clipLength / 1024;
 
-	if (clipSizeInKb > MAX_LEN_PRV_CLIP_KB)
+	if (layoutCache.find(index) != layoutCache.end())
 	{
-		std::wstring fallbackMessage = L"Clip too large to preview.\r\n\t\t" + std::to_wstring(clipSizeInKb) + L"KB Total";
-
-		hr = pDWriteFactory->CreateTextLayout(
-			fallbackMessage.c_str(),
-			fallbackMessage.length(),
-			pDWriteTextFormat,
-			layoutMaxWidth,
-			layoutMaxHeight,
-			&pDWriteTextLayout
-		);
+		pDWriteTextLayout = layoutCache.at(index);
 	}
 	else
 	{
-		hr = pDWriteFactory->CreateTextLayout(
-			previewClip,
-			wcslen(previewClip),
-			pDWriteTextFormat,
-			layoutMaxWidth,
-			layoutMaxHeight,
-			&pDWriteTextLayout
-		);
-	}
+		if (clipSizeInKb > MAX_LEN_PRV_CLIP_KB)
+		{
+			std::wstring fallbackMessage = L"Clip too large to preview.\r\n\t\t" + std::to_wstring(clipSizeInKb) + L"KB Total";
 
+			hr = pDWriteFactory->CreateTextLayout(
+				fallbackMessage.c_str(),
+				static_cast<UINT32>(fallbackMessage.length()),
+				pDWriteTextFormat,
+				layoutMaxWidth,
+				layoutMaxHeight,
+				&pDWriteTextLayout
+			);
+		}
+		else
+		{
+			hr = pDWriteFactory->CreateTextLayout(
+				previewClip,
+				static_cast<UINT32>(wcslen(previewClip)),
+				pDWriteTextFormat,
+				layoutMaxWidth,
+				layoutMaxHeight,
+				&pDWriteTextLayout
+			);
+		}
+
+		if (SUCCEEDED(hr))
+		{
+			layoutCache.insert_or_assign(index, pDWriteTextLayout);
+		}
+	}
 	if (SUCCEEDED(hr))
 	{
 		pDWriteTextLayout->SetIncrementalTabStop(18.0f);
 	}
-	
+
 	if (SUCCEEDED(hr))
 	{
 		pDWriteTextLayout->SetLineSpacing(DWRITE_LINE_SPACING_METHOD_UNIFORM, 16.0f, 12.0f);
 	}
 
-	DWRITE_TEXT_METRICS textMetrics;
+	DWRITE_TEXT_METRICS textMetrics = DWRITE_TEXT_METRICS();
 
 	if (SUCCEEDED(hr))
 	{
@@ -560,8 +576,8 @@ void PreviewWindow::MoveRelativeToRect(LPRECT rect)
 
 		if (renderingHeight > layoutMaxHeight)
 		{
-			// Calculate the non-visible lines remaining. The 1 accounts for the line we chop off
-			remainingTextLines = (textMetrics.lineCount * ((renderingHeight - layoutMaxHeight) / renderingHeight)) + 1;
+			// Calculate the non-visible lines remaining. The 1 accounts for the line we chop off.
+			remainingTextLines = static_cast<unsigned long long>((static_cast<double>(textMetrics.lineCount) * ((renderingHeight - layoutMaxHeight) / renderingHeight))) + 1;
 			renderingHeight = layoutMaxHeight;
 			pDWriteTextLayout->SetMaxHeight(layoutMaxHeight - 16);
 
@@ -578,9 +594,8 @@ void PreviewWindow::MoveRelativeToRect(LPRECT rect)
 		}
 	}
 
-
-	int totalWindowWidth = ScaleX(renderingWidth + (windowBorderWidth * 2.0f) + (textMarginWidth * 2.0f));
-	int totalWindowHeight = ScaleY(renderingHeight + (windowBorderWidth * 2.0f) + (textMarginHeight * 2.0f));
+	const int totalWindowWidth = static_cast<int>(ScaleX(renderingWidth + (windowBorderWidth * 2.0f) + (textMarginWidth * 2.0f)));
+	const int totalWindowHeight = static_cast<int>(ScaleY(renderingHeight + (windowBorderWidth * 2.0f) + (textMarginHeight * 2.0f)));
 
 	int xLoc = rect->right + ScaleX(5);
 	int yLoc = rect->top;
@@ -600,7 +615,7 @@ void PreviewWindow::MoveRelativeToRect(LPRECT rect)
 	// I was tired of it flipping back and forth constantly.
 	if (xLoc + ScaleX(windowMaxWidth) + ScaleX(8) > (lpmi->rcWork).right)
 	{
-		int xLocTemp = rect->left - (totalWindowWidth + ScaleX(8));
+		const int xLocTemp = rect->left - (totalWindowWidth + ScaleX(8));
 		if (xLocTemp > (lpmi->rcWork).left)
 		{
 			xLoc = xLocTemp;
@@ -608,7 +623,7 @@ void PreviewWindow::MoveRelativeToRect(LPRECT rect)
 	}
 	if (yLoc + totalWindowHeight + ScaleX(24) > (lpmi->rcWork).bottom)
 	{
-		int yLocTemp = rect->bottom - (totalWindowHeight);
+		const int yLocTemp = rect->bottom - (totalWindowHeight);
 		if (yLocTemp > (lpmi->rcWork).top)
 		{
 			yLoc = yLocTemp;
@@ -619,15 +634,40 @@ void PreviewWindow::MoveRelativeToRect(LPRECT rect)
 
 	// The two flags at the end ensure that we don't loose focus of the popup menu.
 	SetWindowPos(GetHandle(), HWND_TOPMOST, xLoc, yLoc, totalWindowWidth, totalWindowHeight, SWP_NOACTIVATE | SWP_NOSENDCHANGING);
-	RedrawWindow(GetHandle(), NULL, NULL, RDW_INVALIDATE);
+	RedrawWindow(GetHandle(), nullptr, nullptr, RDW_INVALIDATE);
 }
 
-void PreviewWindow::Show()
+void PreviewWindow::Show() noexcept
 {
 	ShowWindow(GetHandle(), SW_SHOWNA);
 }
 
-void PreviewWindow::Hide()
+void PreviewWindow::Hide() noexcept
 {
 	ShowWindow(GetHandle(), SW_HIDE);
+}
+
+void PreviewWindow::ClearCache()
+{
+	// this will get more fleshed out in the future
+	try
+	{
+		if (!layoutCache.empty())
+		{
+			for (auto pair : layoutCache)
+			{
+				SafeRelease(&(pair.second));
+			}
+			layoutCache.clear();
+		}
+	}
+	catch(const std::exception e) 
+	{
+		// outside of unexpected behavior,
+		// I don't anticipate any exceptions
+		// but if they do happen, let's 
+		// just let the memory leak and
+		// clear the cache rather than crash.
+		layoutCache.clear();
+	}
 }

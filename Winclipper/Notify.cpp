@@ -1,10 +1,8 @@
 #include "stdafx.h"
 #include "Notify.h"
 
-Notify::Notify()
-{ 
-
-}
+Notify::Notify() noexcept
+{ }
 
 Notify::~Notify()
 {
@@ -17,7 +15,7 @@ Notify::~Notify()
 // internalCollection, or false otheriwse.
 bool Notify::Subscribe(HWND hWnd)
 {
-	if (hWnd == NULL)
+	if (hWnd == nullptr)
 	{
 		// shouldn't add a null hWnd
 		return false;
@@ -32,7 +30,7 @@ bool Notify::Subscribe(HWND hWnd)
 // and removed, or false if the value does not exist.
 bool Notify::Unsubscribe(HWND hWnd)
 {
-	if (hWnd == NULL)
+	if (hWnd == nullptr)
 	{
 		// don't attempt to remove a null hWnd
 		return false;
@@ -43,19 +41,20 @@ bool Notify::Unsubscribe(HWND hWnd)
 
 // Posts a given WM_COMMAND message LOWORD to
 // the message queue of each subscribed hWnd.
-void Notify::SendNotifcation(WORD wmCommandLoword, HWND sender)
+void Notify::SendNotifcation(WORD wmCommandLoword, const HWND sender)
 {
 	if (!internalCollection.empty())
 	{
 		for (HWND hWnd : internalCollection)
 		{
-			if (sender == NULL)
+			if (sender == nullptr)
 			{
-				SendMessage(hWnd, WM_COMMAND, wmCommandLoword, 0);
+				PostMessageW(hWnd, WM_COMMAND, wmCommandLoword, 0);
 			}
 			else
 			{
-				SendMessage(hWnd, WM_COMMAND, wmCommandLoword, (LPARAM)sender);
+#pragma warning( suppress : 26490 )
+				PostMessageW(hWnd, WM_COMMAND, wmCommandLoword, reinterpret_cast<LPARAM>(sender));
 			}
 		}
 	}
