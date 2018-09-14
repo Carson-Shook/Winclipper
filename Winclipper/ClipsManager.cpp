@@ -300,6 +300,7 @@ void ClipsManager::ShowClipsMenu(HWND hWnd, LPPOINT cPos, bool showExit)
 {
     HWND curWin = GetForegroundWindow();
 	HWND taskbarWnd = FindWindow(L"Shell_TrayWnd", nullptr);
+	HWND child = GetWindow(curWin, GW_CHILD);
 
 	// Ensures that the last *real* active window is selected
 	// when the user tries to paste using the shell_notifyicon.
@@ -310,6 +311,21 @@ void ClipsManager::ShowClipsMenu(HWND hWnd, LPPOINT cPos, bool showExit)
 		{
 			curWin = GetWindow(curWin, GW_HWNDNEXT);
 		} while (!IsWindowVisible(curWin));
+	}
+	else if (child != nullptr)
+	{
+		// Microsoft Edge hack.
+		// If a child window looks like it belongs to MS Edge,
+		// then search previous from curWin until we get to a
+		// visible window. That should be the one we care about.
+		child = FindWindowExW(curWin, nullptr, L"Windows.UI.Core.CoreWindow", L"Microsoft Edge");
+		if (child != nullptr)
+		{
+			do
+			{
+				curWin = GetWindow(curWin, GW_HWNDPREV);
+			} while (!IsWindowVisible(curWin));
+		}
 	}
 
     if (hWnd != nullptr && curWin != nullptr)
@@ -415,6 +431,10 @@ void ClipsManager::ShowClipsMenu(HWND hWnd, LPPOINT cPos, bool showExit)
         AppendMenuW(menu, MF_STRING, CLEARCLIPS_SELECT, L"&Clear Clips");
         AppendMenuW(menu, MF_SEPARATOR, 0, nullptr);
         AppendMenuW(menu, MF_STRING, SETTINGS_SELECT, L"&Settings");
+		// Debug info
+		//wchar_t str[128];
+		//wsprintf(str, L"Window handle is 0x%08x", curWin);
+		//AppendMenuW(menu, MF_STRING, SETTINGS_SELECT, str);
         if (showExit)
         {
 			AppendMenuW(menu, MF_STRING, EXIT_SELECT, L"&Exit");
@@ -461,6 +481,7 @@ void ClipsManager::ShowClipsMenu(HWND hWnd, LPPOINT cPos, bool showExit)
             break;
         default:
             // for once a program where default actually does something more than error handling
+			SetForegroundWindow(curWin);
             SetActiveWindow(actWin);
             Sleep(20);
 
@@ -473,7 +494,7 @@ void ClipsManager::ShowClipsMenu(HWND hWnd, LPPOINT cPos, bool showExit)
             HWND temp = GetActiveWindow();
             while (temp != actWin && retries > 0)
             {
-                temp = GetActiveWindow();
+				temp = GetActiveWindow();
                 retries--;
                 Sleep(20);
             }

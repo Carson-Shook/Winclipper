@@ -13,6 +13,11 @@
 
                                     // ERROR is returned in any other situation
 
+typedef struct {
+	DWORD pId = 0;
+	HWND hWnd = nullptr;
+} HANDLEDATA;
+
 class ClipsManager
 {
 private:
