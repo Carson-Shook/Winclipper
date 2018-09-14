@@ -504,8 +504,8 @@ void PreviewWindow::MoveRelativeToRect(const LPRECT rect, unsigned int index)
 	const float layoutMaxWidth = windowMaxWidth - (windowBorderWidth * 2.0f) - (textMarginWidth * 2.0f);
 	const float layoutMaxHeight = windowMaxHeight - (windowBorderWidth * 2.0f) - (textMarginHeight * 2.0f);
 
-	float renderingWidth = 0.0f;
-	float renderingHeight = 0.0f;
+	float renderingWidth = layoutMaxWidth;
+	float renderingHeight = layoutMaxHeight;
 
 	const size_t clipLength = wcslen(previewClip);
 	
@@ -517,20 +517,7 @@ void PreviewWindow::MoveRelativeToRect(const LPRECT rect, unsigned int index)
 	}
 	else
 	{
-		if (clipSizeInKb > MAX_LEN_PRV_CLIP_KB)
-		{
-			std::wstring fallbackMessage = L"Clip too large to preview.\r\n\t\t" + std::to_wstring(clipSizeInKb) + L"KB Total";
-
-			hr = pDWriteFactory->CreateTextLayout(
-				fallbackMessage.c_str(),
-				static_cast<UINT32>(fallbackMessage.length()),
-				pDWriteTextFormat,
-				layoutMaxWidth,
-				layoutMaxHeight,
-				&pDWriteTextLayout
-			);
-		}
-		else
+		if (clipSizeInKb < MAX_LEN_PRV_CLIP_KB)
 		{
 			hr = pDWriteFactory->CreateTextLayout(
 				previewClip,
@@ -540,6 +527,19 @@ void PreviewWindow::MoveRelativeToRect(const LPRECT rect, unsigned int index)
 				layoutMaxHeight,
 				&pDWriteTextLayout
 			);
+		}
+		else
+		{
+			std::wstring shortenedClip(previewClip, 0, 5000);
+
+			hr = pDWriteFactory->CreateTextLayout(
+				shortenedClip.c_str(),
+				static_cast<UINT32>(shortenedClip.length()),
+				pDWriteTextFormat,
+				layoutMaxWidth,
+				layoutMaxHeight,
+				&pDWriteTextLayout
+			);	
 		}
 
 		if (SUCCEEDED(hr))
@@ -557,41 +557,48 @@ void PreviewWindow::MoveRelativeToRect(const LPRECT rect, unsigned int index)
 		pDWriteTextLayout->SetLineSpacing(DWRITE_LINE_SPACING_METHOD_UNIFORM, 16.0f, 12.0f);
 	}
 
-	DWRITE_TEXT_METRICS textMetrics = DWRITE_TEXT_METRICS();
-
-	if (SUCCEEDED(hr))
+	if (clipSizeInKb < MAX_LEN_PRV_CLIP_KB)
 	{
-		hr = pDWriteTextLayout->GetMetrics(&textMetrics);
-	}
+		DWRITE_TEXT_METRICS textMetrics = DWRITE_TEXT_METRICS();
 
-	if (SUCCEEDED(hr))
-	{
-		renderingWidth = textMetrics.widthIncludingTrailingWhitespace;
-		renderingHeight = textMetrics.height;
-
-		if (renderingWidth > layoutMaxWidth)
+		if (SUCCEEDED(hr))
 		{
-			renderingWidth = layoutMaxWidth;
+			hr = pDWriteTextLayout->GetMetrics(&textMetrics);
 		}
 
-		if (renderingHeight > layoutMaxHeight)
+		if (SUCCEEDED(hr))
 		{
-			// Calculate the non-visible lines remaining. The 1 accounts for the line we chop off.
-			remainingTextLines = static_cast<unsigned long long>((static_cast<double>(textMetrics.lineCount) * ((renderingHeight - layoutMaxHeight) / renderingHeight))) + 1;
-			renderingHeight = layoutMaxHeight;
-			pDWriteTextLayout->SetMaxHeight(layoutMaxHeight - 16);
+			renderingWidth = textMetrics.widthIncludingTrailingWhitespace;
+			renderingHeight = textMetrics.height;
 
-			// make sure that remaining line information can display
-			if (renderingWidth < 180)
+			if (renderingWidth > layoutMaxWidth)
 			{
-				renderingWidth = 180;
+				renderingWidth = layoutMaxWidth;
+			}
+
+			if (renderingHeight > layoutMaxHeight)
+			{
+				// Calculate the non-visible lines remaining. The 1 accounts for the line we chop off.
+				remainingTextLines = static_cast<unsigned long long>((static_cast<double>(textMetrics.lineCount) * ((renderingHeight - layoutMaxHeight) / renderingHeight))) + 1;
+				renderingHeight = layoutMaxHeight;
+				pDWriteTextLayout->SetMaxHeight(layoutMaxHeight - 16);
+
+				// make sure that remaining line information can display
+				if (renderingWidth < 180)
+				{
+					renderingWidth = 180;
+				}
+			}
+			else
+			{
+				clipSizeInKb = 0;
+				remainingTextLines = 0;
 			}
 		}
-		else
-		{
-			clipSizeInKb = 0;
-			remainingTextLines = 0;
-		}
+	}
+	else
+	{
+		remainingTextLines = 0;
 	}
 
 	const int totalWindowWidth = static_cast<int>(ScaleX(renderingWidth + (windowBorderWidth * 2.0f) + (textMarginWidth * 2.0f)));
