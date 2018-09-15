@@ -12,7 +12,20 @@ You will need Visual Studio 2017 to build Winclipper. The solution file should c
 
 ## Changelog
 
-**1.1.1**      2018-06-17
+**1.2** - 2018-09-15
+
+This release of Winclipper includes yet another rewritten text-preview, this time using DirectWrite, and do you know what that means? Color emojis and improved Unicode support!
+- The entire underlying structure of Winclipper has been reorganized to better support future development.
+- In addition to color emoji on Windows 8.1+ this release also supports the black and white emoji font on previous versions of Windows.
+- Portions of the preview are now cached for improved performance after you've looked at them.
+- You can now use keyboard navigation to open the Clips Menu from the menubar icon.
+- Improved error handling and language safety in most files.
+
+It also includes the following bug fixes:
+- The Clips Menu invoked from the menubar icon should now correctly paste again.
+- Winclipper should now more reliably paste into Microsoft Edge browser content (Note, this is a hack because Edge's window layout is truely bizarre).
+
+**1.1.1** - 2018-06-17
 
 This release of Winclipper includes the following improvements:
 - The last active window now regains focus after dismissing Winclipper without making a selection.
@@ -22,7 +35,7 @@ It also includes the following bug fixes:
 - Winclipper now correctly launches StupidSimpleUpdater (SSUP) so that CheckFrequency is respected.
 - Upgraded SSUP to version 1.1 which includes TLS 1.2 support (as a temporary measure, the upgrades will be hosted on my GitHub Pages site so that existing users will be able to receive it without interruption).
 
-**1.1**      2018-03-18
+**1.1** - 2018-03-18
 
 This release of Winclipper includes a rewritten text-preview that now uses GDI. You should find it much faster, and as a bonus, it now includes a count of the number of lines not visible in the preview (when text is not larger than 80KB) and also includes the total size of the text in KB.
 
