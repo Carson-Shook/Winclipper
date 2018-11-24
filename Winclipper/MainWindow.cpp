@@ -368,7 +368,7 @@ LRESULT MainWindow::WmMenuSelect(HWND hWnd, WPARAM wParam, LPARAM lParam)
 			unsigned int i = LOWORD(wParam);
 			if (i != 0 && i <= cManager->GetSize())
 			{
-				previewWindow->SetPreviewClip(cManager->GetClipAt(i - 1));
+				previewWindow->SetPreviewClip(cManager->GetClipAt(i - 1)->UnicodeText());
 
 				unsigned int offset = 1;
 

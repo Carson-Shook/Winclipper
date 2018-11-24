@@ -480,7 +480,7 @@ HWND PreviewWindow::GetHandle() noexcept
 	return windowHandle;
 }
 
-void PreviewWindow::SetPreviewClip(wchar_t * clip) noexcept
+void PreviewWindow::SetPreviewClip(const wchar_t * clip) noexcept
 {
 	previewClip = clip;
 }
@@ -521,7 +521,7 @@ void PreviewWindow::MoveRelativeToRect(const LPRECT rect, unsigned int index)
 		{
 			hr = pDWriteFactory->CreateTextLayout(
 				previewClip,
-				static_cast<UINT32>(wcslen(previewClip)),
+				static_cast<UINT32>(clipLength),
 				pDWriteTextFormat,
 				layoutMaxWidth,
 				layoutMaxHeight,

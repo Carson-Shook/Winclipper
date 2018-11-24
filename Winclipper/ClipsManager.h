@@ -2,6 +2,7 @@
 #include "resource.h"
 #include "UserSettings.h"
 #include "File.h"
+#include "Clip.h"
 #include "Shlobj.h"
 #include "Shlwapi.h"
 
@@ -22,7 +23,7 @@ class ClipsManager
 {
 private:
     wchar_t                         fullClipsPath[MAX_PATH];
-    std::deque<wchar_t *>           clips;
+    std::deque<Clip *>				clips;
     unsigned int                    displayClips = 20;
     unsigned int                    maxClips = 200;
     unsigned int                    menuDispChars = 64;
@@ -60,7 +61,7 @@ public:
     bool                            AddToClips(HWND hWnd);
     bool                            SetClipboardToClipAtIndex(HWND hWnd, int index);
 	const size_t					GetSize() noexcept;
-	wchar_t *						GetClipAt(size_t index) noexcept;
+	Clip *							GetClipAt(size_t index);
 	void							ShowClipsMenu(HWND hWnd, LPPOINT cPos, bool showExit);
 	void							SelectDefaultMenuItem(bool select2ndClip) noexcept;
 };

@@ -41,7 +41,7 @@ void ClipsManager::DelayClipsWriter(int * waitCount, ClipsManager * cs)
 void ClipsManager::WriteClips()
 {
     isWriterFinished = false;
-    File::BinaryWriteDeque(clips, fullClipsPath);
+    File::WriteAllObjects<Clip>(clips, fullClipsPath);
     isWriterFinished = true;
 }
 
@@ -49,7 +49,7 @@ void ClipsManager::ReadClips()
 {
     if (File::Exists(fullClipsPath))
     {
-        std::deque<wchar_t *> tempClips = File::BinaryReadDeque(fullClipsPath);
+		std::deque<Clip *> tempClips = File::ReadAllObjects<Clip>(fullClipsPath);
 
         clips.assign(tempClips.begin(), tempClips.end());
 
@@ -148,10 +148,10 @@ void ClipsManager::SetMaxClips(unsigned int maxClips)
         while (clips.size() > ClipsManager::maxClips)
         {
             // get reference to the back object before we pop it
-            wchar_t * back = clips.back();
+            Clip * back = clips.back();
             clips.pop_back();
             // dealocate the former back object
-            delete[] back;
+            delete back;
         }
         SaveClipsAsync();
     }
@@ -183,10 +183,9 @@ void ClipsManager::SetSaveToDisk(bool saveToDisk)
 
 void ClipsManager::ClearClips()
 {
-    for (size_t i = 0; i < GetSize(); i++)
+    for (Clip * clip : clips)
     {
-        wchar_t * clip = clips.at(i);
-        delete[] clip;
+        delete clip;
     }
     clips.clear();
     SaveClipsAsync();
@@ -199,41 +198,51 @@ bool ClipsManager::AddToClips(HWND hWnd)
         return false;
     }
 
-    HANDLE psClipboardData = GetClipboardData(CF_UNICODETEXT);
-    if (psClipboardData != nullptr)
-    {
-        wchar_t * data = (wchar_t*)GlobalLock(psClipboardData);
-        if (data != nullptr)
-        {
-            wchar_t * derefData = _wcsdup(data);
-            GlobalUnlock(psClipboardData);
+	Clip * clip = new Clip();
 
-			if (clips.empty())
+	if (IsClipboardFormatAvailable(CF_UNICODETEXT))
+	{
+		HANDLE psClipboardData = GetClipboardData(CF_UNICODETEXT);
+		if (psClipboardData != nullptr)
+		{
+			wchar_t * data = (wchar_t*)GlobalLock(psClipboardData);
+			if (data != nullptr)
 			{
-				clips.push_front(derefData);
+				clip->SetUnicodeText(data);
+				GlobalUnlock(psClipboardData);
+				clip->AddFormat(CF_UNICODETEXT);
 			}
 			else
 			{
-				if (StrCmpW(derefData, clips.front()) != 0)
-				{
-					while (clips.size() >= maxClips)
-					{
-						// get reference to the back object before we pop it
-						wchar_t * back = clips.back();
-						clips.pop_back();
-						// dealocate the former back object
-						delete[] back;
-					}
-					clips.push_front(derefData);
-				}
+				GlobalUnlock(psClipboardData);
 			}
-        }
-        else 
-        {
-            GlobalUnlock(psClipboardData);
-        }
-    }
-    CloseClipboard();
+		}
+	}
+
+	CloseClipboard();
+
+	if (clip->AnyFormats())
+	{
+		if (clips.empty())
+		{
+			clips.push_front(clip);
+		}
+		else
+		{
+			if (!clip->Equals(*(clips.front())))
+			{
+				while (clips.size() >= maxClips)
+				{
+					// get reference to the back object before we pop it
+					Clip * back = clips.back();
+					clips.pop_back();
+					// dealocate the former back object
+					delete back;
+				}
+				clips.push_front(clip);
+			}
+		}
+	}
     SaveClipsAsync();
     return true;
 }
@@ -247,28 +256,40 @@ bool ClipsManager::SetClipboardToClipAtIndex(HWND hWnd, int index)
 
     EmptyClipboard();
 
-    wchar_t * clip = clips.at(index);
+    Clip * clip = GetClipAt(index);
 
-    HGLOBAL hClipboardData = GlobalAlloc(GMEM_MOVEABLE, (wcslen(clip) + 1) * sizeof(wchar_t));
-    if (hClipboardData != nullptr)
-    {
-        wchar_t * pwcData = (wchar_t*)GlobalLock(hClipboardData);
-        if (pwcData != nullptr)
-        {
-            wcscpy_s(pwcData, wcslen(clip) + 1, clip);
+	if (clip != nullptr)
+	{
+		if (clip->ContainsFormat(CF_UNICODETEXT))
+		{
+			const wchar_t * clipUnicodeText = clip->UnicodeText();
+			size_t clipLength = clip->UnicodeTextWString().length();
 
-            GlobalUnlock(hClipboardData);
+			HGLOBAL hClipboardData = GlobalAlloc(GMEM_MOVEABLE, clipLength * sizeof(wchar_t));
+			if (hClipboardData != nullptr)
+			{
+				wchar_t * pwcData = (wchar_t*)GlobalLock(hClipboardData);
+				if (pwcData != nullptr)
+				{
+					wcscpy_s(pwcData, clipLength, clipUnicodeText);
 
-            SetClipboardData(CF_UNICODETEXT, hClipboardData);
+					GlobalUnlock(hClipboardData);
 
-            // Safe to delete clip because we have already copied it.
-            delete[] clip;
-            clips.erase(clips.begin() + index);
-        }
-        else {
-            GlobalUnlock(hClipboardData);
-        }
-    }
+					SetClipboardData(CF_UNICODETEXT, hClipboardData);
+
+					// We remove the clip from the clips deque.
+					// Since we already have a pointer to the Clip
+					// object, we can delete that.
+					clips.erase(clips.begin() + index);
+					delete clip;
+				}
+				else
+				{
+					GlobalUnlock(hClipboardData);
+				}
+			}
+		}
+	}
     // Once the clipboard is closed, the update is fired,
     // and the clip will be added to the front of the deque with AddToClips
     CloseClipboard();
@@ -281,13 +302,10 @@ const size_t ClipsManager::GetSize() noexcept
 	return clips.size();
 }
 
-// Guarantees to return a pointer to wchar_t 
-// or nullptr if clip doesn't exist at index
-wchar_t * ClipsManager::GetClipAt(size_t index) noexcept
+Clip * ClipsManager::GetClipAt(size_t index)
 {
 	try
 	{
-#pragma warning( suppress : 26447 )
 		return clips.at(index);
 	}
 	catch (const std::exception e)
@@ -351,35 +369,16 @@ void ClipsManager::ShowClipsMenu(HWND hWnd, LPPOINT cPos, bool showExit)
 
             for (size_t i = 0; i < j; i++)
             {
-                const wchar_t * clip = GetClipAt(i);
+                Clip * clip = GetClipAt(i);
                 if (clip != nullptr)
                 {
-                    const size_t clipSize = wcslen(clip);
-					
-					std::wstring menuItemText;
-
-					if (clipSize > MenuDisplayChars())
+					if (clip->ContainsFormat(CF_UNICODETEXT))
 					{
-						menuItemText.assign(clip, 0, MenuDisplayChars() - 3);
-						menuItemText.append(L"...\0");
-					}
-					else
-					{
-						menuItemText.assign(clip);
-					}
+						std::wstring menuText;
+						menuText = clip->GetUnicodeTextPreview(MenuDisplayChars());
 
-					for (size_t k = 0; k < menuItemText.size(); k++)
-					{
-						switch (menuItemText.at(k))
-						{
-						case '\t':
-						case '\r':
-						case '\n':
-							menuItemText.at(k) = ' ';
-						}
+						AppendMenuW(menu, MF_STRING, UINT_PTR{ i } +1, menuText.c_str());
 					}
-
-					AppendMenuW(menu, MF_STRING, UINT_PTR{ i } + 1, menuItemText.c_str());
                 }
             }
             if (curSize > DisplayClips())
@@ -388,36 +387,17 @@ void ClipsManager::ShowClipsMenu(HWND hWnd, LPPOINT cPos, bool showExit)
                 
                 for (/*j is equal to displayCount */; j < curSize; j++)
                 {
-                    const wchar_t * clip = GetClipAt(j);
+					Clip * clip = GetClipAt(j);
                     if (clip != nullptr)
                     {
-						const size_t clipSize = wcslen(clip);
-
-						std::wstring menuItemText;
-
-						if (clipSize > MenuDisplayChars())
+						if (clip->ContainsFormat(CF_UNICODETEXT))
 						{
-							menuItemText.assign(clip, 0, MenuDisplayChars() - 3);
-							menuItemText.append(L"...\0");
-						}
-						else
-						{
-							menuItemText.assign(clip);
-						}
+							std::wstring menuText;
+							menuText = clip->GetUnicodeTextPreview(MenuDisplayChars());
 
-						for (size_t k = 0; k < menuItemText.size(); k++)
-						{
-							switch (menuItemText.at(k))
-							{
-							case '\t':
-							case '\r':
-							case '\n':
-								menuItemText.at(k) = ' ';
-							}
+							AppendMenuW(sMenu, MF_STRING, UINT_PTR{ j } +1, menuText.c_str());
 						}
-
-						AppendMenuW(sMenu, MF_STRING, UINT_PTR{ j } + 1, menuItemText.c_str());
-                    }
+					}
                 }
                 AppendMenuW(menu, MF_STRING | MF_POPUP, reinterpret_cast<UINT_PTR>(sMenu), L"More...");
             }
