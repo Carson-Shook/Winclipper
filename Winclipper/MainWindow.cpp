@@ -328,7 +328,9 @@ LRESULT MainWindow::WmCreate(HWND hWnd, WPARAM wParam, LPARAM lParam)
 LRESULT MainWindow::WmDestroy(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
 	delete previewWindow;
+	previewWindow = nullptr;
 	delete cManager;
+	cManager = nullptr;
 	DeleteObject(hFontStd);
 	DeleteNotificationIcon();
 	PostQuitMessage(0);

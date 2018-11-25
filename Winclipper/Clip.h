@@ -26,11 +26,12 @@ public:
 	void				SetUnicodeText(std::wstring unicodeText);
 	const wchar_t *		UnicodeText() noexcept;
 	const std::wstring	UnicodeTextWString();
-	const std::wstring	GetUnicodeTextPreview(size_t desiredLength);
+	const std::wstring	GetUnicodeMenuText(size_t desiredLength);
 private:
 	std::set<UINT>		clipboardFormats;
 	std::wstring		unicodeText;
-	std::wstring		previewText;
+	std::wstring		menuTextCache;
+	size_t				lastKnownMenuTextLength = 0;
 
 	std::string			GetBase64FromWString(const std::wstring data);
 	std::wstring		GetWStringFromBase64(const std::string base64);

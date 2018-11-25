@@ -375,7 +375,7 @@ void ClipsManager::ShowClipsMenu(HWND hWnd, LPPOINT cPos, bool showExit)
 					if (clip->ContainsFormat(CF_UNICODETEXT))
 					{
 						std::wstring menuText;
-						menuText = clip->GetUnicodeTextPreview(MenuDisplayChars());
+						menuText = clip->GetUnicodeMenuText(MenuDisplayChars());
 
 						AppendMenuW(menu, MF_STRING, UINT_PTR{ i } +1, menuText.c_str());
 					}
@@ -393,7 +393,7 @@ void ClipsManager::ShowClipsMenu(HWND hWnd, LPPOINT cPos, bool showExit)
 						if (clip->ContainsFormat(CF_UNICODETEXT))
 						{
 							std::wstring menuText;
-							menuText = clip->GetUnicodeTextPreview(MenuDisplayChars());
+							menuText = clip->GetUnicodeMenuText(MenuDisplayChars());
 
 							AppendMenuW(sMenu, MF_STRING, UINT_PTR{ j } +1, menuText.c_str());
 						}

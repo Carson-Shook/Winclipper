@@ -174,35 +174,39 @@ const std::wstring Clip::UnicodeTextWString()
 	return Clip::unicodeText;
 }
 
-const std::wstring Clip::GetUnicodeTextPreview(size_t desiredLength)
+const std::wstring Clip::GetUnicodeMenuText(size_t desiredLength)
 {
-	std::wstring previewText;
+	if (desiredLength != lastKnownMenuTextLength)
+	{
+		lastKnownMenuTextLength = desiredLength;
+		std::wstring menuText;
 
-	if (unicodeText.length() > desiredLength)
-	{
-		previewText.assign(unicodeText, 0, desiredLength - 3);
-		previewText.append(L"...\0");
-	}
-	else
-	{
-		previewText.assign(unicodeText);
-	}
-
-	for (size_t k = 0; k < previewText.length(); k++)
-	{
-		switch (previewText.at(k))
+		if (unicodeText.length() > desiredLength)
 		{
-		case '\t':
-		case '\r':
-		case '\n':
-			previewText.at(k) = ' ';
+			menuText.assign(unicodeText, 0, desiredLength - 3);
+			menuText.append(L"...\0");
 		}
+		else
+		{
+			menuText.assign(unicodeText);
+		}
+
+		for (size_t k = 0; k < menuText.length(); k++)
+		{
+			switch (menuText.at(k))
+			{
+			case '\t':
+			case '\r':
+			case '\n':
+				menuText.at(k) = ' ';
+			}
+		}
+
+		menuTextCache.clear();
+		menuTextCache.assign(menuText);
 	}
 
-	Clip::previewText.clear();
-	Clip::previewText.assign(previewText);
-
-	return Clip::previewText;
+	return menuTextCache;
 }
 
 std::string Clip::GetBase64FromWString(const std::wstring data)

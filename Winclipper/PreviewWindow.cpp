@@ -360,7 +360,7 @@ HRESULT PreviewWindow::CreateDeviceDependentResources(HWND hWnd) noexcept
 				D2D1::SizeU(
 					rc.right - rc.left,
 					rc.bottom - rc.top),
-				D2D1_PRESENT_OPTIONS_IMMEDIATELY
+				D2D1_PRESENT_OPTIONS_NONE
 			),
 			&pRT
 		);
@@ -541,20 +541,21 @@ void PreviewWindow::MoveRelativeToRect(const LPRECT rect, unsigned int index)
 				&pDWriteTextLayout
 			);	
 		}
+		
+		if (SUCCEEDED(hr))
+		{
+			pDWriteTextLayout->SetIncrementalTabStop(18.0f);
+		}
+
+		if (SUCCEEDED(hr))
+		{
+			pDWriteTextLayout->SetLineSpacing(DWRITE_LINE_SPACING_METHOD_UNIFORM, 16.0f, 12.0f);
+		}
 
 		if (SUCCEEDED(hr))
 		{
 			layoutCache.insert_or_assign(index, pDWriteTextLayout);
 		}
-	}
-	if (SUCCEEDED(hr))
-	{
-		pDWriteTextLayout->SetIncrementalTabStop(18.0f);
-	}
-
-	if (SUCCEEDED(hr))
-	{
-		pDWriteTextLayout->SetLineSpacing(DWRITE_LINE_SPACING_METHOD_UNIFORM, 16.0f, 12.0f);
 	}
 
 	if (clipSizeInKb < MAX_LEN_PRV_CLIP_KB)
