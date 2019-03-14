@@ -5,5 +5,6 @@
 class RegistryUtilities
 {
 public:
+	static unsigned int GetWindows10ReleaseId();
 	static bool QueryKeyForValue(HKEY, wchar_t*);
 };

@@ -1,5 +1,40 @@
 #include "stdafx.h"
+#include <string>
 #include "RegistryUtilities.h"
+
+unsigned int RegistryUtilities::GetWindows10ReleaseId()
+{
+	unsigned int retVal = 0;
+	HKEY hOpened;
+
+	if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows NT\\CurrentVersion", 0, KEY_QUERY_VALUE, &hOpened) == ERROR_SUCCESS)
+	{
+		if (QueryKeyForValue(hOpened, L"ReleaseId") == true)
+		{
+			const size_t bufferSize = 4096;
+			wchar_t data[bufferSize];
+			DWORD cbData = DWORD{ bufferSize };
+
+			// Really should check if ERROR_MORE_DATA is returned, but in practice this
+			// string should never be longer than 5 wchar_t, and if it ever is, we'll
+			// probably find plenty of time to prepare.
+			if (RegQueryValueExW(hOpened, L"ReleaseId", NULL, NULL, reinterpret_cast<LPBYTE>(&data), &cbData) == ERROR_SUCCESS)
+			{
+				try
+				{
+					retVal = std::stoi(data);
+				}
+				catch (const std::exception&)
+				{
+					retVal = 0;
+				}
+			}
+		}
+	}
+	RegCloseKey(hOpened);
+
+	return retVal;
+}
 
 // Determines whether or not a particular value exists for a given key
 bool RegistryUtilities::QueryKeyForValue(HKEY hKey, wchar_t* checkValue)

@@ -91,10 +91,13 @@ void ClipsManager::SendPasteInput(void)
 
 ClipsManager::ClipsManager()
 {
+	windows10ReleaseId = RegistryUtilities::GetWindows10ReleaseId();
 }
 
 ClipsManager::ClipsManager(int displayClips, int maxClips, int menuChars, bool saveToDisk)
 {
+	windows10ReleaseId = RegistryUtilities::GetWindows10ReleaseId();
+
     PTSTR tempClipsPath;
     if (SUCCEEDED(SHGetKnownFolderPath(FOLDERID_LocalAppData, KF_FLAG_DEFAULT, NULL, &tempClipsPath)))
     {
@@ -195,8 +198,11 @@ bool ClipsManager::AddToClips(HWND hWnd)
 {
     if (!OpenClipboard(hWnd))
     {
+		OutputDebugStringW(L"Clipboard Failed to Open\r\n");
         return false;
     }
+
+	OutputDebugStringW(L"Clipboard Opened\r\n");
 
 	Clip * clip = new Clip();
 
@@ -251,8 +257,11 @@ bool ClipsManager::SetClipboardToClipAtIndex(HWND hWnd, int index)
 {
     if (!OpenClipboard(hWnd))
     {
+		OutputDebugStringW(L"Clipboard Failed to Open\r\n");
         return false;
     }
+
+	OutputDebugStringW(L"Clipboard Opened\r\n");
 
     EmptyClipboard();
 
@@ -265,13 +274,13 @@ bool ClipsManager::SetClipboardToClipAtIndex(HWND hWnd, int index)
 			const wchar_t * clipUnicodeText = clip->UnicodeText();
 			size_t clipLength = clip->UnicodeTextWString().length();
 
-			HGLOBAL hClipboardData = GlobalAlloc(GMEM_MOVEABLE, clipLength * sizeof(wchar_t));
+			HGLOBAL hClipboardData = GlobalAlloc(GMEM_MOVEABLE, (clipLength + 1) * sizeof(wchar_t));
 			if (hClipboardData != nullptr)
 			{
 				wchar_t * pwcData = (wchar_t*)GlobalLock(hClipboardData);
 				if (pwcData != nullptr)
 				{
-					wcscpy_s(pwcData, clipLength, clipUnicodeText);
+					wcscpy_s(pwcData, clipLength +1, clipUnicodeText);
 
 					GlobalUnlock(hClipboardData);
 
@@ -332,17 +341,21 @@ void ClipsManager::ShowClipsMenu(HWND hWnd, LPPOINT cPos, bool showExit)
 	}
 	else if (child != nullptr)
 	{
-		// Microsoft Edge hack.
-		// If a child window looks like it belongs to MS Edge,
-		// then search previous from curWin until we get to a
-		// visible window. That should be the one we care about.
-		child = FindWindowExW(curWin, nullptr, L"Windows.UI.Core.CoreWindow", L"Microsoft Edge");
-		if (child != nullptr)
+		if (windows10ReleaseId > 0 && windows10ReleaseId < 1809)
 		{
-			do
+			// Microsoft Edge hack.
+			// (Note: as of 1809, this doesn't appear to be necessary)
+			// If a child window looks like it belongs to MS Edge,
+			// then search previous from curWin until we get to a
+			// visible window. That should be the one we care about.
+			child = FindWindowExW(curWin, nullptr, L"Windows.UI.Core.CoreWindow", L"Microsoft Edge");
+			if (child != nullptr)
 			{
-				curWin = GetWindow(curWin, GW_HWNDPREV);
-			} while (!IsWindowVisible(curWin));
+				do
+				{
+					curWin = GetWindow(curWin, GW_CHILD);
+				} while (!IsWindowVisible(curWin));
+			}
 		}
 	}
 
@@ -467,16 +480,23 @@ void ClipsManager::ShowClipsMenu(HWND hWnd, LPPOINT cPos, bool showExit)
 
             // Have to subtract 1 from index because returning 0 in
             // TrackPopupMenu means cancelation
-            SetClipboardToClipAtIndex(actWin, menuSelection - 1);
+			bool success = false;
+			int retries = 10;
+			while (!success && retries > 0)
+			{
+				success = SetClipboardToClipAtIndex(actWin, menuSelection - 1);
+				Sleep(100);
+				retries--;
+			}
                 
             // attempts to set the active window. Usually succeeds immediately, but not always 
-            int retries = 10;
+            retries = 10;
             HWND temp = GetActiveWindow();
             while (temp != actWin && retries > 0)
             {
 				temp = GetActiveWindow();
                 retries--;
-                Sleep(20);
+                Sleep(100);
             }
 
             SendPasteInput();

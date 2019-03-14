@@ -286,7 +286,14 @@ LRESULT MainWindow::WmappNCallWmContextMenu(HWND hWnd, WPARAM wParam, LPARAM lPa
 LRESULT MainWindow::WmClipboardUpdate(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
 	// Add clips to the clips manager when the clipboard updates.
-	cManager->AddToClips(hWnd);
+	bool success = false;
+	int retries = 10;
+	while (!success && retries > 0)
+	{
+		success = cManager->AddToClips(hWnd);
+		Sleep(100);
+		retries--;
+	}
 	return 0;
 }
 
@@ -370,7 +377,7 @@ LRESULT MainWindow::WmMenuSelect(HWND hWnd, WPARAM wParam, LPARAM lParam)
 			unsigned int i = LOWORD(wParam);
 			if (i != 0 && i <= cManager->GetSize())
 			{
-				previewWindow->SetPreviewClip(cManager->GetClipAt(i - 1)->UnicodeText());
+				previewWindow->SetPreviewClip(cManager->GetClipAt(i - 1));
 
 				unsigned int offset = 1;
 

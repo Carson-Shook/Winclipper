@@ -9,6 +9,7 @@
 #include <dwrite.h>
 #include <d3d11.h>
 #include "ControlUtilities.h"
+#include "Clip.h"
 
 #define MAX_LEN_PRV_CLIP_KB		60
 
@@ -42,7 +43,7 @@ private:
 
 	std::map<unsigned int, IDWriteTextLayout *> layoutCache;
 
-	const wchar_t *				previewClip = nullptr;
+	Clip *						previewClip = nullptr;
 	unsigned long long			remainingTextLines = 0; // need to account for theoretical maximum NTFS file size
 	unsigned long long			clipSizeInKb = 0;
 	wchar_t						szPreviewWindowClass[MAX_LOADSTRING];       // the text preview window
@@ -74,7 +75,7 @@ public:
 	bool						InitPreviewWindow(HINSTANCE hInstance, HWND parentWnd);
 
 	HWND						GetHandle() noexcept;
-	void						SetPreviewClip(const wchar_t * clip) noexcept;
+	void						SetPreviewClip(Clip * clip) noexcept;
 	void						MoveRelativeToRect(LPRECT rect, unsigned int index);
 	void						Show() noexcept;
 	void						Hide() noexcept;

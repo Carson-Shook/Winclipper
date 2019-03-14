@@ -2,6 +2,7 @@
 #include "resource.h"
 #include "UserSettings.h"
 #include "File.h"
+#include "RegistryUtilities.h"
 #include "Clip.h"
 #include "Shlobj.h"
 #include "Shlwapi.h"
@@ -22,6 +23,8 @@ typedef struct {
 class ClipsManager
 {
 private:
+	unsigned int					windows10ReleaseId = 0;
+
     wchar_t                         fullClipsPath[MAX_PATH];
     std::deque<Clip *>				clips;
     unsigned int                    displayClips = 20;
