@@ -23,14 +23,18 @@ private:
 	const float					textMarginHeight = 3.5f;
 	const float					infoBreakHeight = 18.0f;
 
-	ID2D1Factory *				pD2DFactory = nullptr;
 	IDWriteFactory *			pDWriteFactory = nullptr;
-	ID2D1HwndRenderTarget *		pRT = nullptr;
 	IDWriteTextFormat *			pDWriteTextFormat = nullptr;
 	IDWriteTextFormat *			pDWriteInfoBreakFormat = nullptr;
 	IDWriteTextLayout *			pDWriteTextLayout = nullptr;
 	IDWriteRenderingParams *	pDWriteRenderingParams = nullptr;
 
+	IWICImagingFactory *		pIWICFactory = nullptr;
+	IWICFormatConverter *		pConvertedSourceBitmap = nullptr;
+
+	ID2D1Factory *				pD2DFactory = nullptr;
+	ID2D1HwndRenderTarget *		pRT = nullptr;
+	ID2D1Bitmap *				pD2DBitmap = nullptr;
 	ID2D1SolidColorBrush *		pLightGrayBrush = nullptr;
 	ID2D1SolidColorBrush *		pWhiteBrush = nullptr;
 	ID2D1SolidColorBrush *		pBlackBrush = nullptr;

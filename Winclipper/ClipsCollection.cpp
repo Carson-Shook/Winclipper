@@ -61,7 +61,7 @@ void ClipsCollection::AddFront(std::shared_ptr<Clip> clip)
 		if (!clip->Equals(clips.front()))
 		{
 			clips.push_front(clip);
-			while (clips.size() >= maxSize)
+			while (clips.size() > maxSize)
 			{
 				RemoveBack();
 			}

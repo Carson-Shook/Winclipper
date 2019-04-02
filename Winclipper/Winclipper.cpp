@@ -12,11 +12,11 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 	RunUpdater();
 
-	//HRESULT hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
+	HRESULT hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
 	MSG msg;
 
-	/*if (SUCCEEDED(hr))
-	{*/
+	if (SUCCEEDED(hr))
+	{
 		UserSettings uSettings = UserSettings();
 
 		SettingsWindow settingsWindow = SettingsWindow(hInstance, uSettings);
@@ -40,8 +40,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 			}
 		}
 
-		/*CoUninitialize();
-	}*/
+		CoUninitialize();
+	}
 
     return (int) msg.wParam;
 }
