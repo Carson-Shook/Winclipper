@@ -480,7 +480,7 @@ HWND PreviewWindow::GetHandle() noexcept
 	return windowHandle;
 }
 
-void PreviewWindow::SetPreviewClip(Clip * clip) noexcept
+void PreviewWindow::SetPreviewClip(std::shared_ptr<Clip> clip) noexcept
 {
 	previewClip = clip;
 }

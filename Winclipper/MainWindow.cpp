@@ -285,14 +285,21 @@ LRESULT MainWindow::WmappNCallWmContextMenu(HWND hWnd, WPARAM wParam, LPARAM lPa
 
 LRESULT MainWindow::WmClipboardUpdate(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
-	// Add clips to the clips manager when the clipboard updates.
-	bool success = false;
-	int retries = 10;
-	while (!success && retries > 0)
+	if (!cManager->ClipLock)
 	{
-		success = cManager->AddToClips(hWnd);
-		Sleep(100);
-		retries--;
+		// Add clips to the clips manager when the clipboard updates.
+		bool success = false;
+		int retries = 10;
+		while (!success && retries > 0)
+		{
+			success = cManager->AddToClips(hWnd);
+			Sleep(100);
+			retries--;
+		}
+	}
+	else
+	{
+		cManager->ClipLock = false;
 	}
 	return 0;
 }

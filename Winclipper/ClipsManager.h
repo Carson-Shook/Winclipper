@@ -1,9 +1,11 @@
 #pragma once
 #include "resource.h"
+#include <wincodec.h>
 #include "UserSettings.h"
 #include "File.h"
 #include "RegistryUtilities.h"
 #include "Clip.h"
+#include "ClipsCollection.h"
 #include "Shlobj.h"
 #include "Shlwapi.h"
 
@@ -25,8 +27,8 @@ class ClipsManager
 private:
 	unsigned int					windows10ReleaseId = 0;
 
-    wchar_t                         fullClipsPath[MAX_PATH];
-    std::deque<Clip *>				clips;
+    std::wstring                    fullClipsPath;
+    ClipsCollection					clips;
     unsigned int                    displayClips = 20;
     unsigned int                    maxClips = 200;
     unsigned int                    menuDispChars = 64;
@@ -35,11 +37,13 @@ private:
     int                             clipsWriterWaitCount = 0;
     bool                            isWriterFinished = true;
 
+    IWICImagingFactory *			pIWICFactory;
+
     void                            SaveClipsAsync();
     static void                     DelayClipsWriter(int* waitCount, ClipsManager* cs);
     void                            WriteClips();
     void                            ReadClips();
-	void							SendPasteInput(void);
+	unsigned int					SendPasteInput(void);
 
 public:
     ClipsManager();
@@ -47,6 +51,7 @@ public:
     ~ClipsManager();
 
     bool                            NoPendingClipWrites();
+	bool							ClipLock = false;
 
     unsigned int                    DisplayClips();
     void                            SetDisplayClips(unsigned int displayClips);
@@ -64,7 +69,7 @@ public:
     bool                            AddToClips(HWND hWnd);
     bool                            SetClipboardToClipAtIndex(HWND hWnd, int index);
 	const size_t					GetSize() noexcept;
-	Clip *							GetClipAt(size_t index);
+	std::shared_ptr<Clip>			GetClipAt(size_t index);
 	void							ShowClipsMenu(HWND hWnd, LPPOINT cPos, bool showExit);
 	void							SelectDefaultMenuItem(bool select2ndClip) noexcept;
 };

@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include "wincodec.h"
 #include "ClipsManager.h"
 
 void ClipsManager::SaveClipsAsync()
@@ -17,9 +18,9 @@ void ClipsManager::SaveClipsAsync()
     }
     else
     {
-        if (File::Exists(fullClipsPath))
+        if (File::Exists(fullClipsPath.c_str()))
         {
-            File::Delete(fullClipsPath);
+            File::Delete(fullClipsPath.c_str());
         }
     }
 }
@@ -41,23 +42,19 @@ void ClipsManager::DelayClipsWriter(int * waitCount, ClipsManager * cs)
 void ClipsManager::WriteClips()
 {
     isWriterFinished = false;
-    File::WriteAllObjects<Clip>(clips, fullClipsPath);
+	File::Write(fullClipsPath, clips.Serialize());
     isWriterFinished = true;
 }
 
 void ClipsManager::ReadClips()
 {
-    if (File::Exists(fullClipsPath))
+    if (File::Exists(fullClipsPath.c_str()))
     {
-		std::deque<Clip *> tempClips = File::ReadAllObjects<Clip>(fullClipsPath);
-
-        clips.assign(tempClips.begin(), tempClips.end());
-
-        tempClips.clear();
+		clips.Deserialize(File::Read(fullClipsPath));
     }
 }
 
-void ClipsManager::SendPasteInput(void)
+unsigned int ClipsManager::SendPasteInput(void)
 {
 	INPUT inputCtrlKey;
 	INPUT inputVKey;
@@ -76,17 +73,17 @@ void ClipsManager::SendPasteInput(void)
 	inputVKey.ki.dwFlags = 0;
 	inputVKey.ki.dwExtraInfo = 0;
 
-	SendInput(1, &inputCtrlKey, sizeof(INPUT));
-	SendInput(1, &inputVKey, sizeof(INPUT));
+	unsigned int in1 = SendInput(1, &inputCtrlKey, sizeof(INPUT));
+	unsigned int in2 = SendInput(1, &inputVKey, sizeof(INPUT));
 
 	Sleep(50);
 
 	inputCtrlKey.ki.dwFlags = KEYEVENTF_KEYUP;
 	inputVKey.ki.dwFlags = KEYEVENTF_KEYUP;
-	SendInput(1, &inputVKey, sizeof(INPUT));
-	SendInput(1, &inputCtrlKey, sizeof(INPUT));
+	unsigned int in3 = SendInput(1, &inputVKey, sizeof(INPUT));
+	unsigned int in4 = SendInput(1, &inputCtrlKey, sizeof(INPUT));
 
-	return;
+	return in1 + in2 + in3 + in4;
 }
 
 ClipsManager::ClipsManager()
@@ -98,18 +95,22 @@ ClipsManager::ClipsManager(int displayClips, int maxClips, int menuChars, bool s
 {
 	windows10ReleaseId = RegistryUtilities::GetWindows10ReleaseId();
 
-    PTSTR tempClipsPath;
-    if (SUCCEEDED(SHGetKnownFolderPath(FOLDERID_LocalAppData, KF_FLAG_DEFAULT, NULL, &tempClipsPath)))
-    {
-        wcscpy_s(fullClipsPath, tempClipsPath);
-        PathAppend(fullClipsPath, L"\\Winclipper\\Winclipper\\clips.dat");
-        CoTaskMemFree(tempClipsPath);
-    }
+	fullClipsPath = File::JoinPath(File::GetAppDir(), L"clips.dat");
+
+	HRESULT hr = S_OK;
+
+	// Create WIC factory
+	hr = CoCreateInstance(
+		CLSID_WICImagingFactory,
+		nullptr,
+		CLSCTX_INPROC_SERVER,
+		IID_PPV_ARGS(&pIWICFactory)
+	);
 
     ClipsManager::saveToDisk = saveToDisk;
-    ReadClips();
     SetDisplayClips(displayClips);
     SetMaxClips(maxClips);
+	ReadClips();
     SetMenuDisplayChars(menuChars);
 }
 
@@ -142,20 +143,12 @@ unsigned int ClipsManager::MaxClips()
     return maxClips;
 }
 
-void ClipsManager::SetMaxClips(unsigned int maxClips)
+void ClipsManager::SetMaxClips(unsigned int newMaxClips)
 {
-    if (maxClips != ClipsManager::maxClips)
+    if (newMaxClips != maxClips && newMaxClips > 1)
     {
-        ClipsManager::maxClips = maxClips;
-
-        while (clips.size() > ClipsManager::maxClips)
-        {
-            // get reference to the back object before we pop it
-            Clip * back = clips.back();
-            clips.pop_back();
-            // dealocate the former back object
-            delete back;
-        }
+        maxClips = newMaxClips;
+		clips.SetMaxSize(maxClips);
         SaveClipsAsync();
     }
 }
@@ -186,25 +179,42 @@ void ClipsManager::SetSaveToDisk(bool saveToDisk)
 
 void ClipsManager::ClearClips()
 {
-    for (Clip * clip : clips)
-    {
-        delete clip;
-    }
-    clips.clear();
+	clips.Clear();
     SaveClipsAsync();
 }
+//
+//IWICBitmapSource* createSourceFromHBitmap(HBITMAP hBitmap) {
+//	if (hBitmap == NULL)
+//		return NULL;
+//
+//	IWICImagingFactory* ipFactory = NULL;
+//	IWICBitmap* ipBitmap = NULL;
+//
+//	CoInitialize(NULL);
+//
+//	// Create the factory
+//	if (FAILED(CoCreateInstance(CLSID_WICImagingFactory, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&ipFactory))))
+//		goto Return;
+//
+//	// Create the bitmap
+//	if (FAILED(ipFactory->CreateBitmapFromHBITMAP(hBitmap, NULL, WICBitmapIgnoreAlpha, &ipBitmap)))
+//		goto ReleaseFactory;
+//
+//ReleaseFactory:
+//	ipFactory->Release();
+//Return:
+//	CoUninitialize();
+//	return ipBitmap;
+//}
 
 bool ClipsManager::AddToClips(HWND hWnd)
 {
     if (!OpenClipboard(hWnd))
     {
-		OutputDebugStringW(L"Clipboard Failed to Open\r\n");
         return false;
     }
 
-	OutputDebugStringW(L"Clipboard Opened\r\n");
-
-	Clip * clip = new Clip();
+	std::shared_ptr<Clip> clip(new Clip);
 
 	if (IsClipboardFormatAvailable(CF_UNICODETEXT))
 	{
@@ -225,29 +235,81 @@ bool ClipsManager::AddToClips(HWND hWnd)
 		}
 	}
 
+	if (IsClipboardFormatAvailable(CF_DIB))
+	{
+		HANDLE psClipboardData = GetClipboardData(CF_DIB);
+
+		if (psClipboardData != nullptr)
+		{
+			const BITMAPINFO * tempBitmapInfo = (BITMAPINFO *)GlobalLock(psClipboardData);
+
+			if (tempBitmapInfo != nullptr)
+			{
+				unsigned long long colorBits = tempBitmapInfo->bmiHeader.biClrUsed;
+				if (!colorBits)
+				{
+					if (tempBitmapInfo->bmiHeader.biBitCount <= 8)
+					{
+						colorBits = 1 << tempBitmapInfo->bmiHeader.biBitCount;
+					}
+					else if (tempBitmapInfo->bmiHeader.biBitCount != 24 && tempBitmapInfo->bmiHeader.biCompression == BI_BITFIELDS)
+					{
+						colorBits = 3;
+					}
+				}
+
+				size_t offset = tempBitmapInfo->bmiHeader.biSize + (colorBits * sizeof(RGBQUAD));
+				
+				int padding = offset % 4;
+
+				bool hasAlpha = false;
+				bool isPremultiplied = false;
+				std::shared_ptr<BITMAPINFOHEADER> bitmapInfoHeader(new BITMAPINFOHEADER);
+				std::vector<RGBQUAD> quads;
+
+				*bitmapInfoHeader = tempBitmapInfo->bmiHeader;
+
+				if (bitmapInfoHeader->biBitCount != 24)
+				{
+					if (bitmapInfoHeader->biBitCount == 32)
+					{
+						hasAlpha = true;
+					}
+
+					for (unsigned int i = 0; i < colorBits; i++)
+					{
+						RGBQUAD quad = tempBitmapInfo->bmiColors[i];
+						quads.push_back(quad);
+					}
+				}
+
+				// If not zero, use biSizeImage, otherwise calculate it using
+				// Microsoft's reccomended algorithm.
+				size_t size = bitmapInfoHeader->biSizeImage 
+					? bitmapInfoHeader->biSizeImage 
+					: ((((bitmapInfoHeader->biWidth * bitmapInfoHeader->biBitCount) + 31) & ~31) >> 3) * bitmapInfoHeader->biHeight;
+
+				std::shared_ptr<BYTE> pMyBits(new BYTE[size], array_deleter<BYTE>());
+				memcpy(pMyBits.get(), ((BYTE *)tempBitmapInfo) + offset, size);
+
+				GlobalUnlock(psClipboardData);
+
+				clip->SetDibBitmap(
+					bitmapInfoHeader,
+					quads,
+					pMyBits,
+					hasAlpha
+				);
+				clip->AddFormat(CF_DIB);
+			}
+		}
+	}
+
 	CloseClipboard();
 
 	if (clip->AnyFormats())
 	{
-		if (clips.empty())
-		{
-			clips.push_front(clip);
-		}
-		else
-		{
-			if (!clip->Equals(*(clips.front())))
-			{
-				while (clips.size() >= maxClips)
-				{
-					// get reference to the back object before we pop it
-					Clip * back = clips.back();
-					clips.pop_back();
-					// dealocate the former back object
-					delete back;
-				}
-				clips.push_front(clip);
-			}
-		}
+		clips.AddFront(clip);
 	}
     SaveClipsAsync();
     return true;
@@ -257,21 +319,17 @@ bool ClipsManager::SetClipboardToClipAtIndex(HWND hWnd, int index)
 {
     if (!OpenClipboard(hWnd))
     {
-		OutputDebugStringW(L"Clipboard Failed to Open\r\n");
         return false;
     }
 
-	OutputDebugStringW(L"Clipboard Opened\r\n");
-
     EmptyClipboard();
 
-    Clip * clip = GetClipAt(index);
+    std::shared_ptr<Clip> clip = GetClipAt(index);
 
 	if (clip != nullptr)
 	{
 		if (clip->ContainsFormat(CF_UNICODETEXT))
 		{
-			const wchar_t * clipUnicodeText = clip->UnicodeText();
 			size_t clipLength = clip->UnicodeTextWString().length();
 
 			HGLOBAL hClipboardData = GlobalAlloc(GMEM_MOVEABLE, (clipLength + 1) * sizeof(wchar_t));
@@ -280,17 +338,11 @@ bool ClipsManager::SetClipboardToClipAtIndex(HWND hWnd, int index)
 				wchar_t * pwcData = (wchar_t*)GlobalLock(hClipboardData);
 				if (pwcData != nullptr)
 				{
-					wcscpy_s(pwcData, clipLength +1, clipUnicodeText);
+					wcscpy_s(pwcData, clipLength + 1, clip->UnicodeText());
 
 					GlobalUnlock(hClipboardData);
 
 					SetClipboardData(CF_UNICODETEXT, hClipboardData);
-
-					// We remove the clip from the clips deque.
-					// Since we already have a pointer to the Clip
-					// object, we can delete that.
-					clips.erase(clips.begin() + index);
-					delete clip;
 				}
 				else
 				{
@@ -298,9 +350,56 @@ bool ClipsManager::SetClipboardToClipAtIndex(HWND hWnd, int index)
 				}
 			}
 		}
+
+		if (clip->ContainsFormat(CF_DIB))
+		{
+			auto bmiHeader = clip->DibBitmapInfoHeader();
+			auto quadCollection = clip->RgbQuadCollection();
+			size_t rgbQuadsCount = quadCollection.size();
+
+			size_t bitmapSize = bmiHeader->biSizeImage 
+				? bmiHeader->biSizeImage 
+				: ((((bmiHeader->biWidth * bmiHeader->biBitCount) + 31) & ~31) >> 3) * bmiHeader->biHeight;
+			HGLOBAL hClipboardData = GlobalAlloc(GMEM_MOVEABLE, bmiHeader->biSize + rgbQuadsCount * sizeof(RGBQUAD) + bitmapSize);
+
+			BITMAPINFO * bmi = (BITMAPINFO *)GlobalLock(hClipboardData);
+
+			bmi->bmiHeader.biBitCount = bmiHeader->biBitCount;
+			bmi->bmiHeader.biClrImportant = bmiHeader->biClrImportant;
+			bmi->bmiHeader.biClrUsed = bmiHeader->biClrUsed;
+			bmi->bmiHeader.biCompression = bmiHeader->biCompression;
+			bmi->bmiHeader.biHeight = bmiHeader->biHeight;
+			bmi->bmiHeader.biPlanes = bmiHeader->biPlanes;
+			bmi->bmiHeader.biSize = bmiHeader->biSize;
+			bmi->bmiHeader.biSizeImage = bmiHeader->biSizeImage;
+			bmi->bmiHeader.biWidth = bmiHeader->biWidth;
+			bmi->bmiHeader.biXPelsPerMeter = bmiHeader->biXPelsPerMeter;
+			bmi->bmiHeader.biYPelsPerMeter = bmiHeader->biYPelsPerMeter;
+
+			for (auto i = 0; i < rgbQuadsCount; i++)
+			{
+				bmi->bmiColors[i].rgbBlue = quadCollection[i].rgbBlue;
+				bmi->bmiColors[i].rgbGreen = quadCollection[i].rgbGreen;
+				bmi->bmiColors[i].rgbRed = quadCollection[i].rgbRed;
+				bmi->bmiColors[i].rgbReserved = quadCollection[i].rgbReserved;
+			}
+
+			memcpy((BYTE *)bmi + (bmiHeader->biSize + rgbQuadsCount * sizeof(RGBQUAD)), clip->DibBitmapBits().get(), bitmapSize);
+
+			GlobalUnlock(hClipboardData);
+
+			if (!SetClipboardData(CF_DIB, hClipboardData))
+			{
+				GlobalFree(hClipboardData);
+			}
+		}
+
+		if (clips.Front() != clip)
+		{
+			clips.RemoveAt(index);
+			clips.AddFront(clip);
+		}
 	}
-    // Once the clipboard is closed, the update is fired,
-    // and the clip will be added to the front of the deque with AddToClips
     CloseClipboard();
     SaveClipsAsync();
     return true;
@@ -308,14 +407,14 @@ bool ClipsManager::SetClipboardToClipAtIndex(HWND hWnd, int index)
 
 const size_t ClipsManager::GetSize() noexcept
 {
-	return clips.size();
+	return clips.Size();
 }
 
-Clip * ClipsManager::GetClipAt(size_t index)
+std::shared_ptr<Clip> ClipsManager::GetClipAt(size_t index)
 {
 	try
 	{
-		return clips.at(index);
+		return clips.At(index);
 	}
 	catch (const std::exception e)
 	{
@@ -382,7 +481,7 @@ void ClipsManager::ShowClipsMenu(HWND hWnd, LPPOINT cPos, bool showExit)
 
             for (size_t i = 0; i < j; i++)
             {
-                Clip * clip = GetClipAt(i);
+                std::shared_ptr<Clip> clip = GetClipAt(i);
                 if (clip != nullptr)
                 {
 					if (clip->ContainsFormat(CF_UNICODETEXT))
@@ -390,7 +489,11 @@ void ClipsManager::ShowClipsMenu(HWND hWnd, LPPOINT cPos, bool showExit)
 						std::wstring menuText;
 						menuText = clip->GetUnicodeMenuText(MenuDisplayChars());
 
-						AppendMenuW(menu, MF_STRING, UINT_PTR{ i } +1, menuText.c_str());
+						AppendMenuW(menu, MF_STRING, UINT_PTR{ i } + 1, menuText.c_str());
+					}
+					else if (clip->ContainsFormat(CF_DIB))
+					{
+						AppendMenuW(menu, MF_STRING, UINT_PTR{ i } + 1, L"[IMAGE]");
 					}
                 }
             }
@@ -400,7 +503,7 @@ void ClipsManager::ShowClipsMenu(HWND hWnd, LPPOINT cPos, bool showExit)
                 
                 for (/*j is equal to displayCount */; j < curSize; j++)
                 {
-					Clip * clip = GetClipAt(j);
+					std::shared_ptr<Clip> clip = GetClipAt(j);
                     if (clip != nullptr)
                     {
 						if (clip->ContainsFormat(CF_UNICODETEXT))
@@ -408,7 +511,11 @@ void ClipsManager::ShowClipsMenu(HWND hWnd, LPPOINT cPos, bool showExit)
 							std::wstring menuText;
 							menuText = clip->GetUnicodeMenuText(MenuDisplayChars());
 
-							AppendMenuW(sMenu, MF_STRING, UINT_PTR{ j } +1, menuText.c_str());
+							AppendMenuW(sMenu, MF_STRING, UINT_PTR{ j } + 1, menuText.c_str());
+						}
+						else if (clip->ContainsFormat(CF_DIB))
+						{
+							AppendMenuW(menu, MF_STRING, UINT_PTR{ j } + 1, L"[IMAGE]");
 						}
 					}
                 }
@@ -451,7 +558,8 @@ void ClipsManager::ShowClipsMenu(HWND hWnd, LPPOINT cPos, bool showExit)
         {
 		case CANCELED_SELECTION:
 			{
-				SetActiveWindow(actWin); 
+			SetForegroundWindow(curWin);
+			SetActiveWindow(actWin);
 				int retries = 10;
 				HWND temp = GetActiveWindow();
 				while (temp != actWin && retries > 0)
@@ -464,7 +572,8 @@ void ClipsManager::ShowClipsMenu(HWND hWnd, LPPOINT cPos, bool showExit)
 			break;
         case CLEARCLIPS_SELECT:
             PostMessageW(hWnd, WM_COMMAND, IDM_CLEARCLIPS, 0);
-            SetActiveWindow(actWin);
+			SetForegroundWindow(curWin);
+			SetActiveWindow(actWin);
             break;
         case SETTINGS_SELECT:
             PostMessageW(hWnd, WM_COMMAND, IDM_SETTINGS, 0);
@@ -473,34 +582,39 @@ void ClipsManager::ShowClipsMenu(HWND hWnd, LPPOINT cPos, bool showExit)
 			PostMessageW(hWnd, WM_COMMAND, IDM_EXIT, 0);
             break;
         default:
-            // for once a program where default actually does something more than error handling
-			SetForegroundWindow(curWin);
-            SetActiveWindow(actWin);
-            Sleep(20);
+			ClipLock = true;
 
-            // Have to subtract 1 from index because returning 0 in
-            // TrackPopupMenu means cancelation
-			bool success = false;
+			// Have to subtract 1 from index because returning 0 in
+			// TrackPopupMenu means cancelation
 			int retries = 10;
+			bool success = SetClipboardToClipAtIndex(actWin, menuSelection - 1);
 			while (!success && retries > 0)
 			{
-				success = SetClipboardToClipAtIndex(actWin, menuSelection - 1);
 				Sleep(100);
+				success = SetClipboardToClipAtIndex(actWin, menuSelection - 1);
 				retries--;
 			}
-                
-            // attempts to set the active window. Usually succeeds immediately, but not always 
-            retries = 10;
-            HWND temp = GetActiveWindow();
-            while (temp != actWin && retries > 0)
-            {
-				temp = GetActiveWindow();
-                retries--;
-                Sleep(100);
-            }
 
-            SendPasteInput();
-            SetActiveWindow(actWin);
+			// Attempts to set the active window. Usually succeeds immediately, but not always 
+			SetForegroundWindow(curWin);
+			SetActiveWindow(actWin);
+			retries = 10;
+			HWND temp = GetActiveWindow();
+			while (temp != actWin && retries > 0)
+			{
+				Sleep(100);
+				temp = GetActiveWindow();
+				retries--;
+			}
+
+			retries = 10;
+			unsigned int inputCount = SendPasteInput();
+			while (inputCount != 4 && retries > 0)
+			{
+				Sleep(100);
+				inputCount = SendPasteInput();
+				retries--;
+			}
             break;
         }
 

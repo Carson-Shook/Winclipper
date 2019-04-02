@@ -5,19 +5,48 @@
 std::wstring File::GetDirName(const std::wstring& fname)
 {
     std::wstring directory;
-    const size_t last_slash_idx = fname.rfind('\\');
-    if (std::string::npos != last_slash_idx)
+    const size_t sepIndex = fname.rfind('\\');
+    if (std::wstring::npos != sepIndex)
     {
-        directory = fname.substr(0, last_slash_idx);
+        directory = fname.substr(0, sepIndex);
     }
 
     return directory;
 }
 
+std::wstring File::JoinPath(const std::wstring & path1, const std::wstring & path2)
+{
+	auto retVal = path1;
+
+	if (retVal.back() != DIR_SEP)
+	{
+		retVal += DIR_SEP;
+	}
+
+	return retVal + path2;
+}
+
+// Returns location of Winclipper's Local AppData directory
+const std::wstring File::GetAppDir()
+{
+	if (appDir.empty())
+	{
+		wchar_t * tempClipsPath;
+		if (SUCCEEDED(SHGetKnownFolderPath(FOLDERID_LocalAppData, KF_FLAG_DEFAULT, NULL, &tempClipsPath)))
+		{
+			// Ends with DIR_SEP since 99% of the time we're appending a filename.
+			appDir = JoinPath(tempClipsPath, L"\\Winclipper\\Winclipper\\");
+			CoTaskMemFree(tempClipsPath);
+		}
+	}
+	
+	return appDir;
+}
+
 // Determines whether or not a file eixists
 bool File::Exists(const wchar_t *name)
 {
-    int retval = PathFileExists(name);
+    int retval = PathFileExistsW(name);
     if (retval == 1)
     {
         return true;
@@ -27,11 +56,41 @@ bool File::Exists(const wchar_t *name)
 
 bool File::Delete(const wchar_t * name)
 {
-    if (DeleteFile(name) == 0)
+    if (DeleteFileW(name) == 0)
     {
         return true;
     }
     return false;
+}
+
+void File::Write(std::wstring filename, std::string data)
+{
+	if (!File::Exists(filename.c_str()))
+	{
+		SHCreateDirectoryExW(NULL, (GetDirName(filename).c_str()), NULL);
+	}
+	std::ofstream outStream(filename, std::ios::out | std::ios::binary);
+
+	if (outStream)
+	{
+		outStream << data;
+		outStream.close();
+	}
+	// Add error handling
+}
+
+std::string File::Read(std::wstring filename)
+{
+	// See: http://insanecoding.blogspot.com/2011/11/how-to-read-in-file-in-c.html
+	std::ifstream inStream(filename, std::ios::in | std::ios::binary);
+	if (inStream)
+	{
+		std::ostringstream contents;
+		contents << inStream.rdbuf();
+		inStream.close();
+		return contents.str();
+	}
+	return std::string();
 }
 
 // Writes all lines in a vector to a text file
@@ -39,7 +98,7 @@ void File::WriteAllLines(const wchar_t* name, std::vector<std::wstring> lines)
 {
     if (!File::Exists(name))
     {
-        SHCreateDirectoryEx(NULL, (GetDirName(name).c_str()), NULL);
+        SHCreateDirectoryExW(NULL, (GetDirName(name).c_str()), NULL);
     }
     std::wofstream output_file(name);
     std::ostream_iterator<std::wstring, wchar_t> output_iterator(output_file, L"\n");
@@ -58,57 +117,4 @@ std::vector<std::wstring> File::ReadAllLines(const wchar_t * name)
     return lines;
 }
 
-std::deque<wchar_t *> File::BinaryReadDeque(const wchar_t * name)
-{
-    std::ifstream inFile(name, std::ios::binary);
-    if (!inFile) {
-        throw std::runtime_error("Could not open file for reading");
-    }
-
-    std::deque<wchar_t *> retVal;
-
-    std::wstring_convert<std::codecvt_utf8<wchar_t>, wchar_t> converter;
-
-    while (!inFile.eof())
-    {
-        std::string base64str;
-        inFile >> base64str;
-
-        if (base64str.compare("") == 0)
-        {
-            break;
-        }
-
-        std::string byteStr = base64_decode(base64str);
-        std::wstring wideStr = converter.from_bytes(byteStr);
-        wchar_t * pushVal = _wcsdup(wideStr.c_str());
-        retVal.push_back(pushVal);
-    }
-
-    return retVal;
-}
-
-void File::BinaryWriteDeque(const std::deque<wchar_t *> data, const wchar_t * name)
-{
-    if (!File::Exists(name))
-    {
-        SHCreateDirectoryEx(NULL, (GetDirName(name).c_str()), NULL);
-    }
-
-    std::ofstream outFile(name, std::ios::binary);
-    if (!outFile) {
-        throw std::runtime_error("Could not open file for writing");
-    }
-
-    std::wstring_convert<std::codecvt_utf8<wchar_t>, wchar_t> converter;
-
-    for (size_t i = 0, j = data.size(); i < j; i++)
-    {
-        std::string anotherTemp = converter.to_bytes(data.at(i));
-        const char * temp = anotherTemp.c_str();
-        outFile << base64_encode((unsigned char *)temp, (unsigned int)strlen(temp) + 1);
-        outFile << "\r\n";
-    }
-
-    outFile.close();
-}
+std::wstring File::appDir;

@@ -12,29 +12,36 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 	RunUpdater();
 
-	UserSettings uSettings = UserSettings();
+	//HRESULT hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
+	MSG msg;
 
-	SettingsWindow settingsWindow = SettingsWindow(hInstance, uSettings);
-	MainWindow mainWindow = MainWindow(hInstance, uSettings, settingsWindow);
+	/*if (SUCCEEDED(hr))
+	{*/
+		UserSettings uSettings = UserSettings();
 
-    hInst = hInstance; // Store instance handle in our global variable
+		SettingsWindow settingsWindow = SettingsWindow(hInstance, uSettings);
+		MainWindow mainWindow = MainWindow(hInstance, uSettings, settingsWindow);
 
-    HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_WINCSETTINGS));
+		hInst = hInstance; // Store instance handle in our global variable
 
-    MSG msg;
+		HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_WINCSETTINGS));
 
-    // Main message loop:
-    while (GetMessage(&msg, nullptr, 0, 0))
-    {
-        if (!TranslateAccelerator(msg.hwnd, hAccelTable,  &msg))
-        {
-            if (!IsDialogMessage(GetAncestor(msg.hwnd,GA_ROOTOWNER), &msg))
-            {
-                TranslateMessage(&msg);
-                DispatchMessage(&msg);
-            }
-        }
-    }
+
+		// Main message loop:
+		while (GetMessage(&msg, nullptr, 0, 0))
+		{
+			if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg))
+			{
+				if (!IsDialogMessage(GetAncestor(msg.hwnd, GA_ROOTOWNER), &msg))
+				{
+					TranslateMessage(&msg);
+					DispatchMessage(&msg);
+				}
+			}
+		}
+
+		/*CoUninitialize();
+	}*/
 
     return (int) msg.wParam;
 }

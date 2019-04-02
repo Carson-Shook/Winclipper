@@ -42,3 +42,20 @@
 #include <limits>
 #include <map>
 #include <set>
+
+template <class T> inline void SafeRelease(T **ppT)
+{
+	if (*ppT)
+	{
+		(*ppT)->Release();
+		*ppT = nullptr;
+	}
+}
+
+template <typename T> struct array_deleter
+{
+	void operator ()(T const * p)
+	{
+		delete[] p;
+	}
+};

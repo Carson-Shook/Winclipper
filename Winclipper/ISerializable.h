@@ -5,6 +5,8 @@
 // so that even if the implementation changes, this
 // number should not.
 #define MAX_VERSION_LENGTH 5
+#define RECORD_SEPARATOR_CHAR "\x1e"
+#define UNIT_SEPARATOR_CHAR "\x1f"
 
 class ISerializable
 {

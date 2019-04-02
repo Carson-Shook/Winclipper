@@ -43,7 +43,7 @@ private:
 
 	std::map<unsigned int, IDWriteTextLayout *> layoutCache;
 
-	Clip *						previewClip = nullptr;
+	std::shared_ptr<Clip>		previewClip = nullptr;
 	unsigned long long			remainingTextLines = 0; // need to account for theoretical maximum NTFS file size
 	unsigned long long			clipSizeInKb = 0;
 	wchar_t						szPreviewWindowClass[MAX_LOADSTRING];       // the text preview window
@@ -59,15 +59,6 @@ private:
 	void						DestroyDeviceIndependentResources();
 	void						DestroyDeviceDependentResources();
 
-	template <class T> inline void		SafeRelease(T **ppT)
-	{
-		if (*ppT)
-		{
-			(*ppT)->Release();
-			*ppT = nullptr;
-		}
-	}
-
 public:
 								PreviewWindow(HINSTANCE hInstance, HWND hWndParent);
 								~PreviewWindow();
@@ -75,7 +66,7 @@ public:
 	bool						InitPreviewWindow(HINSTANCE hInstance, HWND parentWnd);
 
 	HWND						GetHandle() noexcept;
-	void						SetPreviewClip(Clip * clip) noexcept;
+	void						SetPreviewClip(std::shared_ptr<Clip> clip) noexcept;
 	void						MoveRelativeToRect(LPRECT rect, unsigned int index);
 	void						Show() noexcept;
 	void						Hide() noexcept;
