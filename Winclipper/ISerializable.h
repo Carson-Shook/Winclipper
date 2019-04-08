@@ -1,21 +1,13 @@
 #pragma once
 
-// Max number of characters that we should pad to
-// when writing the version number. This is hard-coded
-// so that even if the implementation changes, this
-// number should not.
-#define MAX_VERSION_LENGTH 5
-#define RECORD_SEPARATOR_CHAR "\x1e"
-#define UNIT_SEPARATOR_CHAR "\x1f"
+#define RECORD_SEPARATOR_CHAR '\x1e'
+#define UNIT_SEPARATOR_CHAR '\x1f'
 
 class ISerializable
 {
 public:
 	ISerializable();
 	~ISerializable();
-
-	// Portable and reliable way to write the version number.
-	std::string WriteVersion();
 
 	// Should return the current version of the
 	// serialization format. Use to differentiate

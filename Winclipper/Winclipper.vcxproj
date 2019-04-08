@@ -229,6 +229,7 @@
     <ResourceCompile Include="Winclipper.rc" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="Loading.bmp" />
     <Image Include="Winclipper.ico" />
   </ItemGroup>
   <ItemGroup>

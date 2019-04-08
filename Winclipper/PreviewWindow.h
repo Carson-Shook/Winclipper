@@ -31,10 +31,12 @@ private:
 
 	IWICImagingFactory *		pIWICFactory = nullptr;
 	IWICFormatConverter *		pConvertedSourceBitmap = nullptr;
+	IWICFormatConverter *		pConvertedLoadingBitmap = nullptr;
 
 	ID2D1Factory *				pD2DFactory = nullptr;
 	ID2D1HwndRenderTarget *		pRT = nullptr;
 	ID2D1Bitmap *				pD2DBitmap = nullptr;
+	ID2D1Bitmap *				pD2DLoadingBitmap = nullptr;
 	ID2D1SolidColorBrush *		pLightGrayBrush = nullptr;
 	ID2D1SolidColorBrush *		pWhiteBrush = nullptr;
 	ID2D1SolidColorBrush *		pBlackBrush = nullptr;
@@ -47,28 +49,32 @@ private:
 
 	std::map<unsigned int, IDWriteTextLayout *> layoutCache;
 
+	unsigned int				timerAttempts = 0;
+
 	std::shared_ptr<Clip>		previewClip = nullptr;
 	unsigned long long			remainingTextLines = 0; // need to account for theoretical maximum NTFS file size
 	unsigned long long			clipSizeInKb = 0;
 	wchar_t						szPreviewWindowClass[MAX_LOADSTRING];       // the text preview window
 	HWND						windowHandle;
+	bool						bitmapReady;
 
 	ATOM						RegisterPreviewWindowClass(HINSTANCE);
 	static LRESULT CALLBACK		PreviewWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 	LRESULT						WmCreate();
 	LRESULT						WmDestroy();
+	LRESULT						WmTimer();
 	LRESULT						WmPaint(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
-	HRESULT						CreateDeviceIndependentResources();
+	HRESULT						CreateDeviceIndependentResources(HINSTANCE hInstance);
 	HRESULT						CreateDeviceDependentResources(HWND hWnd) noexcept;
 	void						DestroyDeviceIndependentResources();
 	void						DestroyDeviceDependentResources();
+	HRESULT						SetBitmapConverter();
 
 public:
-								PreviewWindow(HINSTANCE hInstance, HWND hWndParent);
-								~PreviewWindow();
+	PreviewWindow(HINSTANCE hInstance, HWND hWndParent);
+	~PreviewWindow();
 
 	bool						InitPreviewWindow(HINSTANCE hInstance, HWND parentWnd);
-
 	HWND						GetHandle() noexcept;
 	void						SetPreviewClip(std::shared_ptr<Clip> clip) noexcept;
 	void						MoveRelativeToRect(LPRECT rect, unsigned int index);

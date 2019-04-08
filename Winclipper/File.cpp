@@ -17,13 +17,18 @@ std::wstring File::GetDirName(const std::wstring& fname)
 std::wstring File::JoinPath(const std::wstring & path1, const std::wstring & path2)
 {
 	auto retVal = path1;
-
+	auto retVal2 = path2;
 	if (retVal.back() != DIR_SEP)
 	{
 		retVal += DIR_SEP;
 	}
+	
+	if (retVal2.front() == DIR_SEP)
+	{
+		retVal2.erase(0, 1);
+	}
 
-	return retVal + path2;
+	return retVal + retVal2;
 }
 
 // Returns location of Winclipper's Local AppData directory

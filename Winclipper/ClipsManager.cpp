@@ -108,9 +108,9 @@ ClipsManager::ClipsManager(int displayClips, int maxClips, int menuChars, bool s
 	);
 
     ClipsManager::saveToDisk = saveToDisk;
-    SetDisplayClips(displayClips);
-    SetMaxClips(maxClips);
 	ReadClips();
+	SetDisplayClips(displayClips);
+    SetMaxClips(maxClips);
     SetMenuDisplayChars(menuChars);
 }
 
@@ -245,20 +245,20 @@ bool ClipsManager::AddToClips(HWND hWnd)
 
 			if (tempBitmapInfo != nullptr)
 			{
-				unsigned long long colorBits = tempBitmapInfo->bmiHeader.biClrUsed;
-				if (!colorBits)
+				unsigned long long colorBytes = tempBitmapInfo->bmiHeader.biClrUsed;
+				if (!colorBytes)
 				{
 					if (tempBitmapInfo->bmiHeader.biBitCount <= 8)
 					{
-						colorBits = 1 << tempBitmapInfo->bmiHeader.biBitCount;
+						colorBytes = 1 << tempBitmapInfo->bmiHeader.biBitCount;
 					}
 					else if (tempBitmapInfo->bmiHeader.biBitCount != 24 && tempBitmapInfo->bmiHeader.biCompression == BI_BITFIELDS)
 					{
-						colorBits = 3;
+						colorBytes = 3;
 					}
 				}
 
-				size_t offset = tempBitmapInfo->bmiHeader.biSize + (colorBits * sizeof(RGBQUAD));
+				size_t offset = tempBitmapInfo->bmiHeader.biSize + (colorBytes * sizeof(RGBQUAD));
 				
 				int padding = offset % 4;
 
@@ -271,12 +271,7 @@ bool ClipsManager::AddToClips(HWND hWnd)
 
 				if (bitmapInfoHeader->biBitCount != 24)
 				{
-					if (bitmapInfoHeader->biBitCount == 32)
-					{
-						hasAlpha = true;
-					}
-
-					for (unsigned int i = 0; i < colorBits; i++)
+					for (unsigned int i = 0; i < colorBytes; i++)
 					{
 						RGBQUAD quad = tempBitmapInfo->bmiColors[i];
 						quads.push_back(quad);
@@ -297,8 +292,7 @@ bool ClipsManager::AddToClips(HWND hWnd)
 				clip->SetDibBitmap(
 					bitmapInfoHeader,
 					quads,
-					pMyBits,
-					hasAlpha
+					pMyBits
 				);
 				clip->AddFormat(CF_DIB);
 			}
@@ -493,7 +487,7 @@ void ClipsManager::ShowClipsMenu(HWND hWnd, LPPOINT cPos, bool showExit)
 					}
 					else if (clip->ContainsFormat(CF_DIB))
 					{
-						AppendMenuW(menu, MF_STRING, UINT_PTR{ i } + 1, L"[IMAGE]");
+						AppendMenuW(menu, MF_STRING, UINT_PTR{ i } + 1, (L"[IMAGE] " + std::to_wstring(clip->DibHeight()) + L" x " + std::to_wstring(clip->DibWidth())).c_str());
 					}
                 }
             }
@@ -515,7 +509,7 @@ void ClipsManager::ShowClipsMenu(HWND hWnd, LPPOINT cPos, bool showExit)
 						}
 						else if (clip->ContainsFormat(CF_DIB))
 						{
-							AppendMenuW(menu, MF_STRING, UINT_PTR{ j } + 1, L"[IMAGE]");
+							AppendMenuW(menu, MF_STRING, UINT_PTR{ j } + 1, (L"[IMAGE] " + std::to_wstring(clip->DibHeight()) + L" x " + std::to_wstring(clip->DibWidth())).c_str());
 						}
 					}
                 }
@@ -540,7 +534,6 @@ void ClipsManager::ShowClipsMenu(HWND hWnd, LPPOINT cPos, bool showExit)
 			AppendMenuW(menu, MF_STRING, EXIT_SELECT, L"&Exit");
         }
         
-
         int menuSelection;
         menuSelection = TrackPopupMenu(
             menu,

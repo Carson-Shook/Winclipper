@@ -2,12 +2,11 @@
 #include "Bitmap.h"
 
 
-Bitmap::Bitmap(std::shared_ptr<BITMAPINFOHEADER> pBmiHeader, std::vector<RGBQUAD> quads, std::shared_ptr<BYTE> bits, bool hasAlpha)
+Bitmap::Bitmap(std::shared_ptr<BITMAPINFOHEADER> pBmiHeader, std::vector<RGBQUAD> quads, std::shared_ptr<BYTE> bits)
 {
 	pDibBitmapInfoHeader = pBmiHeader;
 	rgbQuadCollection = quads;
 	pDibBitmapBits = bits;
-	dibBitmapHasAlpha = hasAlpha;
 }
 
 Bitmap::Bitmap()
@@ -62,7 +61,6 @@ void Bitmap::Deserialize(std::string serializationData)
 	if (dataLength != 0)
 	{
 		BITMAPFILEHEADER header;
-		char tempHeader[sizeof(BITMAPFILEHEADER)];
 		std::shared_ptr<BITMAPINFOHEADER> bmih(new BITMAPINFOHEADER);
 		std::vector<RGBQUAD> quads;
 
@@ -74,12 +72,15 @@ void Bitmap::Deserialize(std::string serializationData)
 		unsigned int colorBytes = bmih->biClrUsed;
 		if (!colorBytes)
 		{
-			if (bmih->biBitCount != 24)
+			if (bmih->biBitCount <= 8)
 			{
 				colorBytes = 1 << bmih->biBitCount;
 			}
+			else if (bmih->biBitCount != 24 && bmih->biCompression == BI_BITFIELDS)
+			{
+				colorBytes = 3;
+			}
 		}
-		colorBytes = colorBytes * sizeof(RGBQUAD);
 
 		for (auto i = 0; i < colorBytes; i++)
 		{
@@ -120,9 +121,4 @@ const std::vector<RGBQUAD> Bitmap::RgbQuadCollection()
 const std::shared_ptr <BYTE> Bitmap::DibBitmapBits()
 {
 	return pDibBitmapBits;
-}
-
-const bool Bitmap::DibHasAlpha()
-{
-	return dibBitmapHasAlpha;
 }

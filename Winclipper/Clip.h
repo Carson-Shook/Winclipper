@@ -12,6 +12,8 @@ public:
 	Clip() noexcept;
 	~Clip();
 
+	void						MarkForDelete();
+
 	unsigned __int16			Version() noexcept override;
 	std::string					Serialize() override;
 	void						Deserialize(std::string serializationData) override;
@@ -23,13 +25,16 @@ public:
 	bool						AnyFormats() noexcept;
 	bool						ContainsFormat(DWORD clipboardFormat);
 
-	void										SetDibBitmap(std::shared_ptr<BITMAPINFOHEADER> pBmiHeader, std::vector<RGBQUAD> quads, std::shared_ptr<BYTE> bits, bool hasAlpha);
-	std::shared_ptr<Bitmap>						EnsureBitmap();
+	void						SetDibBitmap(std::shared_ptr<BITMAPINFOHEADER> pBmiHeader, std::vector<RGBQUAD> quads, std::shared_ptr<BYTE> bits);
+	bool						BitmapReady();
+	std::shared_ptr<Bitmap>		EnsureBitmap();
+	void						EnsureBitmapAsync();
 
 	const std::shared_ptr<BITMAPINFOHEADER>		DibBitmapInfoHeader();
 	const std::vector<RGBQUAD>					RgbQuadCollection();
 	const std::shared_ptr<BYTE>					DibBitmapBits();
-	const bool									DibHasAlpha();
+	unsigned int								DibHeight();
+	unsigned int								DibWidth();
 
 	void						SetUnicodeText(wchar_t * unicodeText);
 	void						SetUnicodeText(std::wstring unicodeText);
@@ -40,12 +45,19 @@ private:
 	std::set<UINT>				clipboardFormats;
 
 	std::string					bitmapGuid;
+	unsigned int				bitmapHeight = 0;
+	unsigned int				bitmapWidth = 0;
 	std::weak_ptr<Bitmap>		pBitmap;
 
 	std::wstring				unicodeText;
 	std::wstring				menuTextCache;
 	size_t						lastKnownMenuTextLength = 0;
 
+	bool						inCriticalSection = false;
+	bool						shouldDelete = false;
+
 	std::string					GetBase64FromWString(const std::wstring data);
 	std::wstring				GetWStringFromBase64(const std::string base64);
+
+	static void					EnsureBitmapAsyncInternal(Clip * clip);
 };

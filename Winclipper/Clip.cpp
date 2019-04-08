@@ -7,10 +7,17 @@ Clip::Clip() noexcept
 
 Clip::~Clip()
 {
-	if (!bitmapGuid.empty())
+	if (!bitmapGuid.empty() && shouldDelete)
 	{
 		OnDemandBitmapManager::Remove(bitmapGuid);
 	}
+}
+
+// Call this if any associated resources should
+// be deleted when object is deconstructed.
+void Clip::MarkForDelete()
+{
+	shouldDelete = true;
 }
 
 /* ISerializable member function implementations */
@@ -22,23 +29,27 @@ unsigned __int16 Clip::Version() noexcept
 
 std::string Clip::Serialize() 
 {
-	std::string data = WriteVersion();
-	data.append(RECORD_SEPARATOR_CHAR);
+	//std::string data = WriteVersion();
+	std::string data;
 	if (AnyFormats())
 	{
 		if (ContainsFormat(CF_UNICODETEXT))
 		{
+			data.push_back(RECORD_SEPARATOR_CHAR);
 			data.append(std::to_string(CF_UNICODETEXT));
-			data.append(UNIT_SEPARATOR_CHAR);
+			data.push_back(UNIT_SEPARATOR_CHAR);
 			data.append(GetBase64FromWString(UnicodeTextWString()));
-			data.append(RECORD_SEPARATOR_CHAR);
 		}
 		if (ContainsFormat(CF_DIB))
 		{
+			data.push_back(RECORD_SEPARATOR_CHAR);
 			data.append(std::to_string(CF_DIB));
-			data.append(UNIT_SEPARATOR_CHAR);
+			data.push_back(UNIT_SEPARATOR_CHAR);
 			data.append(bitmapGuid);
-			data.append(RECORD_SEPARATOR_CHAR);
+			data.push_back(UNIT_SEPARATOR_CHAR);
+			data.append(std::to_string(bitmapHeight));
+			data.push_back(UNIT_SEPARATOR_CHAR);
+			data.append(std::to_string(bitmapWidth));
 		}
 	}
 	return data;
@@ -49,73 +60,51 @@ void Clip::Deserialize(std::string serializationData)
 	const size_t dataLength = serializationData.length();
 	if (dataLength != 0)
 	{
-		std::vector<std::string> strings;
-		std::string record;
+		std::istringstream stream(serializationData);
 
-		for (const char c : serializationData)
+		if (stream.peek() == RECORD_SEPARATOR_CHAR)
 		{
-			if (c == RECORD_SEPARATOR_CHAR[0])
+			stream.ignore(1);
+			while (!stream.eof())
 			{
-				strings.push_back(record);
-				record.clear();
-			}
-			else
-			{
-				record.push_back(c);
-			}
-		}
+				std::string record;
+				std::getline(stream, record, RECORD_SEPARATOR_CHAR);
 
-		unsigned __int16 versionNumber = 0;
-
-		if (!strings.empty())
-		{
-			versionNumber = stoi(strings.at(0));
-			strings.erase(strings.begin());
-		}
-
-		switch (versionNumber)
-		{
-		case 1:
-			{
-				std::map<DWORD, std::string> records;
-
-				for (std::string value : strings)
+				if (record.length() > 0)
 				{
-					try
-					{
-						records.emplace(
-							std::stoul(value.substr(0, value.find(UNIT_SEPARATOR_CHAR))),
-							value.substr(value.find(UNIT_SEPARATOR_CHAR) + 1)
-						);
-					}
-					catch (const std::exception e)
-					{
-						// May eventually throw an error message, but let's try this for now.
-						return;
-					}
-				}
+					std::istringstream recordStream(record);
+					std::vector<std::string> units;
 
-				for (std::pair<DWORD, std::string> pair : records)
-				{
-					switch (pair.first)
+					while (!recordStream.eof())
+					{
+						std::string unit;
+						std::getline(recordStream, unit, UNIT_SEPARATOR_CHAR);
+						units.push_back(unit);
+					}
+
+					DWORD cf = std::stoul(units.at(0));
+
+					switch (cf)
 					{
 					case CF_UNICODETEXT:
-						Clip::AddFormat(pair.first);
-						Clip::SetUnicodeText(GetWStringFromBase64(pair.second));
+						Clip::AddFormat(cf);
+						Clip::SetUnicodeText(GetWStringFromBase64(units.at(1)));
 						break;
 					case CF_DIB:
-						Clip::AddFormat(pair.first);
-						Clip::bitmapGuid = pair.second;
+						Clip::AddFormat(cf);
+						Clip::bitmapGuid = units.at(1);
+						Clip::bitmapHeight = std::stoi(units.at(2));
+						Clip::bitmapWidth = std::stoi(units.at(3));
 						break;
 					default:
 						break;
 					}
 				}
 			}
-			break;
-		default:
-			DeserializeVersion0(serializationData);
-			break;
+		}
+		else
+		{
+			DeserializeVersion0(stream.str());
 		}
 	}
 }
@@ -171,9 +160,21 @@ bool Clip::ContainsFormat(DWORD clipboardFormat)
 	return clipboardFormats.find(clipboardFormat) != clipboardFormats.end();
 }
 
-void Clip::SetDibBitmap(std::shared_ptr<BITMAPINFOHEADER> pBmiHeader, std::vector<RGBQUAD> quads, std::shared_ptr<BYTE> bits, bool hasAlpha)
+void Clip::SetDibBitmap(std::shared_ptr<BITMAPINFOHEADER> pBmiHeader, std::vector<RGBQUAD> quads, std::shared_ptr<BYTE> bits)
 {
-	bitmapGuid = OnDemandBitmapManager::Add(std::make_shared<Bitmap>(pBmiHeader, quads, bits, hasAlpha));
+	bitmapWidth = static_cast<unsigned int>(pBmiHeader->biWidth);
+	bitmapHeight = static_cast<unsigned int>(pBmiHeader->biHeight);
+	bitmapGuid = OnDemandBitmapManager::Add(std::make_shared<Bitmap>(pBmiHeader, quads, bits));
+	pBitmap = OnDemandBitmapManager::Get(bitmapGuid);
+}
+
+bool Clip::BitmapReady()
+{
+	if (!inCriticalSection)
+	{
+		std::shared_ptr<Bitmap> p = pBitmap.lock();
+		return !p ? false : true;
+	}
 }
 
 std::shared_ptr<Bitmap> Clip::EnsureBitmap()
@@ -185,6 +186,11 @@ std::shared_ptr<Bitmap> Clip::EnsureBitmap()
 		p = pBitmap.lock();
 	}
 	return p;
+}
+
+void Clip::EnsureBitmapAsync()
+{
+	std::thread(EnsureBitmapAsyncInternal, this).detach();
 }
 
 const std::shared_ptr<BITMAPINFOHEADER> Clip::DibBitmapInfoHeader()
@@ -211,10 +217,14 @@ const std::shared_ptr <BYTE> Clip::DibBitmapBits()
 	return p->DibBitmapBits();
 }
 
-const bool Clip::DibHasAlpha()
+unsigned int Clip::DibHeight()
 {
-	auto p = EnsureBitmap();
-	return p->DibHasAlpha();
+	return bitmapHeight;
+}
+
+unsigned int Clip::DibWidth()
+{
+	return bitmapWidth;
 }
 
 void Clip::SetUnicodeText(wchar_t * unicodeText)
@@ -293,4 +303,14 @@ std::wstring Clip::GetWStringFromBase64(const std::string base64)
 	}
 
 	return converter.from_bytes(base64_decode(base64));
+}
+
+void Clip::EnsureBitmapAsyncInternal(Clip * clip)
+{
+	if (!clip->inCriticalSection)
+	{
+		clip->inCriticalSection = true;
+		clip->pBitmap = OnDemandBitmapManager::Get(clip->bitmapGuid);
+		clip->inCriticalSection = false;
+	}
 }

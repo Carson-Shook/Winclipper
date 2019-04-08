@@ -41,9 +41,18 @@ void ClipsCollection::Deserialize(std::string serializationData)
 
 		while (std::getline(stream, readData))
 		{
-			std::shared_ptr<Clip> clip(new Clip);
-			clip->Deserialize(readData);
-			clips.push_back(clip);
+			try
+			{
+				std::shared_ptr<Clip> clip(new Clip);
+				clip->Deserialize(readData);
+				clips.push_back(clip);
+			}
+			catch (const std::exception&)
+			{
+				// If the data is bad, there isn't much we can do.
+				// If I ever add an alerts system, then I'll just trip
+				// a flag to post a single message about corrupt data.
+			}
 		}
 	}
 }
@@ -63,6 +72,7 @@ void ClipsCollection::AddFront(std::shared_ptr<Clip> clip)
 			clips.push_front(clip);
 			while (clips.size() > maxSize)
 			{
+				clips.back()->MarkForDelete();
 				RemoveBack();
 			}
 		}
@@ -130,6 +140,7 @@ void ClipsCollection::SetMaxSize(unsigned int newMaxSize)
 
 		while (clips.size() > maxSize)
 		{
+			clips.back()->MarkForDelete();
 			RemoveBack();
 		}
 	}

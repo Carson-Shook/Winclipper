@@ -5,7 +5,7 @@
 class Bitmap : public ISerializable
 {
 public:
-	Bitmap(std::shared_ptr<BITMAPINFOHEADER> pBmiHeader, std::vector<RGBQUAD> quads, std::shared_ptr<BYTE> bits, bool hasAlpha);
+	Bitmap(std::shared_ptr<BITMAPINFOHEADER> pBmiHeader, std::vector<RGBQUAD> quads, std::shared_ptr<BYTE> bits);
 	Bitmap();
 	~Bitmap();
 	
@@ -16,12 +16,10 @@ public:
 	const std::shared_ptr<BITMAPINFOHEADER>		DibBitmapInfoHeader();
 	const std::vector<RGBQUAD>					RgbQuadCollection();
 	const std::shared_ptr<BYTE>					DibBitmapBits();
-	const bool									DibHasAlpha();
 
 private:
 	std::shared_ptr<BITMAPINFOHEADER>			pDibBitmapInfoHeader = nullptr;
 	std::vector<RGBQUAD>						rgbQuadCollection;
 	std::shared_ptr<BYTE>						pDibBitmapBits = nullptr;
-	bool										dibBitmapHasAlpha;
 };
 

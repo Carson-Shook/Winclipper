@@ -56,6 +56,9 @@ LRESULT CALLBACK PreviewWindow::PreviewWndProc(HWND hWnd, UINT message, WPARAM w
 	case WM_CREATE:
 		pThis->WmCreate();
 		break;
+	case WM_TIMER:
+		pThis->WmTimer();
+		break;
 	case WM_PAINT:
 		{
 			if (SUCCEEDED(pThis->WmPaint(hWnd, message, wParam, lParam)))
@@ -77,6 +80,25 @@ LRESULT PreviewWindow::WmCreate()
 
 LRESULT PreviewWindow::WmDestroy()
 {
+	return 0;
+}
+
+LRESULT PreviewWindow::WmTimer()
+{
+	if (previewClip->BitmapReady())
+	{
+		HRESULT hr = SetBitmapConverter();
+		if (SUCCEEDED(hr))
+		{
+			RedrawWindow(GetHandle(), nullptr, nullptr, RDW_INVALIDATE);
+		}
+	}
+	else
+	{
+		bitmapReady = false;
+		SetTimer(GetHandle(), IDT_BITMAPTIMER, 100, nullptr);
+	}
+
 	return 0;
 }
 
@@ -125,20 +147,18 @@ LRESULT PreviewWindow::WmPaint(HWND hWnd, UINT message, WPARAM wParam, LPARAM lP
 
 			pRT->Clear(WindowColor);
 
+			auto rect = D2D1::RectF(
+				windowBorderWidth,
+				windowBorderWidth,
+				pRT->GetSize().width - windowBorderWidth,
+				pRT->GetSize().height - windowBorderWidth);
+
 			pRT->FillRectangle(
-				D2D1::RectF(
-					windowBorderWidth,
-					windowBorderWidth,
-					pRT->GetSize().width - windowBorderWidth,
-					pRT->GetSize().height - windowBorderWidth),
+				rect,
 				pWhiteBrush);
 
 			pRT->DrawRectangle(
-				D2D1::RectF(
-					windowBorderWidth,
-					windowBorderWidth,
-					pRT->GetSize().width - windowBorderWidth,
-					pRT->GetSize().height - windowBorderWidth),
+				rect,
 				pLightGrayBrush, 0.5F);
 
 			pRT->DrawTextLayout(
@@ -151,20 +171,18 @@ LRESULT PreviewWindow::WmPaint(HWND hWnd, UINT message, WPARAM wParam, LPARAM lP
 
 			if (remainingTextLines > 0 || clipSizeInKb > MAX_LEN_PRV_CLIP_KB)
 			{
+				auto infoBreakRect = D2D1::RectF(
+					windowBorderWidth,
+					pRT->GetSize().height - infoBreakHeight - windowBorderWidth,
+					pRT->GetSize().width - windowBorderWidth,
+					pRT->GetSize().height - windowBorderWidth);
+
 				pRT->FillRectangle(
-					D2D1::RectF(
-						windowBorderWidth,
-						pRT->GetSize().height - infoBreakHeight - windowBorderWidth,
-						pRT->GetSize().width - windowBorderWidth,
-						pRT->GetSize().height - windowBorderWidth),
+					infoBreakRect,
 					pBlueGrayBrush);
 
 				pRT->DrawRectangle(
-					D2D1::RectF(
-						windowBorderWidth,
-						pRT->GetSize().height - infoBreakHeight - windowBorderWidth,
-						pRT->GetSize().width - windowBorderWidth,
-						pRT->GetSize().height - windowBorderWidth),
+					infoBreakRect,
 					pLightGrayBrush, 0.5F);
 
 				pRT->DrawTextLayout(
@@ -179,15 +197,21 @@ LRESULT PreviewWindow::WmPaint(HWND hWnd, UINT message, WPARAM wParam, LPARAM lP
 			hr = pRT->EndDraw();
 		}
 		SafeRelease(&pDWriteInfoBreakLayout);
-		//SafeRelease(&pDWriteTextLayout);
 	}
 	else if (previewClip->ContainsFormat(CF_DIB))
 	{ 
 		if (SUCCEEDED(hr))
 		{
-			// Need to release the previous D2DBitmap if there is one
-			SafeRelease(&pD2DBitmap);
-			hr = pRT->CreateBitmapFromWicBitmap(pConvertedSourceBitmap, nullptr, &pD2DBitmap);
+			if (bitmapReady)
+			{
+				// Need to release the previous D2DBitmap if there is one
+				SafeRelease(&pD2DBitmap);
+				hr = pRT->CreateBitmapFromWicBitmap(pConvertedSourceBitmap, nullptr, &pD2DBitmap);
+			}
+			else if (pD2DLoadingBitmap == nullptr)
+			{
+				hr = pRT->CreateBitmapFromWicBitmap(pConvertedLoadingBitmap, nullptr, &pD2DLoadingBitmap);
+			}
 		}
 
 		if (SUCCEEDED(hr))
@@ -208,15 +232,26 @@ LRESULT PreviewWindow::WmPaint(HWND hWnd, UINT message, WPARAM wParam, LPARAM lP
 				rect,
 				pWhiteBrush);
 
-			pRT->DrawRectangle(
-				D2D1::RectF(
-					windowBorderWidth,
-					windowBorderWidth,
-					pRT->GetSize().width - windowBorderWidth,
-					pRT->GetSize().height - windowBorderWidth),
-				pLightGrayBrush, 0.5F);
+			if (bitmapReady)
+			{
+				pRT->DrawBitmap(pD2DBitmap, rect);
+			}
+			else
+			{
+				float left = (windowBorderWidth + rect.right) / 2.0F;
+				float bottom = (windowBorderWidth + rect.bottom) / 2.0F;
+				auto loadingRect = D2D1::RectF(
+					left - (pD2DLoadingBitmap->GetSize().width / ScaleX(2.0F)),
+					bottom - (pD2DLoadingBitmap->GetSize().height / ScaleY(2.0F)),
+					left + (pD2DLoadingBitmap->GetSize().width / ScaleX(2.0F)),
+					bottom + (pD2DLoadingBitmap->GetSize().height / ScaleY(2.0F))
+				);
+				pRT->DrawBitmap(pD2DLoadingBitmap, loadingRect);
+			}
 
-			pRT->DrawBitmap(pD2DBitmap, rect);
+			pRT->DrawRectangle(
+				rect,
+				pLightGrayBrush, 0.5F);
 
 			hr = pRT->EndDraw();
 		}
@@ -229,7 +264,7 @@ LRESULT PreviewWindow::WmPaint(HWND hWnd, UINT message, WPARAM wParam, LPARAM lP
 	return hr;
 }
 
-HRESULT PreviewWindow::CreateDeviceIndependentResources()
+HRESULT PreviewWindow::CreateDeviceIndependentResources(HINSTANCE hInstance)
 {
 	HRESULT hr = S_OK;
 	
@@ -382,9 +417,9 @@ HRESULT PreviewWindow::CreateDeviceIndependentResources()
 
 		delete[] fontName;
 
+		// Create WIC factory
 		if (SUCCEEDED(hr))
 		{
-			// Create WIC factory
 			hr = CoCreateInstance(
 				CLSID_WICImagingFactory,
 				nullptr,
@@ -392,6 +427,49 @@ HRESULT PreviewWindow::CreateDeviceIndependentResources()
 				IID_PPV_ARGS(&pIWICFactory)
 			);
 		}
+
+		HBITMAP hBitmap = NULL;
+		IWICBitmapDecoder *pDecoder = nullptr;
+		IWICBitmap *pBitmap = nullptr;
+
+		if (SUCCEEDED(hr))
+		{
+			hBitmap = (HBITMAP)LoadImageW(hInstance, MAKEINTRESOURCE(IDB_LOADINGBMP), IMAGE_BITMAP, 0, 0, LR_DEFAULTSIZE);
+			DWORD lastError = GetLastError();
+			hr = hBitmap ? S_OK : E_FAIL;
+		}
+
+		if (SUCCEEDED(hr))
+		{
+			hr = pIWICFactory->CreateBitmapFromHBITMAP(
+				hBitmap,
+				nullptr,
+				WICBitmapIgnoreAlpha,
+				&pBitmap
+			);
+		}
+		if (SUCCEEDED(hr))
+		{
+			// Convert the image format to 32bppPBGRA
+			// (DXGI_FORMAT_B8G8R8A8_UNORM + D2D1_ALPHA_MODE_PREMULTIPLIED).
+			hr = pIWICFactory->CreateFormatConverter(&pConvertedLoadingBitmap);
+		}
+
+		if (SUCCEEDED(hr))
+		{
+			hr = pConvertedLoadingBitmap->Initialize(
+				pBitmap,
+				GUID_WICPixelFormat32bppPBGRA,
+				WICBitmapDitherTypeNone,
+				NULL,
+				0.f,
+				WICBitmapPaletteTypeMedianCut
+			);
+		}
+
+		SafeRelease(&pDecoder);
+		SafeRelease(&pBitmap);
+		DeleteObject(hBitmap);
 	}
 
 	return hr;
@@ -471,6 +549,13 @@ HRESULT PreviewWindow::CreateDeviceDependentResources(HWND hWnd) noexcept
 		);
 	}
 
+	if (SUCCEEDED(hr) && pD2DLoadingBitmap == nullptr)
+	{
+		hr = pRT->CreateBitmapFromWicBitmap(
+			pConvertedLoadingBitmap, 
+			nullptr, 
+			&pD2DLoadingBitmap);
+	}
 	return hr;
 }
 
@@ -478,6 +563,9 @@ void PreviewWindow::DestroyDeviceIndependentResources()
 {
 	SafeRelease(&pDWriteInfoBreakFormat);
 	SafeRelease(&pDWriteTextFormat);
+	SafeRelease(&pConvertedSourceBitmap);
+	SafeRelease(&pConvertedLoadingBitmap);
+	SafeRelease(&pIWICFactory);
 	SafeRelease(&pD2DFactory);
 	return;
 }
@@ -489,15 +577,89 @@ void PreviewWindow::DestroyDeviceDependentResources()
 	SafeRelease(&pWhiteBrush);
 	SafeRelease(&pBlackBrush);
 	SafeRelease(&pLabelTextBrush);
+	SafeRelease(&pD2DBitmap);
+	SafeRelease(&pD2DLoadingBitmap);
 	SafeRelease(&pRT);
 	return;
+}
+
+HRESULT PreviewWindow::SetBitmapConverter()
+{
+	HRESULT hr = S_OK;
+
+	HDC screen = GetDC(NULL);
+	auto quads = previewClip->RgbQuadCollection();
+	auto header = previewClip->DibBitmapInfoHeader();
+	BITMAPINFO * bmi = (BITMAPINFO *)new BYTE[header->biSize + quads.size() * sizeof(RGBQUAD)];
+
+	bmi->bmiHeader = *header;
+	for (auto i = 0; i < quads.size(); i++)
+	{
+		bmi->bmiColors[i].rgbBlue = quads[i].rgbBlue;
+		bmi->bmiColors[i].rgbGreen = quads[i].rgbGreen;
+		bmi->bmiColors[i].rgbRed = quads[i].rgbRed;
+		bmi->bmiColors[i].rgbReserved = quads[i].rgbReserved;
+	}
+
+	HBITMAP hBitmap = CreateDIBitmap(
+		screen,
+		header.get(),
+		CBM_INIT,
+		previewClip->DibBitmapBits().get(),
+		bmi,
+		DIB_RGB_COLORS
+	);
+	hr = hBitmap ? S_OK : E_FAIL;
+
+	IWICBitmapDecoder *pDecoder = nullptr;
+	IWICBitmap *pBitmap = nullptr;
+
+	if (SUCCEEDED(hr))
+	{
+		hr = pIWICFactory->CreateBitmapFromHBITMAP(
+			hBitmap,
+			nullptr,
+			header->biBitCount == 32 ? WICBitmapUseAlpha : WICBitmapIgnoreAlpha,
+			&pBitmap
+		);
+	}
+
+	if (SUCCEEDED(hr))
+	{
+		SafeRelease(&pConvertedSourceBitmap);
+		hr = pIWICFactory->CreateFormatConverter(&pConvertedSourceBitmap);
+	}
+
+	if (SUCCEEDED(hr))
+	{
+		hr = pConvertedSourceBitmap->Initialize(
+			pBitmap,
+			GUID_WICPixelFormat32bppPBGRA,
+			WICBitmapDitherTypeNone,
+			nullptr,
+			0.f,
+			WICBitmapPaletteTypeCustom
+		);
+	}
+
+	SafeRelease(&pDecoder);
+	SafeRelease(&pBitmap);
+	delete[](BYTE *)bmi;
+	ReleaseDC(NULL, screen);
+
+	if (SUCCEEDED(hr))
+	{
+		bitmapReady = true;
+	}
+
+	return hr;
 }
 
 PreviewWindow::PreviewWindow(HINSTANCE hInstance, HWND hWndParent)
 {
 	LoadStringW(hInstance, IDC_WINCPREVIEW, szPreviewWindowClass, MAX_LOADSTRING);
 
-	CreateDeviceIndependentResources();
+	CreateDeviceIndependentResources(hInstance);
 
 	RegisterPreviewWindowClass(hInstance);
 
@@ -540,6 +702,8 @@ void PreviewWindow::SetPreviewClip(std::shared_ptr<Clip> clip) noexcept
 
 void PreviewWindow::MoveRelativeToRect(const LPRECT rect, unsigned int index)
 {
+	KillTimer(GetHandle(), IDT_BITMAPTIMER);
+
 	if (previewClip == nullptr)
 	{
 		return;
@@ -659,92 +823,35 @@ void PreviewWindow::MoveRelativeToRect(const LPRECT rect, unsigned int index)
 	}
 	else if (previewClip->ContainsFormat(CF_DIB))
 	{
-		HDC screen = GetDC(NULL);
-		auto quads = previewClip->RgbQuadCollection();
-		auto header = previewClip->DibBitmapInfoHeader();
-		BITMAPINFO * bmi = (BITMAPINFO *)new BYTE[header->biSize + quads.size() * sizeof(RGBQUAD)];
-
-		bmi->bmiHeader = *header;
-		for (auto i = 0; i < quads.size(); i++)
+		if (previewClip->BitmapReady())
 		{
-			bmi->bmiColors[i].rgbBlue = quads[i].rgbBlue;
-			bmi->bmiColors[i].rgbGreen = quads[i].rgbGreen;
-			bmi->bmiColors[i].rgbRed = quads[i].rgbRed;
-			bmi->bmiColors[i].rgbReserved = quads[i].rgbReserved;
+			hr = SetBitmapConverter();
+		}
+		else
+		{
+			previewClip->EnsureBitmapAsync();
+			bitmapReady = false;
+			SetTimer(GetHandle(), IDT_BITMAPTIMER, 100, nullptr);
 		}
 
-		HBITMAP hBitmap = CreateDIBitmap(
-			screen,
-			header.get(),
-			CBM_INIT,
-			previewClip->DibBitmapBits().get(),
-			bmi,
-			DIB_RGB_COLORS
-		);
+		renderingHeight = static_cast<float>(previewClip->DibHeight());
+		renderingWidth = static_cast<float>(previewClip->DibWidth());
 
-		HRESULT hr = S_OK;
-
-		// Step 2: Decode the source image
-
-		// Create a decoder
-		IWICBitmapDecoder *pDecoder = nullptr;
-		IWICBitmap *pBitmap = nullptr;
-
-		hr = pIWICFactory->CreateBitmapFromHBITMAP(
-			hBitmap,
-			nullptr,
-			header->biBitCount == 32 ? WICBitmapUseAlpha : WICBitmapIgnoreAlpha,
-			&pBitmap
-		);
-
-		if (SUCCEEDED(hr))
+		if (renderingWidth > layoutMaxWidth || renderingHeight > layoutMaxHeight)
 		{
-			SafeRelease(&pConvertedSourceBitmap);
-			hr = pIWICFactory->CreateFormatConverter(&pConvertedSourceBitmap);
-		}
-
-		if (SUCCEEDED(hr))
-		{
-			hr = pConvertedSourceBitmap->Initialize(
-				pBitmap,
-				GUID_WICPixelFormat32bppPBGRA,
-				WICBitmapDitherTypeNone,
-				nullptr,
-				0.f,
-				WICBitmapPaletteTypeCustom
-			);
-		}
-
-		if (SUCCEEDED(hr))
-		{
-			UINT width;
-			UINT height;
-			pConvertedSourceBitmap->GetSize(&width, &height);
-
-			renderingWidth = static_cast<float>(width);
-			renderingHeight = static_cast<float>(height);
-
-			if (renderingWidth > layoutMaxWidth || renderingHeight > layoutMaxHeight)
+			if (renderingWidth >= renderingHeight)
 			{
-				if (renderingWidth >= renderingHeight)
-				{
-					float ratio = layoutMaxWidth / renderingWidth;
-					renderingWidth = layoutMaxWidth;
-					renderingHeight = renderingHeight * ratio;
-				}
-				else
-				{
-					float ratio = layoutMaxHeight / renderingHeight;
-					renderingHeight = layoutMaxHeight;
-					renderingWidth = renderingWidth * ratio;
-				}
+				float ratio = layoutMaxWidth / renderingWidth;
+				renderingWidth = layoutMaxWidth;
+				renderingHeight = renderingHeight * ratio;
+			}
+			else
+			{
+				float ratio = layoutMaxHeight / renderingHeight;
+				renderingHeight = layoutMaxHeight;
+				renderingWidth = renderingWidth * ratio;
 			}
 		}
-
-		SafeRelease(&pDecoder);
-		SafeRelease(&pBitmap);
-		delete[] (BYTE *)bmi;
-		ReleaseDC(NULL, screen);
 	}
 
 	const int totalWindowWidth = static_cast<int>(ScaleX(renderingWidth + (windowBorderWidth * 2.0f) + (textMarginWidth * 2.0f)));
