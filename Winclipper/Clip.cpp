@@ -7,9 +7,14 @@ Clip::Clip() noexcept
 
 Clip::~Clip()
 {
+	if (thumbnail != NULL)
+	{
+		DeleteObject(thumbnail);
+	}
 	if (!bitmapGuid.empty() && shouldDelete)
 	{
 		OnDemandBitmapManager::Remove(bitmapGuid);
+		OnDemandBitmapManager::RemoveThumbnail(bitmapGuid);
 	}
 }
 
@@ -87,14 +92,21 @@ void Clip::Deserialize(std::string serializationData)
 					switch (cf)
 					{
 					case CF_UNICODETEXT:
-						Clip::AddFormat(cf);
-						Clip::SetUnicodeText(GetWStringFromBase64(units.at(1)));
+						AddFormat(cf);
+						SetUnicodeText(GetWStringFromBase64(units.at(1)));
 						break;
 					case CF_DIB:
-						Clip::AddFormat(cf);
-						Clip::bitmapGuid = units.at(1);
-						Clip::bitmapHeight = std::stoi(units.at(2));
-						Clip::bitmapWidth = std::stoi(units.at(3));
+						AddFormat(cf);
+						bitmapGuid = units.at(1);
+						if (!OnDemandBitmapManager::Exists(bitmapGuid))
+						{
+							// If the bitmap data is missing, then we want to
+							// ensure the clip is not created.
+							throw std::exception("Cached bitmap missing.");
+						}
+						bitmapHeight = std::stoi(units.at(2));
+						bitmapWidth = std::stoi(units.at(3));
+						thumbnail = OnDemandBitmapManager::GetThumbnail(bitmapGuid);
 						break;
 					default:
 						break;
@@ -164,7 +176,10 @@ void Clip::SetDibBitmap(std::shared_ptr<BITMAPINFOHEADER> pBmiHeader, std::vecto
 {
 	bitmapWidth = static_cast<unsigned int>(pBmiHeader->biWidth);
 	bitmapHeight = static_cast<unsigned int>(pBmiHeader->biHeight);
-	bitmapGuid = OnDemandBitmapManager::Add(std::make_shared<Bitmap>(pBmiHeader, quads, bits));
+	auto bitmap = std::make_shared<Bitmap>(pBmiHeader, quads, bits);
+
+	bitmapGuid = OnDemandBitmapManager::Add(bitmap);
+	thumbnail = OnDemandBitmapManager::CreateAndSaveThumbnail(bitmapGuid, bitmap);
 	pBitmap = OnDemandBitmapManager::Get(bitmapGuid);
 }
 
@@ -175,6 +190,7 @@ bool Clip::BitmapReady()
 		std::shared_ptr<Bitmap> p = pBitmap.lock();
 		return !p ? false : true;
 	}
+	return false;
 }
 
 std::shared_ptr<Bitmap> Clip::EnsureBitmap()
@@ -185,6 +201,7 @@ std::shared_ptr<Bitmap> Clip::EnsureBitmap()
 		pBitmap = OnDemandBitmapManager::Get(bitmapGuid);
 		p = pBitmap.lock();
 	}
+	OnDemandBitmapManager::UpdateUsage(bitmapGuid);
 	return p;
 }
 
@@ -211,7 +228,7 @@ const std::vector<RGBQUAD> Clip::RgbQuadCollection()
 	return p->RgbQuadCollection();
 }
 
-const std::shared_ptr <BYTE> Clip::DibBitmapBits()
+const std::shared_ptr<BYTE> Clip::DibBitmapBits()
 {
 	auto p = EnsureBitmap();
 	return p->DibBitmapBits();
@@ -225,6 +242,23 @@ unsigned int Clip::DibHeight()
 unsigned int Clip::DibWidth()
 {
 	return bitmapWidth;
+}
+
+size_t Clip::DibSize()
+{
+	auto p = EnsureBitmap();
+	return p->Size();
+}
+
+HBITMAP Clip::GetHbitmap()
+{
+	auto p = EnsureBitmap();
+	return p->GetHbitmap();
+}
+
+HBITMAP Clip::GetThumbnail()
+{
+	return thumbnail;
 }
 
 void Clip::SetUnicodeText(wchar_t * unicodeText)

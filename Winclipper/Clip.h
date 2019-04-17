@@ -35,6 +35,9 @@ public:
 	const std::shared_ptr<BYTE>					DibBitmapBits();
 	unsigned int								DibHeight();
 	unsigned int								DibWidth();
+	size_t										DibSize();
+	HBITMAP										GetHbitmap();
+	HBITMAP										GetThumbnail();
 
 	void						SetUnicodeText(wchar_t * unicodeText);
 	void						SetUnicodeText(std::wstring unicodeText);
@@ -48,6 +51,7 @@ private:
 	unsigned int				bitmapHeight = 0;
 	unsigned int				bitmapWidth = 0;
 	std::weak_ptr<Bitmap>		pBitmap;
+	HBITMAP						thumbnail = NULL;
 
 	std::wstring				unicodeText;
 	std::wstring				menuTextCache;

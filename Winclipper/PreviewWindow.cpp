@@ -85,7 +85,7 @@ LRESULT PreviewWindow::WmDestroy()
 
 LRESULT PreviewWindow::WmTimer()
 {
-	if (previewClip->BitmapReady())
+	if (!clipChanged && previewClip->BitmapReady())
 	{
 		HRESULT hr = SetBitmapConverter();
 		if (SUCCEEDED(hr))
@@ -93,11 +93,12 @@ LRESULT PreviewWindow::WmTimer()
 			RedrawWindow(GetHandle(), nullptr, nullptr, RDW_INVALIDATE);
 		}
 	}
-	else
+	else if (timerAttempts < 100)
 	{
 		bitmapReady = false;
 		SetTimer(GetHandle(), IDT_BITMAPTIMER, 100, nullptr);
 	}
+	clipChanged = false;
 
 	return 0;
 }
@@ -254,6 +255,9 @@ LRESULT PreviewWindow::WmPaint(HWND hWnd, UINT message, WPARAM wParam, LPARAM lP
 				pLightGrayBrush, 0.5F);
 
 			hr = pRT->EndDraw();
+
+			SafeRelease(&pD2DBitmap);
+			SafeRelease(&pConvertedSourceBitmap);
 		}
 	}
 	if (hr == D2DERR_RECREATE_TARGET)
@@ -587,31 +591,9 @@ HRESULT PreviewWindow::SetBitmapConverter()
 {
 	HRESULT hr = S_OK;
 
-	HDC screen = GetDC(NULL);
-	auto quads = previewClip->RgbQuadCollection();
-	auto header = previewClip->DibBitmapInfoHeader();
-	BITMAPINFO * bmi = (BITMAPINFO *)new BYTE[header->biSize + quads.size() * sizeof(RGBQUAD)];
-
-	bmi->bmiHeader = *header;
-	for (auto i = 0; i < quads.size(); i++)
-	{
-		bmi->bmiColors[i].rgbBlue = quads[i].rgbBlue;
-		bmi->bmiColors[i].rgbGreen = quads[i].rgbGreen;
-		bmi->bmiColors[i].rgbRed = quads[i].rgbRed;
-		bmi->bmiColors[i].rgbReserved = quads[i].rgbReserved;
-	}
-
-	HBITMAP hBitmap = CreateDIBitmap(
-		screen,
-		header.get(),
-		CBM_INIT,
-		previewClip->DibBitmapBits().get(),
-		bmi,
-		DIB_RGB_COLORS
-	);
+	HBITMAP hBitmap = previewClip-> GetHbitmap();
 	hr = hBitmap ? S_OK : E_FAIL;
 
-	IWICBitmapDecoder *pDecoder = nullptr;
 	IWICBitmap *pBitmap = nullptr;
 
 	if (SUCCEEDED(hr))
@@ -619,7 +601,7 @@ HRESULT PreviewWindow::SetBitmapConverter()
 		hr = pIWICFactory->CreateBitmapFromHBITMAP(
 			hBitmap,
 			nullptr,
-			header->biBitCount == 32 ? WICBitmapUseAlpha : WICBitmapIgnoreAlpha,
+			previewClip->DibBitmapInfoHeader()->biBitCount == 32 ? WICBitmapUseAlpha : WICBitmapIgnoreAlpha,
 			&pBitmap
 		);
 	}
@@ -642,10 +624,7 @@ HRESULT PreviewWindow::SetBitmapConverter()
 		);
 	}
 
-	SafeRelease(&pDecoder);
 	SafeRelease(&pBitmap);
-	delete[](BYTE *)bmi;
-	ReleaseDC(NULL, screen);
 
 	if (SUCCEEDED(hr))
 	{
@@ -702,6 +681,7 @@ void PreviewWindow::SetPreviewClip(std::shared_ptr<Clip> clip) noexcept
 
 void PreviewWindow::MoveRelativeToRect(const LPRECT rect, unsigned int index)
 {
+	clipChanged = true;
 	KillTimer(GetHandle(), IDT_BITMAPTIMER);
 
 	if (previewClip == nullptr)

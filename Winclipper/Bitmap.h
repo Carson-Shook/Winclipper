@@ -16,10 +16,13 @@ public:
 	const std::shared_ptr<BITMAPINFOHEADER>		DibBitmapInfoHeader();
 	const std::vector<RGBQUAD>					RgbQuadCollection();
 	const std::shared_ptr<BYTE>					DibBitmapBits();
+	HBITMAP										GetHbitmap();
+	size_t										Size();
 
 private:
 	std::shared_ptr<BITMAPINFOHEADER>			pDibBitmapInfoHeader = nullptr;
 	std::vector<RGBQUAD>						rgbQuadCollection;
 	std::shared_ptr<BYTE>						pDibBitmapBits = nullptr;
+	HBITMAP										hBitmap = NULL;
 };
 

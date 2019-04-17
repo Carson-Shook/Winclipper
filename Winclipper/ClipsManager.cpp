@@ -50,7 +50,14 @@ void ClipsManager::ReadClips()
 {
     if (File::Exists(fullClipsPath.c_str()))
     {
-		clips.Deserialize(File::Read(fullClipsPath));
+		try
+		{
+			clips.Deserialize(File::Read(fullClipsPath));
+		}
+		catch (const std::exception& e)
+		{
+			MessageBoxA(NULL, e.what(), "Winclipper", MB_OK | MB_ICONWARNING | MB_TASKMODAL | MB_SETFOREGROUND);
+		}
     }
 }
 
@@ -116,7 +123,6 @@ ClipsManager::ClipsManager(int displayClips, int maxClips, int menuChars, bool s
 
 ClipsManager::~ClipsManager()
 {
-    ClearClips();
 }
 
 bool ClipsManager::NoPendingClipWrites()
@@ -350,32 +356,17 @@ bool ClipsManager::SetClipboardToClipAtIndex(HWND hWnd, int index)
 			auto bmiHeader = clip->DibBitmapInfoHeader();
 			auto quadCollection = clip->RgbQuadCollection();
 			size_t rgbQuadsCount = quadCollection.size();
+			size_t bitmapSize = clip->DibSize();
 
-			size_t bitmapSize = bmiHeader->biSizeImage 
-				? bmiHeader->biSizeImage 
-				: ((((bmiHeader->biWidth * bmiHeader->biBitCount) + 31) & ~31) >> 3) * bmiHeader->biHeight;
 			HGLOBAL hClipboardData = GlobalAlloc(GMEM_MOVEABLE, bmiHeader->biSize + rgbQuadsCount * sizeof(RGBQUAD) + bitmapSize);
 
 			BITMAPINFO * bmi = (BITMAPINFO *)GlobalLock(hClipboardData);
 
-			bmi->bmiHeader.biBitCount = bmiHeader->biBitCount;
-			bmi->bmiHeader.biClrImportant = bmiHeader->biClrImportant;
-			bmi->bmiHeader.biClrUsed = bmiHeader->biClrUsed;
-			bmi->bmiHeader.biCompression = bmiHeader->biCompression;
-			bmi->bmiHeader.biHeight = bmiHeader->biHeight;
-			bmi->bmiHeader.biPlanes = bmiHeader->biPlanes;
-			bmi->bmiHeader.biSize = bmiHeader->biSize;
-			bmi->bmiHeader.biSizeImage = bmiHeader->biSizeImage;
-			bmi->bmiHeader.biWidth = bmiHeader->biWidth;
-			bmi->bmiHeader.biXPelsPerMeter = bmiHeader->biXPelsPerMeter;
-			bmi->bmiHeader.biYPelsPerMeter = bmiHeader->biYPelsPerMeter;
+			bmi->bmiHeader = *bmiHeader;
 
 			for (auto i = 0; i < rgbQuadsCount; i++)
 			{
-				bmi->bmiColors[i].rgbBlue = quadCollection[i].rgbBlue;
-				bmi->bmiColors[i].rgbGreen = quadCollection[i].rgbGreen;
-				bmi->bmiColors[i].rgbRed = quadCollection[i].rgbRed;
-				bmi->bmiColors[i].rgbReserved = quadCollection[i].rgbReserved;
+				bmi->bmiColors[i] = quadCollection[i];
 			}
 
 			memcpy((BYTE *)bmi + (bmiHeader->biSize + rgbQuadsCount * sizeof(RGBQUAD)), clip->DibBitmapBits().get(), bitmapSize);
@@ -487,7 +478,8 @@ void ClipsManager::ShowClipsMenu(HWND hWnd, LPPOINT cPos, bool showExit)
 					}
 					else if (clip->ContainsFormat(CF_DIB))
 					{
-						AppendMenuW(menu, MF_STRING, UINT_PTR{ i } + 1, (L"[IMAGE] " + std::to_wstring(clip->DibHeight()) + L" x " + std::to_wstring(clip->DibWidth())).c_str());
+						AppendMenuW(menu, MF_STRING, UINT_PTR{ i } +1, (L"[IMAGE] " + std::to_wstring(clip->DibHeight()) + L" x " + std::to_wstring(clip->DibWidth())).c_str());
+						SetMenuItemBitmaps(menu, UINT_PTR{ i } +1, MF_BYCOMMAND, clip->GetThumbnail(), clip->GetThumbnail());
 					}
                 }
             }
@@ -509,7 +501,8 @@ void ClipsManager::ShowClipsMenu(HWND hWnd, LPPOINT cPos, bool showExit)
 						}
 						else if (clip->ContainsFormat(CF_DIB))
 						{
-							AppendMenuW(menu, MF_STRING, UINT_PTR{ j } + 1, (L"[IMAGE] " + std::to_wstring(clip->DibHeight()) + L" x " + std::to_wstring(clip->DibWidth())).c_str());
+							AppendMenuW(sMenu, MF_STRING, UINT_PTR{ j } + 1, (L"[IMAGE] " + std::to_wstring(clip->DibHeight()) + L" x " + std::to_wstring(clip->DibWidth())).c_str());
+							SetMenuItemBitmaps(sMenu, UINT_PTR{ j } +1, MF_BYCOMMAND, clip->GetThumbnail(), clip->GetThumbnail());
 						}
 					}
                 }

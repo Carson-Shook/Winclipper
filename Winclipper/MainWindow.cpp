@@ -399,20 +399,34 @@ LRESULT MainWindow::WmMenuSelect(HWND hWnd, WPARAM wParam, LPARAM lParam)
 				// This might be the same item, or it could be a different one
 				// if the menu has been scrolled. That is our delta value that
 				// can be used to calculate the true offset for the preview.
+				// We do this by getting the real rect at the top of the menu
+				// and subtracting it's bottom value from the original first
+				// item's rect top, and then we can use the resulting value
+				// as an offset in pixels to subtract from our desired item.
 				LPRECT hitTestRect = new RECT();
 				int hitTestDelta = 0;
+				unsigned long long sizeOffset = 0;
 				if (GetMenuItemRect(hWnd, activePopupMenu, 0, hitTestRect))
 				{
 					LPPOINT hitTest = new POINT({ hitTestRect->left + 1, hitTestRect->top + 1 });
 					hitTestDelta = MenuItemFromPoint(hWnd, activePopupMenu, *hitTest);
 					delete hitTest;
+
+					LPRECT currentRect = new RECT();
+					if (GetMenuItemRect(hWnd, activePopupMenu, hitTestDelta - offset, currentRect))
+					{
+						sizeOffset = currentRect->bottom - hitTestRect->top;
+					}
+					delete currentRect;
 				}
 				delete hitTestRect;
 
 				LPRECT menuItemDims = new RECT();
 
-				if (GetMenuItemRect(hWnd, activePopupMenu, i - offset - hitTestDelta, menuItemDims))
+				if (GetMenuItemRect(hWnd, activePopupMenu, i - offset, menuItemDims))
 				{
+					menuItemDims->top = menuItemDims->top - sizeOffset;
+					menuItemDims->bottom = menuItemDims->bottom - sizeOffset;
 					previewWindow->MoveRelativeToRect(menuItemDims, i);
 					previewWindow->Show();
 				}

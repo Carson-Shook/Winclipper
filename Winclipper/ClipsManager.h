@@ -13,7 +13,6 @@
 #define SETTINGS_SELECT     2000    // user selected the Settings option
 #define CLEARCLIPS_SELECT   2001    // clear all clips that are currently saved (doesn't clear the actual clipboard)
 #define EXIT_SELECT         2002    // close the application
-#define DELETE_CLIP_SELECT	3000
 #define CLIPS_WRITE_DELAY   2000    
 
                                     // ERROR is returned in any other situation

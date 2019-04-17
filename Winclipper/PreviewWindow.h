@@ -50,6 +50,7 @@ private:
 	std::map<unsigned int, IDWriteTextLayout *> layoutCache;
 
 	unsigned int				timerAttempts = 0;
+	bool						clipChanged = false;
 
 	std::shared_ptr<Clip>		previewClip = nullptr;
 	unsigned long long			remainingTextLines = 0; // need to account for theoretical maximum NTFS file size

@@ -15,6 +15,10 @@ Bitmap::Bitmap()
 
 Bitmap::~Bitmap()
 {
+	if (hBitmap != NULL)
+	{
+		DeleteObject(hBitmap);
+	}
 }
 
 /* ISerializable member function implementations */
@@ -26,9 +30,7 @@ unsigned __int16 Bitmap::Version() noexcept
 
 std::string Bitmap::Serialize()
 {
-	size_t bmSize = pDibBitmapInfoHeader->biSizeImage
-		? pDibBitmapInfoHeader->biSizeImage
-		: ((((pDibBitmapInfoHeader->biWidth * pDibBitmapInfoHeader->biBitCount) + 31) & ~31) >> 3) * pDibBitmapInfoHeader->biHeight;
+	size_t bmSize = Size();
 	BITMAPFILEHEADER header;
 	header.bfType = 0x4d42;
 	header.bfOffBits = sizeof(BITMAPFILEHEADER) + pDibBitmapInfoHeader->biSize + (rgbQuadCollection.size() * sizeof(RGBQUAD));
@@ -99,6 +101,8 @@ void Bitmap::Deserialize(std::string serializationData)
 		pDibBitmapInfoHeader = bmih;
 		rgbQuadCollection = quads;
 		pDibBitmapBits = bits;
+
+		GetHbitmap();
 	}
 }
 
@@ -118,7 +122,55 @@ const std::vector<RGBQUAD> Bitmap::RgbQuadCollection()
 	return rgbQuadCollection;
 }
 
-const std::shared_ptr <BYTE> Bitmap::DibBitmapBits()
+const std::shared_ptr<BYTE> Bitmap::DibBitmapBits()
 {
 	return pDibBitmapBits;
+}
+
+// Creates an HBITMAP for the bitmap.
+// It is the responibility of the caller
+// to call DeleteObject on the HBITMAP.
+HBITMAP Bitmap::GetHbitmap()
+{
+	if (hBitmap == NULL)
+	{
+		HDC screen = GetDC(NULL);
+		BITMAPINFO * bmi = (BITMAPINFO *)new BYTE[pDibBitmapInfoHeader->biSize + rgbQuadCollection.size() * sizeof(RGBQUAD)];
+
+		bmi->bmiHeader = *pDibBitmapInfoHeader;
+		for (auto i = 0; i < rgbQuadCollection.size(); i++)
+		{
+			bmi->bmiColors[i].rgbBlue = rgbQuadCollection[i].rgbBlue;
+			bmi->bmiColors[i].rgbGreen = rgbQuadCollection[i].rgbGreen;
+			bmi->bmiColors[i].rgbRed = rgbQuadCollection[i].rgbRed;
+			bmi->bmiColors[i].rgbReserved = rgbQuadCollection[i].rgbReserved;
+		}
+
+		hBitmap = CreateDIBitmap(
+			screen,
+			pDibBitmapInfoHeader.get(),
+			CBM_INIT,
+			pDibBitmapBits.get(),
+			bmi,
+			DIB_RGB_COLORS
+		);
+
+		delete[](BYTE *)bmi;
+		ReleaseDC(NULL, screen);
+	}
+	return hBitmap;
+}
+
+// Returns the size of the image in bytes.
+size_t Bitmap::Size()
+{
+	size_t retVal = 0;
+	if (pDibBitmapInfoHeader != nullptr)
+	{
+		retVal = pDibBitmapInfoHeader->biSizeImage
+			? pDibBitmapInfoHeader->biSizeImage
+			: ((((pDibBitmapInfoHeader->biWidth * pDibBitmapInfoHeader->biBitCount) + 31) & ~31) >> 3) * pDibBitmapInfoHeader->biHeight;
+	}
+
+	return retVal;
 }
