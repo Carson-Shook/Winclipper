@@ -9,11 +9,6 @@ public:
 	ISerializable();
 	~ISerializable();
 
-	// Should return the current version of the
-	// serialization format. Use to differentiate
-	// between old and new data formats.
-	virtual unsigned __int16 Version() = 0;
-
 	// Should return a wstring of all writeable
 	// values of the derived class.
 	virtual std::string Serialize() = 0;

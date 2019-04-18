@@ -9,7 +9,6 @@ public:
 	Bitmap();
 	~Bitmap();
 	
-	unsigned __int16			Version() noexcept override;
 	std::string					Serialize() override;
 	void						Deserialize(std::string serializationData) override;
 

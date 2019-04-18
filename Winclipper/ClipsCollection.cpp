@@ -14,11 +14,6 @@ ClipsCollection::~ClipsCollection()
 
 /* ISerializable member function implementations */
 
-unsigned __int16 ClipsCollection::Version() noexcept
-{
-	return 1;
-}
-
 std::string ClipsCollection::Serialize()
 {
 	std::string data;

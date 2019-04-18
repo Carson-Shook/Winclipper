@@ -27,11 +27,6 @@ void Clip::MarkForDelete()
 
 /* ISerializable member function implementations */
 
-unsigned __int16 Clip::Version() noexcept
-{
-	return 1;
-}
-
 std::string Clip::Serialize() 
 {
 	//std::string data = WriteVersion();

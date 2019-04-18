@@ -14,7 +14,6 @@ public:
 
 	void						MarkForDelete();
 
-	unsigned __int16			Version() noexcept override;
 	std::string					Serialize() override;
 	void						Deserialize(std::string serializationData) override;
 	void						DeserializeVersion0(std::string serializationData);

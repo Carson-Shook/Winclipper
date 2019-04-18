@@ -8,7 +8,6 @@ public:
 	ClipsCollection();
 	~ClipsCollection();
 
-	unsigned __int16						Version() noexcept override;
 	std::string								Serialize() override;
 	void									Deserialize(std::string serializationData) override;
 

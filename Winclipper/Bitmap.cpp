@@ -23,11 +23,6 @@ Bitmap::~Bitmap()
 
 /* ISerializable member function implementations */
 
-unsigned __int16 Bitmap::Version() noexcept
-{
-	return 1;
-}
-
 std::string Bitmap::Serialize()
 {
 	size_t bmSize = Size();
