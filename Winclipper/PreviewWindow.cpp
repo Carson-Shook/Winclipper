@@ -432,7 +432,7 @@ HRESULT PreviewWindow::CreateDeviceIndependentResources(HINSTANCE hInstance)
 			);
 		}
 
-		HBITMAP hBitmap = NULL;
+		HBITMAP hBitmap = nullptr;
 		IWICBitmapDecoder *pDecoder = nullptr;
 		IWICBitmap *pBitmap = nullptr;
 
@@ -473,7 +473,10 @@ HRESULT PreviewWindow::CreateDeviceIndependentResources(HINSTANCE hInstance)
 
 		SafeRelease(&pDecoder);
 		SafeRelease(&pBitmap);
-		DeleteObject(hBitmap);
+		if (hBitmap != nullptr)
+		{
+			DeleteObject(hBitmap);
+		}
 	}
 
 	return hr;

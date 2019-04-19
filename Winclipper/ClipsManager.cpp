@@ -100,19 +100,17 @@ ClipsManager::ClipsManager()
 
 ClipsManager::ClipsManager(int displayClips, int maxClips, int menuChars, bool saveToDisk)
 {
+	try
+	{
+		fullClipsPath = File::JoinPath(File::GetAppDir(), L"clips.dat");
+	}
+	catch (const std::exception& e)
+	{
+		MessageBoxA(NULL, e.what(), "Winclipper", MB_OK | MB_ICONWARNING | MB_TASKMODAL | MB_SETFOREGROUND);
+		// Add termination code after adding HWND to the initializer.
+	}
+
 	windows10ReleaseId = RegistryUtilities::GetWindows10ReleaseId();
-
-	fullClipsPath = File::JoinPath(File::GetAppDir(), L"clips.dat");
-
-	HRESULT hr = S_OK;
-
-	// Create WIC factory
-	hr = CoCreateInstance(
-		CLSID_WICImagingFactory,
-		nullptr,
-		CLSCTX_INPROC_SERVER,
-		IID_PPV_ARGS(&pIWICFactory)
-	);
 
     ClipsManager::saveToDisk = saveToDisk;
 	ReadClips();
@@ -188,30 +186,6 @@ void ClipsManager::ClearClips()
 	clips.Clear();
     SaveClipsAsync();
 }
-//
-//IWICBitmapSource* createSourceFromHBitmap(HBITMAP hBitmap) {
-//	if (hBitmap == NULL)
-//		return NULL;
-//
-//	IWICImagingFactory* ipFactory = NULL;
-//	IWICBitmap* ipBitmap = NULL;
-//
-//	CoInitialize(NULL);
-//
-//	// Create the factory
-//	if (FAILED(CoCreateInstance(CLSID_WICImagingFactory, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&ipFactory))))
-//		goto Return;
-//
-//	// Create the bitmap
-//	if (FAILED(ipFactory->CreateBitmapFromHBITMAP(hBitmap, NULL, WICBitmapIgnoreAlpha, &ipBitmap)))
-//		goto ReleaseFactory;
-//
-//ReleaseFactory:
-//	ipFactory->Release();
-//Return:
-//	CoUninitialize();
-//	return ipBitmap;
-//}
 
 bool ClipsManager::AddToClips(HWND hWnd)
 {
@@ -251,7 +225,7 @@ bool ClipsManager::AddToClips(HWND hWnd)
 
 			if (tempBitmapInfo != nullptr)
 			{
-				unsigned long long colorBytes = tempBitmapInfo->bmiHeader.biClrUsed;
+				unsigned int colorBytes = tempBitmapInfo->bmiHeader.biClrUsed;
 				if (!colorBytes)
 				{
 					if (tempBitmapInfo->bmiHeader.biBitCount <= 8)
@@ -265,11 +239,7 @@ bool ClipsManager::AddToClips(HWND hWnd)
 				}
 
 				size_t offset = tempBitmapInfo->bmiHeader.biSize + (colorBytes * sizeof(RGBQUAD));
-				
-				int padding = offset % 4;
 
-				bool hasAlpha = false;
-				bool isPremultiplied = false;
 				std::shared_ptr<BITMAPINFOHEADER> bitmapInfoHeader(new BITMAPINFOHEADER);
 				std::vector<RGBQUAD> quads;
 
@@ -295,12 +265,19 @@ bool ClipsManager::AddToClips(HWND hWnd)
 
 				GlobalUnlock(psClipboardData);
 
-				clip->SetDibBitmap(
-					bitmapInfoHeader,
-					quads,
-					pMyBits
-				);
-				clip->AddFormat(CF_DIB);
+				try
+				{
+					clip->SetDibBitmap(
+						bitmapInfoHeader,
+						quads,
+						pMyBits
+					);
+					clip->AddFormat(CF_DIB);
+				}
+				catch (const std::exception&)
+				{
+					// Not really sure I should put up a message if this fails
+				}
 			}
 		}
 	}
@@ -310,6 +287,10 @@ bool ClipsManager::AddToClips(HWND hWnd)
 	if (clip->AnyFormats())
 	{
 		clips.AddFront(clip);
+	}
+	else
+	{
+		clip->MarkForDelete();
 	}
     SaveClipsAsync();
     return true;
@@ -324,7 +305,7 @@ bool ClipsManager::SetClipboardToClipAtIndex(HWND hWnd, int index)
 
     EmptyClipboard();
 
-    std::shared_ptr<Clip> clip = GetClipAt(index);
+	std::shared_ptr<Clip> clip = index == 0 ? GetClipAt(index) : clips.RemoveAt(index);
 
 	if (clip != nullptr)
 	{
@@ -360,28 +341,37 @@ bool ClipsManager::SetClipboardToClipAtIndex(HWND hWnd, int index)
 
 			HGLOBAL hClipboardData = GlobalAlloc(GMEM_MOVEABLE, bmiHeader->biSize + rgbQuadsCount * sizeof(RGBQUAD) + bitmapSize);
 
-			BITMAPINFO * bmi = (BITMAPINFO *)GlobalLock(hClipboardData);
-
-			bmi->bmiHeader = *bmiHeader;
-
-			for (auto i = 0; i < rgbQuadsCount; i++)
+			if (hClipboardData != nullptr && bmiHeader != nullptr)
 			{
-				bmi->bmiColors[i] = quadCollection[i];
-			}
+				BITMAPINFO * bmi = (BITMAPINFO *)GlobalLock(hClipboardData);
+				
+				if (bmi != nullptr)
+				{
+					bmi->bmiHeader = *bmiHeader;
 
-			memcpy((BYTE *)bmi + (bmiHeader->biSize + rgbQuadsCount * sizeof(RGBQUAD)), clip->DibBitmapBits().get(), bitmapSize);
+					for (size_t i = 0; i < rgbQuadsCount; i++)
+					{
+						bmi->bmiColors[i] = quadCollection[i];
+					}
 
-			GlobalUnlock(hClipboardData);
+					memcpy((BYTE *)bmi + (bmiHeader->biSize + rgbQuadsCount * sizeof(RGBQUAD)), clip->DibBitmapBits().get(), bitmapSize);
 
-			if (!SetClipboardData(CF_DIB, hClipboardData))
-			{
-				GlobalFree(hClipboardData);
+					GlobalUnlock(hClipboardData);
+					
+					if (!SetClipboardData(CF_DIB, hClipboardData))
+					{
+						GlobalFree(hClipboardData);
+					}
+				}
+				else
+				{
+					GlobalUnlock(hClipboardData);
+				}
 			}
 		}
 
-		if (clips.Front() != clip)
+		if (index != 0)
 		{
-			clips.RemoveAt(index);
 			clips.AddFront(clip);
 		}
 	}

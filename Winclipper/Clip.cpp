@@ -1,13 +1,13 @@
 #include "stdafx.h"
 #include "Clip.h"
 
-Clip::Clip() noexcept
+Clip::Clip()
 {
 }
 
 Clip::~Clip()
 {
-	if (thumbnail != NULL)
+	if (thumbnail != nullptr)
 	{
 		DeleteObject(thumbnail);
 	}
@@ -20,7 +20,7 @@ Clip::~Clip()
 
 // Call this if any associated resources should
 // be deleted when object is deconstructed.
-void Clip::MarkForDelete()
+void Clip::MarkForDelete() noexcept
 {
 	shouldDelete = true;
 }
@@ -82,29 +82,32 @@ void Clip::Deserialize(std::string serializationData)
 						units.push_back(unit);
 					}
 
-					DWORD cf = std::stoul(units.at(0));
-
-					switch (cf)
+					if (units.size() != 0)
 					{
-					case CF_UNICODETEXT:
-						AddFormat(cf);
-						SetUnicodeText(GetWStringFromBase64(units.at(1)));
-						break;
-					case CF_DIB:
-						AddFormat(cf);
-						bitmapGuid = units.at(1);
-						if (!OnDemandBitmapManager::Exists(bitmapGuid))
+						const DWORD cf = std::stoul(units.at(0));
+
+						switch (cf)
 						{
-							// If the bitmap data is missing, then we want to
-							// ensure the clip is not created.
-							throw std::exception("Cached bitmap missing.");
+						case CF_UNICODETEXT:
+							AddFormat(cf);
+							SetUnicodeText(GetWStringFromBase64(units.at(1)));
+							break;
+						case CF_DIB:
+							AddFormat(cf);
+							bitmapGuid = units.at(1);
+							if (!OnDemandBitmapManager::Exists(bitmapGuid))
+							{
+								// If the bitmap data is missing, then we want to
+								// ensure the clip is not created.
+								throw std::exception("Cached bitmap missing.");
+							}
+							bitmapHeight = std::stoi(units.at(2));
+							bitmapWidth = std::stoi(units.at(3));
+							thumbnail = OnDemandBitmapManager::GetThumbnail(bitmapGuid);
+							break;
+						default:
+							break;
 						}
-						bitmapHeight = std::stoi(units.at(2));
-						bitmapWidth = std::stoi(units.at(3));
-						thumbnail = OnDemandBitmapManager::GetThumbnail(bitmapGuid);
-						break;
-					default:
-						break;
 					}
 				}
 			}

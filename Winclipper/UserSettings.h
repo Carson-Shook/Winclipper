@@ -38,7 +38,7 @@
 class UserSettings : public Notify
 {
 private:
-    wchar_t             fullSettingPath[MAX_PATH];
+    std::wstring        fullSettingPath;
     int                 maxDisplayClips;
     int                 maxSavedClips;
     int                 menuDisplayChars;
@@ -85,6 +85,7 @@ public:
 
     bool                ShowPreview();
     void                SetShowPreview(bool showPreview);
+
 };
 
 

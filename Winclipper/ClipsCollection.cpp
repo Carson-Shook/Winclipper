@@ -43,7 +43,10 @@ void ClipsCollection::Deserialize(std::string serializationData)
 			try
 			{
 				clip->Deserialize(readData);
-				clips.push_back(clip);
+				if (clip->AnyFormats())
+				{
+					clips.push_back(clip);
+				}
 			}
 			catch (const std::exception&)
 			{
@@ -90,17 +93,12 @@ void ClipsCollection::AddFront(std::shared_ptr<Clip> clip)
 	}
 }
 
-std::shared_ptr<Clip> ClipsCollection::RemoveBack()
+void ClipsCollection::RemoveBack()
 {
-	std::shared_ptr<Clip> clip(nullptr);
-
 	if (!clips.empty())
 	{
-		clip = clips.back();
 		clips.pop_back();
 	}
-
-	return clip;
 }
 
 std::shared_ptr<Clip> ClipsCollection::RemoveAt(size_t index)

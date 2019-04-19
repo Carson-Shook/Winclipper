@@ -306,23 +306,30 @@ std::string OnDemandBitmapManager::CreateGuidString()
 {
 	GUID guid;
 	char guidString[38];
-	CoCreateGuid(&guid);
-	sprintf_s(guidString,
-		38,
-		"%08X-%04X-%04X-%02X%02X-%02X%02X%02X%02X%02X%02X", 
-		guid.Data1, 
-		guid.Data2, 
-		guid.Data3, 
-		guid.Data4[0], 
-		guid.Data4[1], 
-		guid.Data4[2], 
-		guid.Data4[3], 
-		guid.Data4[4], 
-		guid.Data4[5], 
-		guid.Data4[6], 
-		guid.Data4[7]);
+	HRESULT hr = CoCreateGuid(&guid);
+	if (SUCCEEDED(hr) || hr == RPC_S_UUID_LOCAL_ONLY)
+	{
+		sprintf_s(guidString,
+			38,
+			"%08X-%04X-%04X-%02X%02X-%02X%02X%02X%02X%02X%02X",
+			guid.Data1,
+			guid.Data2,
+			guid.Data3,
+			guid.Data4[0],
+			guid.Data4[1],
+			guid.Data4[2],
+			guid.Data4[3],
+			guid.Data4[4],
+			guid.Data4[5],
+			guid.Data4[6],
+			guid.Data4[7]);
 
-	return std::string(guidString);
+		return std::string(guidString);
+	}
+	else
+	{
+		throw std::exception("GUID could not be created.");
+	}
 }
 
 void OnDemandBitmapManager::UpdateUsage(std::string guid)

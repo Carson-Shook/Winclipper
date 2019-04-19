@@ -9,13 +9,13 @@ Bitmap::Bitmap(std::shared_ptr<BITMAPINFOHEADER> pBmiHeader, std::vector<RGBQUAD
 	pDibBitmapBits = bits;
 }
 
-Bitmap::Bitmap()
+Bitmap::Bitmap() noexcept
 {
 }
 
 Bitmap::~Bitmap()
 {
-	if (hBitmap != NULL)
+	if (hBitmap != nullptr)
 	{
 		DeleteObject(hBitmap);
 	}
@@ -25,7 +25,9 @@ Bitmap::~Bitmap()
 
 std::string Bitmap::Serialize()
 {
-	size_t bmSize = Size();
+	std::string data;
+
+	const size_t bmSize = Size();
 	BITMAPFILEHEADER header;
 	header.bfType = 0x4d42;
 	header.bfOffBits = sizeof(BITMAPFILEHEADER) + pDibBitmapInfoHeader->biSize + (rgbQuadCollection.size() * sizeof(RGBQUAD));
@@ -33,8 +35,8 @@ std::string Bitmap::Serialize()
 	header.bfReserved2 = 0;
 	header.bfSize = header.bfOffBits + bmSize;
 
-	std::string data;
-	
+	// reinterpret_cast should be fine in these situations
+	// since we are reinterpreting the values as binary data.
 	data.append(reinterpret_cast<const char *>(&header),
 		reinterpret_cast<const char *>(&header) + sizeof(BITMAPFILEHEADER));
 	data.append(reinterpret_cast<const char *>(pDibBitmapInfoHeader.get()),
@@ -58,7 +60,7 @@ void Bitmap::Deserialize(std::string serializationData)
 	if (dataLength != 0)
 	{
 		BITMAPFILEHEADER header;
-		std::shared_ptr<BITMAPINFOHEADER> bmih(new BITMAPINFOHEADER);
+		std::shared_ptr<BITMAPINFOHEADER> bmih = std::make_shared<BITMAPINFOHEADER>();
 		std::vector<RGBQUAD> quads;
 
 		std::istringstream stream(serializationData);
@@ -79,7 +81,7 @@ void Bitmap::Deserialize(std::string serializationData)
 			}
 		}
 
-		for (auto i = 0; i < colorBytes; i++)
+		for (unsigned int i = 0; i < colorBytes; i++)
 		{
 			RGBQUAD quad;
 			stream.readsome(reinterpret_cast<char *>(&quad), sizeof(RGBQUAD));
@@ -87,7 +89,7 @@ void Bitmap::Deserialize(std::string serializationData)
 			quads.push_back(quad);
 		}
 
-		size_t bmSize = header.bfSize - header.bfOffBits;
+		const size_t bmSize = header.bfSize - header.bfOffBits;
 
 		std::shared_ptr<BYTE> bits(new BYTE[bmSize], array_deleter<BYTE>());
 
@@ -103,7 +105,7 @@ void Bitmap::Deserialize(std::string serializationData)
 
 /* End ISerializable implementation */
 
-const std::shared_ptr<BITMAPINFOHEADER> Bitmap::DibBitmapInfoHeader()
+const std::shared_ptr<BITMAPINFOHEADER> Bitmap::DibBitmapInfoHeader() noexcept
 {
 	return pDibBitmapInfoHeader;
 }
@@ -117,7 +119,7 @@ const std::vector<RGBQUAD> Bitmap::RgbQuadCollection()
 	return rgbQuadCollection;
 }
 
-const std::shared_ptr<BYTE> Bitmap::DibBitmapBits()
+const std::shared_ptr<BYTE> Bitmap::DibBitmapBits() noexcept
 {
 	return pDibBitmapBits;
 }
@@ -127,18 +129,15 @@ const std::shared_ptr<BYTE> Bitmap::DibBitmapBits()
 // to call DeleteObject on the HBITMAP.
 HBITMAP Bitmap::GetHbitmap()
 {
-	if (hBitmap == NULL)
+	if (hBitmap == nullptr)
 	{
-		HDC screen = GetDC(NULL);
+		HDC screen = GetDC(nullptr);
 		BITMAPINFO * bmi = (BITMAPINFO *)new BYTE[pDibBitmapInfoHeader->biSize + rgbQuadCollection.size() * sizeof(RGBQUAD)];
 
 		bmi->bmiHeader = *pDibBitmapInfoHeader;
-		for (auto i = 0; i < rgbQuadCollection.size(); i++)
+		for (size_t i = 0; i < rgbQuadCollection.size(); i++)
 		{
-			bmi->bmiColors[i].rgbBlue = rgbQuadCollection[i].rgbBlue;
-			bmi->bmiColors[i].rgbGreen = rgbQuadCollection[i].rgbGreen;
-			bmi->bmiColors[i].rgbRed = rgbQuadCollection[i].rgbRed;
-			bmi->bmiColors[i].rgbReserved = rgbQuadCollection[i].rgbReserved;
+			bmi->bmiColors[i] = rgbQuadCollection[i];
 		}
 
 		hBitmap = CreateDIBitmap(
@@ -151,13 +150,13 @@ HBITMAP Bitmap::GetHbitmap()
 		);
 
 		delete[](BYTE *)bmi;
-		ReleaseDC(NULL, screen);
+		ReleaseDC(nullptr, screen);
 	}
 	return hBitmap;
 }
 
 // Returns the size of the image in bytes.
-size_t Bitmap::Size()
+size_t Bitmap::Size() noexcept
 {
 	size_t retVal = 0;
 	if (pDibBitmapInfoHeader != nullptr)

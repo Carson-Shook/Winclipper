@@ -43,7 +43,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		CoUninitialize();
 	}
 
-    return (int) msg.wParam;
+    return 0;
 }
 
 // Execute StupidSimpleUpdater

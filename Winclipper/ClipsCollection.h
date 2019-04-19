@@ -12,7 +12,7 @@ public:
 	void									Deserialize(std::string serializationData) override;
 
 	void									AddFront(std::shared_ptr<Clip> clip);
-	std::shared_ptr<Clip>					RemoveBack();
+	void									RemoveBack();
 	std::shared_ptr<Clip>					RemoveAt(size_t index);
 	std::shared_ptr<Clip>					At(size_t index);
 	std::shared_ptr<Clip>					Front();

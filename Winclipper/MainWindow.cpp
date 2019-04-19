@@ -342,9 +342,7 @@ LRESULT MainWindow::WmCreate(HWND hWnd, WPARAM wParam, LPARAM lParam)
 LRESULT MainWindow::WmDestroy(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
 	delete previewWindow;
-	previewWindow = nullptr;
 	delete cManager;
-	cManager = nullptr;
 	DeleteObject(hFontStd);
 	DeleteNotificationIcon();
 	PostQuitMessage(0);
@@ -405,7 +403,7 @@ LRESULT MainWindow::WmMenuSelect(HWND hWnd, WPARAM wParam, LPARAM lParam)
 				// as an offset in pixels to subtract from our desired item.
 				LPRECT hitTestRect = new RECT();
 				int hitTestDelta = 0;
-				unsigned long long sizeOffset = 0;
+				long sizeOffset = 0;
 				if (GetMenuItemRect(hWnd, activePopupMenu, 0, hitTestRect))
 				{
 					LPPOINT hitTest = new POINT({ hitTestRect->left + 1, hitTestRect->top + 1 });

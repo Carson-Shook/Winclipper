@@ -1,6 +1,5 @@
 #pragma once
 #include "resource.h"
-#include <wincodec.h>
 #include "UserSettings.h"
 #include "File.h"
 #include "RegistryUtilities.h"
@@ -36,8 +35,6 @@ private:
 
     int                             clipsWriterWaitCount = 0;
     bool                            isWriterFinished = true;
-
-    IWICImagingFactory *			pIWICFactory;
 
     void                            SaveClipsAsync();
     static void                     DelayClipsWriter(int* waitCount, ClipsManager* cs);

@@ -56,7 +56,7 @@ private:
 	unsigned long long			remainingTextLines = 0; // need to account for theoretical maximum NTFS file size
 	unsigned long long			clipSizeInKb = 0;
 	wchar_t						szPreviewWindowClass[MAX_LOADSTRING];       // the text preview window
-	HWND						windowHandle;
+	HWND						windowHandle = nullptr;
 	bool						bitmapReady;
 
 	ATOM						RegisterPreviewWindowClass(HINSTANCE);

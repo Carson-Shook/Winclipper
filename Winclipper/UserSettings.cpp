@@ -58,17 +58,11 @@ unsigned short stous(std::wstring str)
 // They will only be written to disk once a change has been made.
 UserSettings::UserSettings()
 {
-    wchar_t* tempSettingPath;
-    if (SUCCEEDED(SHGetKnownFolderPath(FOLDERID_LocalAppData, KF_FLAG_DEFAULT, NULL, &tempSettingPath)))
-    {
-        wcscpy_s(fullSettingPath, tempSettingPath);
-        PathAppend(fullSettingPath, L"\\Winclipper\\Winclipper\\settings.dat");
-        CoTaskMemFree(tempSettingPath);
-    }
+	fullSettingPath = File::JoinPath(File::GetAppDir(), L"settings.dat");
 
-    if (File::Exists(fullSettingPath))
+    if (File::Exists(fullSettingPath.c_str()))
     {
-        std::vector<std::wstring> settings = File::ReadAllLines(fullSettingPath);
+        std::vector<std::wstring> settings = File::ReadAllLines(fullSettingPath.c_str());
 
         if (!settings.empty())
         {
@@ -309,7 +303,7 @@ void UserSettings::WriteSettings()
     isWriterFinished = false;
     std::vector<std::wstring> settings = this->Serialize();
 
-    File::WriteAllLines(fullSettingPath, settings);
+    File::WriteAllLines(fullSettingPath.c_str(), settings);
     isWriterFinished = true;
 }
 

@@ -9,10 +9,10 @@
 class Clip : public ISerializable
 {
 public:
-	Clip() noexcept;
+	Clip();
 	~Clip();
 
-	void						MarkForDelete();
+	void						MarkForDelete() noexcept;
 
 	std::string					Serialize() override;
 	void						Deserialize(std::string serializationData) override;

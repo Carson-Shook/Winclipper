@@ -43,6 +43,10 @@ const std::wstring File::GetAppDir()
 			appDir = JoinPath(tempClipsPath, L"\\Winclipper\\Winclipper\\");
 			CoTaskMemFree(tempClipsPath);
 		}
+		else
+		{
+			throw std::exception("Your AppData folder could not be found.");
+		}
 	}
 	
 	return appDir;
