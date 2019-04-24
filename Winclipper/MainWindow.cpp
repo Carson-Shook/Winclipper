@@ -86,6 +86,12 @@ LRESULT MainWindow::MainWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
 		case NTF_SAVETODISK_CHANGED:
 			pThis->WmCommandNtfSaveToDiskChanged(hWnd, wParam, lParam);
 			break;
+		case NTF_SAVEIMAGES_CHANGED:
+			pThis->WmCommandNtfSaveImagesChanged(hWnd, wParam, lParam);
+			break;
+		case NTF_MAXCACHEMBYTES_CHANGED:
+			pThis->WmCommandNtfMaxcacheMBytesChanged(hWnd, wParam, lParam);
+			break;
 		default:
 			return DefWindowProcW(hWnd, message, wParam, lParam);
 		}
@@ -123,6 +129,9 @@ LRESULT MainWindow::MainWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
 		break;
 	case WM_INITMENUPOPUP:
 		pThis->WmInitMenuPopup(hWnd, wParam, lParam);
+		break;
+	case WM_MENURBUTTONUP:
+		pThis->WmMenuRButtonUp(hWnd, wParam, lParam);
 		break;
 	case WM_UNINITMENUPOPUP:
 		pThis->WmUninitMenuPopup(hWnd, wParam, lParam);
@@ -178,7 +187,7 @@ LRESULT MainWindow::WmCommandIdmSettings(HWND hWnd, WPARAM wParam, LPARAM lParam
 
 LRESULT MainWindow::WmCommandIdmAbout(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
-	HWND sender = (HWND)lParam == NULL ? hWnd : (HWND)lParam;
+	HWND sender = (HWND)lParam == nullptr ? hWnd : (HWND)lParam;
 	DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), sender, About);
 	return 0;
 }
@@ -192,6 +201,7 @@ LRESULT MainWindow::WmCommandIdmExit(HWND hWnd, WPARAM wParam, LPARAM lParam)
 		Sleep(2000);
 		waitUntilFinishedAttempts--;
 	}
+	OnDemandBitmapManager::SafeClose();
 	DestroyWindow(hWnd);
 
 	return 0;
@@ -228,6 +238,18 @@ LRESULT MainWindow::WmCommandNtfSaveToDiskChanged(HWND hWnd, WPARAM wParam, LPAR
 	return 0;
 }
 
+LRESULT MainWindow::WmCommandNtfSaveImagesChanged(HWND hWnd, WPARAM wParam, LPARAM lParam)
+{
+	cManager->SetSaveImages(uSettings.SaveImages());
+	return 0;
+}
+
+LRESULT MainWindow::WmCommandNtfMaxcacheMBytesChanged(HWND hWnd, WPARAM wParam, LPARAM lParam)
+{
+	OnDemandBitmapManager::SetMaxBytes(unsigned long long{ uSettings.MaxCacheMegabytes() } * 1048576);
+	return 0;
+}
+
 LRESULT MainWindow::WmappNCallNinKeySelect(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
 	// This prevents any additional keypresses from being 
@@ -235,21 +257,21 @@ LRESULT MainWindow::WmappNCallNinKeySelect(HWND hWnd, WPARAM wParam, LPARAM lPar
 	if (!ninKeypressLocked)
 	{
 		ninKeypressLocked = true;
-		int xCoord GET_X_LPARAM(wParam);
-		int yCoord GET_Y_LPARAM(wParam);
+		const int xCoord GET_X_LPARAM(wParam);
+		const int yCoord GET_Y_LPARAM(wParam);
 
-		LPPOINT cPos = new POINT;
+		POINT cPos;
 		if (xCoord != NULL && yCoord != NULL)
 		{
-			cPos->x = xCoord;
-			cPos->y = yCoord;
+			cPos.x = xCoord;
+			cPos.y = yCoord;
 		}
 		else
 		{
-			cPos->x = 10;
-			cPos->y = 10;
+			cPos.x = 10;
+			cPos.y = 10;
 		}
-		cManager->ShowClipsMenu(GetHandle(), cPos, true);
+		cManager->ShowClipsMenu(GetHandle(), &cPos, true);
 		previewWindow->ClearCache();
 		ninKeypressLocked = false;
 	}
@@ -271,13 +293,13 @@ LRESULT MainWindow::WmappNCallWmLButtonDblClk(HWND hWnd, WPARAM wParam, LPARAM l
 
 LRESULT MainWindow::WmappNCallWmContextMenu(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
-	LPPOINT cPos = new POINT;
-	if (!GetCursorPos(cPos))
+	POINT cPos;
+	if (!GetCursorPos(&cPos))
 	{
-		(*cPos).x = 10;
-		(*cPos).y = 10;
+		cPos.x = 10;
+		cPos.y = 10;
 	}
-	cManager->ShowClipsMenu(GetHandle(), cPos, true);
+	cManager->ShowClipsMenu(GetHandle(), &cPos, true);
 	previewWindow->ClearCache();
 
 	return 0;
@@ -308,13 +330,13 @@ LRESULT MainWindow::WmHotkey(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
 	// When the global hotkey is called, get the current window
 	// so we can reactivate it later, and then show the clips menu.
-	LPPOINT cPos = new POINT;
-	if (!GetCursorPos(cPos))
+	POINT cPos;
+	if (!GetCursorPos(&cPos))
 	{
-		(*cPos).x = 10;
-		(*cPos).y = 10;
+		cPos.x = 10;
+		cPos.y = 10;
 	}
-	cManager->ShowClipsMenu(GetHandle(), cPos, false);
+	cManager->ShowClipsMenu(GetHandle(), &cPos, false);
 	previewWindow->ClearCache();
 
 	return 0;
@@ -335,7 +357,7 @@ LRESULT MainWindow::WmCreate(HWND hWnd, WPARAM wParam, LPARAM lParam)
 	uSettings.Subscribe(hWnd);
 	settingsWindow.Subscribe(hWnd);
 
-	cManager = new ClipsManager(uSettings.MaxDisplayClips(), uSettings.MaxSavedClips(), uSettings.MenuDisplayChars(), uSettings.SaveToDisk());
+	cManager = new ClipsManager(uSettings.MaxDisplayClips(), uSettings.MaxSavedClips(), uSettings.MenuDisplayChars(), uSettings.SaveToDisk(), uSettings.SaveImages());
 	return 0;
 }
 
@@ -343,7 +365,6 @@ LRESULT MainWindow::WmDestroy(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
 	delete previewWindow;
 	delete cManager;
-	DeleteObject(hFontStd);
 	DeleteNotificationIcon();
 	PostQuitMessage(0);
 	return 0;
@@ -354,6 +375,44 @@ LRESULT MainWindow::WmInitMenu(HWND hWnd, WPARAM wParam, LPARAM lParam)
 	// keep track of the top level menu to differentiate for display purposes
 	activePopupMenu = topPopupMenu = (HMENU)wParam;
 	cManager->SelectDefaultMenuItem(cManager->GetSize() > 1 ? uSettings.Select2ndClip() : false);
+	return 0;
+}
+
+LRESULT MainWindow::WmMenuRButtonUp(HWND hWnd, WPARAM wParam, LPARAM lParam)
+{
+	HMENU menu = CreatePopupMenu();
+	AppendMenuW(menu, MF_STRING, 1, L"Delete");
+
+	POINT cPos;
+	if (!GetCursorPos(&cPos))
+	{
+		cPos.x = 10;
+		cPos.y = 10;
+	}
+
+	int menuSelection;
+	menuSelection = TrackPopupMenuEx(
+		menu,
+		TPM_LEFTALIGN | TPM_TOPALIGN | TPM_NONOTIFY | TPM_RETURNCMD | TPM_RECURSE,
+		cPos.x - 5,
+		cPos.y - 5,
+		hWnd,
+		nullptr
+	);
+
+	if (menuSelection == 1)
+	{
+		unsigned int index = LOWORD(wParam);
+
+		if (activePopupMenu != topPopupMenu)
+		{
+			index += cManager->DisplayClips();
+		}
+		cManager->DeleteClipAt(index);
+
+		PostMessageW(hWnd, WM_CANCELMODE, 0, 0);
+	}
+
 	return 0;
 }
 
@@ -379,7 +438,7 @@ LRESULT MainWindow::WmMenuSelect(HWND hWnd, WPARAM wParam, LPARAM lParam)
 		DWORD flags = HIWORD(wParam);
 		if ((flags & MF_HILITE) && !(flags & MF_POPUP))
 		{
-			unsigned int i = LOWORD(wParam);
+			const unsigned int i = LOWORD(wParam);
 			if (i != 0 && i <= cManager->GetSize())
 			{
 				previewWindow->SetPreviewClip(cManager->GetClipAt(i - 1));
@@ -401,34 +460,29 @@ LRESULT MainWindow::WmMenuSelect(HWND hWnd, WPARAM wParam, LPARAM lParam)
 				// and subtracting it's bottom value from the original first
 				// item's rect top, and then we can use the resulting value
 				// as an offset in pixels to subtract from our desired item.
-				LPRECT hitTestRect = new RECT();
+				RECT hitTestRect = { 0,0,0,0 };
 				int hitTestDelta = 0;
 				long sizeOffset = 0;
-				if (GetMenuItemRect(hWnd, activePopupMenu, 0, hitTestRect))
+				if (GetMenuItemRect(hWnd, activePopupMenu, 0, &hitTestRect))
 				{
-					LPPOINT hitTest = new POINT({ hitTestRect->left + 1, hitTestRect->top + 1 });
-					hitTestDelta = MenuItemFromPoint(hWnd, activePopupMenu, *hitTest);
-					delete hitTest;
+					POINT hitTest = { hitTestRect.left + 1, hitTestRect.top + 1 };
+					hitTestDelta = MenuItemFromPoint(hWnd, activePopupMenu, hitTest);
 
-					LPRECT currentRect = new RECT();
-					if (GetMenuItemRect(hWnd, activePopupMenu, hitTestDelta - offset, currentRect))
+					RECT currentRect;
+					if (GetMenuItemRect(hWnd, activePopupMenu, hitTestDelta - offset, &currentRect))
 					{
-						sizeOffset = currentRect->bottom - hitTestRect->top;
+						sizeOffset = currentRect.bottom - hitTestRect.top;
 					}
-					delete currentRect;
 				}
-				delete hitTestRect;
 
-				LPRECT menuItemDims = new RECT();
-
-				if (GetMenuItemRect(hWnd, activePopupMenu, i - offset, menuItemDims))
+				RECT menuItemDims;
+				if (GetMenuItemRect(hWnd, activePopupMenu, i - offset, &menuItemDims))
 				{
-					menuItemDims->top = menuItemDims->top - sizeOffset;
-					menuItemDims->bottom = menuItemDims->bottom - sizeOffset;
-					previewWindow->MoveRelativeToRect(menuItemDims, i);
+					menuItemDims.top = menuItemDims.top - sizeOffset;
+					menuItemDims.bottom = menuItemDims.bottom - sizeOffset;
+					previewWindow->MoveRelativeToRect(&menuItemDims, i);
 					previewWindow->Show();
 				}
-				delete menuItemDims;
 			}
 			else
 			{
@@ -451,22 +505,21 @@ LRESULT MainWindow::WndProcDefault(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
 	if (previewWindow != nullptr && IsWindowVisible(previewWindow->GetHandle()))
 	{
-		LPPOINT cPos = new POINT;
-		if (GetCursorPos(cPos))
+		POINT cPos;
+		if (GetCursorPos(&cPos))
 		{
-			if (cPos->x != previousMouseLoc->x || cPos->y != previousMouseLoc->y)
+			if (cPos.x != previousMouseLoc->x || cPos.y != previousMouseLoc->y)
 			{
-				if (MenuItemFromPoint(hWnd, activePopupMenu, *cPos) == -1)
+				if (MenuItemFromPoint(hWnd, activePopupMenu, cPos) == -1)
 				{
 					previewWindow->Hide();
 				}
 
-				previousMouseLoc->x = cPos->x;
-				previousMouseLoc->y = cPos->y;
+				previousMouseLoc->x = cPos.x;
+				previousMouseLoc->y = cPos.y;
 
 			}
 		}
-		delete cPos;
 	}
 	return 0;
 }
@@ -499,11 +552,6 @@ bool MainWindow::DeleteNotificationIcon()
 MainWindow::MainWindow(HINSTANCE hInstance, UserSettings & userSettings, SettingsWindow & settingsWindow)
 	:uSettings(userSettings), settingsWindow(settingsWindow)
 {
-	NONCLIENTMETRICS hfDefault;
-	hfDefault.cbSize = sizeof(NONCLIENTMETRICS);
-	SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(NONCLIENTMETRICS), &hfDefault, 0);
-	hFontStd = CreateFontIndirectW(&hfDefault.lfCaptionFont);
-
 	LoadStringW(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
 	LoadStringW(hInstance, IDC_WINCLIPPER, szMainWindowClass, MAX_LOADSTRING);
 
@@ -541,6 +589,8 @@ bool MainWindow::InitMainWindow(HINSTANCE hInstance)
 
 	ShowWindow(hWnd, SW_HIDE);
 	UpdateWindow(hWnd);
+
+	OnDemandBitmapManager::SetMaxBytes(unsigned long long{ uSettings.MaxCacheMegabytes() } * 1048576);
 
 	return true;
 }

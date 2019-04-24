@@ -56,12 +56,12 @@ void ClipsManager::ReadClips()
 		}
 		catch (const std::exception& e)
 		{
-			MessageBoxA(NULL, e.what(), "Winclipper", MB_OK | MB_ICONWARNING | MB_TASKMODAL | MB_SETFOREGROUND);
+			MessageBoxA(nullptr, e.what(), "Winclipper", MB_OK | MB_ICONWARNING | MB_TASKMODAL | MB_SETFOREGROUND);
 		}
     }
 }
 
-unsigned int ClipsManager::SendPasteInput(void)
+unsigned int ClipsManager::SendPasteInput(void) noexcept
 {
 	INPUT inputCtrlKey;
 	INPUT inputVKey;
@@ -80,40 +80,33 @@ unsigned int ClipsManager::SendPasteInput(void)
 	inputVKey.ki.dwFlags = 0;
 	inputVKey.ki.dwExtraInfo = 0;
 
-	unsigned int in1 = SendInput(1, &inputCtrlKey, sizeof(INPUT));
-	unsigned int in2 = SendInput(1, &inputVKey, sizeof(INPUT));
+	const unsigned int in1 = SendInput(1, &inputCtrlKey, sizeof(INPUT));
+	const unsigned int in2 = SendInput(1, &inputVKey, sizeof(INPUT));
 
 	Sleep(50);
 
 	inputCtrlKey.ki.dwFlags = KEYEVENTF_KEYUP;
 	inputVKey.ki.dwFlags = KEYEVENTF_KEYUP;
-	unsigned int in3 = SendInput(1, &inputVKey, sizeof(INPUT));
-	unsigned int in4 = SendInput(1, &inputCtrlKey, sizeof(INPUT));
+	const unsigned int in3 = SendInput(1, &inputVKey, sizeof(INPUT));
+	const unsigned int in4 = SendInput(1, &inputCtrlKey, sizeof(INPUT));
 
 	return in1 + in2 + in3 + in4;
 }
 
-ClipsManager::ClipsManager()
+void ClipsManager::ClearBitmaps()
 {
-	windows10ReleaseId = RegistryUtilities::GetWindows10ReleaseId();
+	clips.RemoveAllOfFormat(CF_DIB);
 }
 
-ClipsManager::ClipsManager(int displayClips, int maxClips, int menuChars, bool saveToDisk)
+ClipsManager::ClipsManager(int displayClips, int maxClips, int menuChars, bool saveToDisk, bool saveImages)
 {
-	try
-	{
-		fullClipsPath = File::JoinPath(File::GetAppDir(), L"clips.dat");
-	}
-	catch (const std::exception& e)
-	{
-		MessageBoxA(NULL, e.what(), "Winclipper", MB_OK | MB_ICONWARNING | MB_TASKMODAL | MB_SETFOREGROUND);
-		// Add termination code after adding HWND to the initializer.
-	}
+	fullClipsPath = File::JoinPath(File::GetAppDir(), L"clips.dat");
 
 	windows10ReleaseId = RegistryUtilities::GetWindows10ReleaseId();
 
     ClipsManager::saveToDisk = saveToDisk;
 	ReadClips();
+	SetSaveImages(saveImages);
 	SetDisplayClips(displayClips);
     SetMaxClips(maxClips);
     SetMenuDisplayChars(menuChars);
@@ -123,18 +116,18 @@ ClipsManager::~ClipsManager()
 {
 }
 
-bool ClipsManager::NoPendingClipWrites()
+bool ClipsManager::NoPendingClipWrites() noexcept
 {
     return clipsWriterWaitCount == 0 && isWriterFinished;
 }
 
 
-unsigned int ClipsManager::DisplayClips()
+unsigned int ClipsManager::DisplayClips() noexcept
 {
     return displayClips;
 }
 
-void ClipsManager::SetDisplayClips(unsigned int displayClips)
+void ClipsManager::SetDisplayClips(unsigned int displayClips) noexcept
 {
     if (displayClips != ClipsManager::displayClips)
     {
@@ -142,7 +135,7 @@ void ClipsManager::SetDisplayClips(unsigned int displayClips)
     }
 }
 
-unsigned int ClipsManager::MaxClips()
+unsigned int ClipsManager::MaxClips() noexcept
 {
     return maxClips;
 }
@@ -157,17 +150,17 @@ void ClipsManager::SetMaxClips(unsigned int newMaxClips)
     }
 }
 
-unsigned int ClipsManager::MenuDisplayChars()
+unsigned int ClipsManager::MenuDisplayChars() noexcept
 {
     return menuDispChars;
 }
 
-void ClipsManager::SetMenuDisplayChars(unsigned int menuDispChars)
+void ClipsManager::SetMenuDisplayChars(unsigned int menuDispChars) noexcept
 {
     ClipsManager::menuDispChars = menuDispChars;
 }
 
-bool ClipsManager::SaveToDisk()
+bool ClipsManager::SaveToDisk() noexcept
 {
     return ClipsManager::saveToDisk;
 }
@@ -179,6 +172,24 @@ void ClipsManager::SetSaveToDisk(bool saveToDisk)
         ClipsManager::saveToDisk = saveToDisk;
         SaveClipsAsync();
     }
+}
+
+bool ClipsManager::SaveImages() noexcept
+{
+	return ClipsManager::saveImages;
+}
+
+void ClipsManager::SetSaveImages(bool saveImages)
+{
+	if (saveImages != ClipsManager::saveImages)
+	{
+		ClipsManager::saveImages = saveImages;
+		if (saveImages != true)
+		{
+			ClearBitmaps();
+			SaveClipsAsync();
+		}
+	}
 }
 
 void ClipsManager::ClearClips()
@@ -194,14 +205,14 @@ bool ClipsManager::AddToClips(HWND hWnd)
         return false;
     }
 
-	std::shared_ptr<Clip> clip(new Clip);
+	std::shared_ptr<Clip> clip = std::make_shared<Clip>();
 
 	if (IsClipboardFormatAvailable(CF_UNICODETEXT))
 	{
 		HANDLE psClipboardData = GetClipboardData(CF_UNICODETEXT);
 		if (psClipboardData != nullptr)
 		{
-			wchar_t * data = (wchar_t*)GlobalLock(psClipboardData);
+			const wchar_t * data = static_cast<wchar_t*>(GlobalLock(psClipboardData));
 			if (data != nullptr)
 			{
 				clip->SetUnicodeText(data);
@@ -215,13 +226,13 @@ bool ClipsManager::AddToClips(HWND hWnd)
 		}
 	}
 
-	if (IsClipboardFormatAvailable(CF_DIB))
+	if (SaveImages() && IsClipboardFormatAvailable(CF_DIB))
 	{
 		HANDLE psClipboardData = GetClipboardData(CF_DIB);
 
 		if (psClipboardData != nullptr)
 		{
-			const BITMAPINFO * tempBitmapInfo = (BITMAPINFO *)GlobalLock(psClipboardData);
+			const BITMAPINFO * tempBitmapInfo = static_cast<BITMAPINFO *>(GlobalLock(psClipboardData));
 
 			if (tempBitmapInfo != nullptr)
 			{
@@ -238,9 +249,9 @@ bool ClipsManager::AddToClips(HWND hWnd)
 					}
 				}
 
-				size_t offset = tempBitmapInfo->bmiHeader.biSize + (colorBytes * sizeof(RGBQUAD));
+				const size_t offset = tempBitmapInfo->bmiHeader.biSize + (colorBytes * sizeof(RGBQUAD));
 
-				std::shared_ptr<BITMAPINFOHEADER> bitmapInfoHeader(new BITMAPINFOHEADER);
+				std::shared_ptr<BITMAPINFOHEADER> bitmapInfoHeader = std::make_shared<BITMAPINFOHEADER>();
 				std::vector<RGBQUAD> quads;
 
 				*bitmapInfoHeader = tempBitmapInfo->bmiHeader;
@@ -249,19 +260,19 @@ bool ClipsManager::AddToClips(HWND hWnd)
 				{
 					for (unsigned int i = 0; i < colorBytes; i++)
 					{
-						RGBQUAD quad = tempBitmapInfo->bmiColors[i];
+						const RGBQUAD quad = tempBitmapInfo->bmiColors[i];
 						quads.push_back(quad);
 					}
 				}
 
 				// If not zero, use biSizeImage, otherwise calculate it using
 				// Microsoft's reccomended algorithm.
-				size_t size = bitmapInfoHeader->biSizeImage 
+				const size_t size = bitmapInfoHeader->biSizeImage 
 					? bitmapInfoHeader->biSizeImage 
 					: ((((bitmapInfoHeader->biWidth * bitmapInfoHeader->biBitCount) + 31) & ~31) >> 3) * bitmapInfoHeader->biHeight;
 
 				std::shared_ptr<BYTE> pMyBits(new BYTE[size], array_deleter<BYTE>());
-				memcpy(pMyBits.get(), ((BYTE *)tempBitmapInfo) + offset, size);
+				memcpy_s(pMyBits.get(), size, ((BYTE *)tempBitmapInfo) + offset, size);
 
 				GlobalUnlock(psClipboardData);
 
@@ -316,7 +327,7 @@ bool ClipsManager::SetClipboardToClipAtIndex(HWND hWnd, int index)
 			HGLOBAL hClipboardData = GlobalAlloc(GMEM_MOVEABLE, (clipLength + 1) * sizeof(wchar_t));
 			if (hClipboardData != nullptr)
 			{
-				wchar_t * pwcData = (wchar_t*)GlobalLock(hClipboardData);
+				wchar_t * pwcData = static_cast<wchar_t*>(GlobalLock(hClipboardData));
 				if (pwcData != nullptr)
 				{
 					wcscpy_s(pwcData, clipLength + 1, clip->UnicodeText());
@@ -336,14 +347,14 @@ bool ClipsManager::SetClipboardToClipAtIndex(HWND hWnd, int index)
 		{
 			auto bmiHeader = clip->DibBitmapInfoHeader();
 			auto quadCollection = clip->RgbQuadCollection();
-			size_t rgbQuadsCount = quadCollection.size();
-			size_t bitmapSize = clip->DibSize();
+			const size_t rgbQuadsCount = quadCollection.size();
+			const size_t bitmapSize = clip->DibSize();
 
 			HGLOBAL hClipboardData = GlobalAlloc(GMEM_MOVEABLE, bmiHeader->biSize + rgbQuadsCount * sizeof(RGBQUAD) + bitmapSize);
 
 			if (hClipboardData != nullptr && bmiHeader != nullptr)
 			{
-				BITMAPINFO * bmi = (BITMAPINFO *)GlobalLock(hClipboardData);
+				BITMAPINFO * bmi = static_cast<BITMAPINFO *>(GlobalLock(hClipboardData));
 				
 				if (bmi != nullptr)
 				{
@@ -354,7 +365,7 @@ bool ClipsManager::SetClipboardToClipAtIndex(HWND hWnd, int index)
 						bmi->bmiColors[i] = quadCollection[i];
 					}
 
-					memcpy((BYTE *)bmi + (bmiHeader->biSize + rgbQuadsCount * sizeof(RGBQUAD)), clip->DibBitmapBits().get(), bitmapSize);
+					memcpy_s((BYTE *)bmi + (bmiHeader->biSize + rgbQuadsCount * sizeof(RGBQUAD)), bitmapSize, clip->DibBitmapBits().get(), bitmapSize);
 
 					GlobalUnlock(hClipboardData);
 					
@@ -385,6 +396,12 @@ const size_t ClipsManager::GetSize() noexcept
 	return clips.Size();
 }
 
+void ClipsManager::DeleteClipAt(size_t index)
+{
+	auto clip = clips.RemoveAt(index);
+	clip->MarkForDelete();
+}
+
 std::shared_ptr<Clip> ClipsManager::GetClipAt(size_t index)
 {
 	try
@@ -397,7 +414,7 @@ std::shared_ptr<Clip> ClipsManager::GetClipAt(size_t index)
 	}
 }
 
-void ClipsManager::ShowClipsMenu(HWND hWnd, LPPOINT cPos, bool showExit)
+void ClipsManager::ShowClipsMenu(HWND hWnd, const LPPOINT cPos, bool showExit)
 {
     HWND curWin = GetForegroundWindow();
 	HWND taskbarWnd = FindWindow(L"Shell_TrayWnd", nullptr);
@@ -521,8 +538,8 @@ void ClipsManager::ShowClipsMenu(HWND hWnd, LPPOINT cPos, bool showExit)
         menuSelection = TrackPopupMenu(
             menu,
             TPM_LEFTALIGN | TPM_TOPALIGN | TPM_RETURNCMD,
-            cPos->x,
-            cPos->y,
+            cPos->x - 5,
+            cPos->y - 5,
             0,
             hWnd,
             NULL

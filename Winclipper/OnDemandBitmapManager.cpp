@@ -96,23 +96,21 @@ void OnDemandBitmapManager::SetMaxBytes(unsigned long long newMaxBytes)
 	if (newMaxBytes != maxBytes)
 	{
 		maxBytes = newMaxBytes;
+		RunCleanupAsync();
 	}
 }
 
 HBITMAP OnDemandBitmapManager::CreateAndSaveThumbnail(std::string guid, std::shared_ptr<Bitmap> bitmap)
 {
-	HBITMAP retVal = NULL;
+	HBITMAP retVal = nullptr;
 
 	IWICStream * piFileStream = nullptr;
 	IWICBitmapEncoder * piEncoder = nullptr;
 	IWICMetadataBlockWriter * piBlockWriter = nullptr;
 	IWICMetadataBlockReader * piBlockReader = nullptr;
 
-	UINT count = 0;
-	double dpiX = 0.0;
-	double dpiY = 0.0;
-	UINT height = GetSystemMetrics(SM_CXMENUCHECK);;
-	UINT width = GetSystemMetrics(SM_CXMENUCHECK);;
+	const UINT height = GetSystemMetrics(SM_CXMENUCHECK);
+	const UINT width = GetSystemMetrics(SM_CXMENUCHECK);
 
 
 	HBITMAP hBitmap = bitmap->GetHbitmap();
@@ -254,7 +252,7 @@ HBITMAP OnDemandBitmapManager::CreateAndSaveThumbnail(std::string guid, std::sha
 	if (SUCCEEDED(hr))
 	{
 		std::vector<BYTE> buffer(width * height * 4);
-		pConvertedSourceBitmap->CopyPixels(0, width * 4, buffer.size(), buffer.data());
+		pConvertedSourceBitmap->CopyPixels(nullptr, width * 4, buffer.size(), buffer.data());
 
 		retVal = CreateBitmap(width, height, 1, 32, buffer.data());
 	}
@@ -272,14 +270,14 @@ HBITMAP OnDemandBitmapManager::CreateAndSaveThumbnail(std::string guid, std::sha
 
 HBITMAP OnDemandBitmapManager::GetThumbnail(std::string guid)
 {
-	HBITMAP retVal = NULL;
+	HBITMAP retVal = nullptr;
 	std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
 	auto path = File::JoinPath(GetCacheDir(), converter.from_bytes(guid));
 
 	path += L"-thumb";
 	if (File::Exists(path.c_str()))
 	{
-		retVal = (HBITMAP)LoadImageW(NULL, path.c_str(), IMAGE_BITMAP, 0, 0, LR_DEFAULTSIZE | LR_LOADFROMFILE);
+		retVal = (HBITMAP)LoadImageW(nullptr, path.c_str(), IMAGE_BITMAP, 0, 0, LR_DEFAULTSIZE | LR_LOADFROMFILE);
 	}
 	else
 	{
@@ -306,7 +304,7 @@ std::string OnDemandBitmapManager::CreateGuidString()
 {
 	GUID guid;
 	char guidString[38];
-	HRESULT hr = CoCreateGuid(&guid);
+	const HRESULT hr = CoCreateGuid(&guid);
 	if (SUCCEEDED(hr) || hr == RPC_S_UUID_LOCAL_ONLY)
 	{
 		sprintf_s(guidString,
@@ -360,6 +358,16 @@ void OnDemandBitmapManager::UpdateUsage(std::string guid)
 	}
 }
 
+void OnDemandBitmapManager::SafeClose()
+{
+	safeClosing = true;
+	while (!cleanupMutex.try_lock())
+	{
+		Sleep(1);
+	}
+	cleanupMutex.unlock();
+}
+
 void OnDemandBitmapManager::RunCleanupAsync()
 {
 	if (cleanupWaitCount == 0)
@@ -376,19 +384,27 @@ void OnDemandBitmapManager::RunCleanupAsync()
 void OnDemandBitmapManager::RunCleanupInternal()
 {
 	cleanupMutex.lock();
-	while (cleanupWaitCount != 0)
+	while (cleanupWaitCount != 0 && !safeClosing)
 	{
+		// effective 5 second delay, but allows
+		// us to exit in 1 second at worst if
+		// program is in closing state.
+		int i = 5;
 		cleanupWaitCount = 1;
-		Sleep(5000);
+		while (i > 0 && !safeClosing)
+		{
+			Sleep(1000);
+			i--;
+		}
 		cleanupWaitCount--;
 	}
 	
-	while (inCriticalSection)
+	while (inCriticalSection && !safeClosing)
 	{
 		Sleep(10);
 	}
 
-	if (!usageList.empty())
+	if (!usageList.empty() && !safeClosing)
 	{
 		inCriticalSection = true;
 
@@ -396,7 +412,9 @@ void OnDemandBitmapManager::RunCleanupInternal()
 		std::map<std::string, std::shared_ptr<Bitmap>>::iterator it;
 		for (it = bitmapCache.begin(); it != bitmapCache.end(); it++)
 		{
-			currentSize += it->second->Size();
+			// We multiply by two because each Bitmap is roughly the size of
+			// itself plus the HBITMAP used in other parts of the program.
+			currentSize += (unsigned long long{ it->second->Size() } *2);
 		}
 
 		long references = 0;
@@ -406,7 +424,7 @@ void OnDemandBitmapManager::RunCleanupInternal()
 			references = bitmapCache.at(key).use_count();
 			if (references < 2)
 			{
-				currentSize -= static_cast<unsigned long long>(bitmapCache.at(key)->Size());
+				currentSize -= (unsigned long long{ bitmapCache.at(key)->Size() } *2);
 				bitmapCache.erase(key);
 				usageList.pop_back();
 			}
@@ -421,7 +439,7 @@ IWICImagingFactory * OnDemandBitmapManager::GetWICFactory()
 {
 	if (pIWICFactory == nullptr)
 	{
-		HRESULT hr = CoCreateInstance(
+		const HRESULT hr = CoCreateInstance(
 			CLSID_WICImagingFactory,
 			nullptr,
 			CLSCTX_INPROC_SERVER,
@@ -438,7 +456,8 @@ std::wstring OnDemandBitmapManager::cacheDir;
 std::map<std::string, std::shared_ptr<Bitmap>> OnDemandBitmapManager::bitmapCache;
 std::deque<std::string> OnDemandBitmapManager::usageList;
 
-unsigned long long OnDemandBitmapManager::maxBytes = 15728640; // 104857600; // 100 MB
+unsigned long long OnDemandBitmapManager::maxBytes = 104857600; // 100 MB
 unsigned int OnDemandBitmapManager::cleanupWaitCount = 0;
 bool OnDemandBitmapManager::inCriticalSection = false;
+bool OnDemandBitmapManager::safeClosing = false;
 std::mutex OnDemandBitmapManager::cleanupMutex;

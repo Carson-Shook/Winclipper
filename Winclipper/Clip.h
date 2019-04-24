@@ -9,7 +9,7 @@
 class Clip : public ISerializable
 {
 public:
-	Clip();
+	Clip() noexcept;
 	~Clip();
 
 	void						MarkForDelete() noexcept;
@@ -25,20 +25,20 @@ public:
 	bool						ContainsFormat(DWORD clipboardFormat);
 
 	void						SetDibBitmap(std::shared_ptr<BITMAPINFOHEADER> pBmiHeader, std::vector<RGBQUAD> quads, std::shared_ptr<BYTE> bits);
-	bool						BitmapReady();
+	bool						BitmapReady() noexcept;
 	std::shared_ptr<Bitmap>		EnsureBitmap();
 	void						EnsureBitmapAsync();
 
 	const std::shared_ptr<BITMAPINFOHEADER>		DibBitmapInfoHeader();
 	const std::vector<RGBQUAD>					RgbQuadCollection();
 	const std::shared_ptr<BYTE>					DibBitmapBits();
-	unsigned int								DibHeight();
-	unsigned int								DibWidth();
+	long										DibHeight() noexcept;
+	long										DibWidth() noexcept;
 	size_t										DibSize();
 	HBITMAP										GetHbitmap();
-	HBITMAP										GetThumbnail();
+	HBITMAP										GetThumbnail() noexcept;
 
-	void						SetUnicodeText(wchar_t * unicodeText);
+	void						SetUnicodeText(const wchar_t * unicodeText);
 	void						SetUnicodeText(std::wstring unicodeText);
 	const wchar_t *				UnicodeText() noexcept;
 	const std::wstring			UnicodeTextWString();
@@ -50,7 +50,7 @@ private:
 	unsigned int				bitmapHeight = 0;
 	unsigned int				bitmapWidth = 0;
 	std::weak_ptr<Bitmap>		pBitmap;
-	HBITMAP						thumbnail = NULL;
+	HBITMAP						thumbnail = nullptr;
 
 	std::wstring				unicodeText;
 	std::wstring				menuTextCache;

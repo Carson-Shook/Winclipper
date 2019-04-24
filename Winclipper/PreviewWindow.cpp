@@ -87,7 +87,7 @@ LRESULT PreviewWindow::WmTimer()
 {
 	if (!clipChanged && previewClip->BitmapReady())
 	{
-		HRESULT hr = SetBitmapConverter();
+		const HRESULT hr = SetBitmapConverter();
 		if (SUCCEEDED(hr))
 		{
 			RedrawWindow(GetHandle(), nullptr, nullptr, RDW_INVALIDATE);
@@ -148,7 +148,7 @@ LRESULT PreviewWindow::WmPaint(HWND hWnd, UINT message, WPARAM wParam, LPARAM lP
 
 			pRT->Clear(WindowColor);
 
-			auto rect = D2D1::RectF(
+			const auto rect = D2D1::RectF(
 				windowBorderWidth,
 				windowBorderWidth,
 				pRT->GetSize().width - windowBorderWidth,
@@ -172,7 +172,7 @@ LRESULT PreviewWindow::WmPaint(HWND hWnd, UINT message, WPARAM wParam, LPARAM lP
 
 			if (remainingTextLines > 0 || clipSizeInKb > MAX_LEN_PRV_CLIP_KB)
 			{
-				auto infoBreakRect = D2D1::RectF(
+				const auto infoBreakRect = D2D1::RectF(
 					windowBorderWidth,
 					pRT->GetSize().height - infoBreakHeight - windowBorderWidth,
 					pRT->GetSize().width - windowBorderWidth,
@@ -223,7 +223,7 @@ LRESULT PreviewWindow::WmPaint(HWND hWnd, UINT message, WPARAM wParam, LPARAM lP
 
 			pRT->Clear(WindowColor);
 
-			auto rect = D2D1::RectF(
+			const auto rect = D2D1::RectF(
 				windowBorderWidth,
 				windowBorderWidth,
 				pRT->GetSize().width - windowBorderWidth,
@@ -239,9 +239,9 @@ LRESULT PreviewWindow::WmPaint(HWND hWnd, UINT message, WPARAM wParam, LPARAM lP
 			}
 			else
 			{
-				float left = (windowBorderWidth + rect.right) / 2.0F;
-				float bottom = (windowBorderWidth + rect.bottom) / 2.0F;
-				auto loadingRect = D2D1::RectF(
+				const float left = (windowBorderWidth + rect.right) / 2.0F;
+				const float bottom = (windowBorderWidth + rect.bottom) / 2.0F;
+				const auto loadingRect = D2D1::RectF(
 					left - (pD2DLoadingBitmap->GetSize().width / ScaleX(2.0F)),
 					bottom - (pD2DLoadingBitmap->GetSize().height / ScaleY(2.0F)),
 					left + (pD2DLoadingBitmap->GetSize().width / ScaleX(2.0F)),
@@ -824,13 +824,13 @@ void PreviewWindow::MoveRelativeToRect(const LPRECT rect, unsigned int index)
 		{
 			if (renderingWidth >= renderingHeight)
 			{
-				float ratio = layoutMaxWidth / renderingWidth;
+				const float ratio = layoutMaxWidth / renderingWidth;
 				renderingWidth = layoutMaxWidth;
 				renderingHeight = renderingHeight * ratio;
 			}
 			else
 			{
-				float ratio = layoutMaxHeight / renderingHeight;
+				const float ratio = layoutMaxHeight / renderingHeight;
 				renderingHeight = layoutMaxHeight;
 				renderingWidth = renderingWidth * ratio;
 			}
@@ -843,11 +843,11 @@ void PreviewWindow::MoveRelativeToRect(const LPRECT rect, unsigned int index)
 	int xLoc = rect->right + ScaleX(5);
 	int yLoc = rect->top;
 
-	LPMONITORINFO lpmi = new MONITORINFO;
-	lpmi->cbSize = sizeof(MONITORINFO);
+	MONITORINFO lpmi;
+	lpmi.cbSize = sizeof(MONITORINFO);
 	HMONITOR currentMonitor = MonitorFromRect(rect, 0);
 
-	GetMonitorInfo(currentMonitor, lpmi);
+	GetMonitorInfo(currentMonitor, &lpmi);
 
 	// These two if's account for the preview going off screen.
 	// their position is precalculated, and if they would move out
@@ -856,24 +856,22 @@ void PreviewWindow::MoveRelativeToRect(const LPRECT rect, unsigned int index)
 	// them go off screen.
 	// 2018-09-09: width is now based on the maximum window size.
 	// I was tired of it flipping back and forth constantly.
-	if (xLoc + ScaleX(windowMaxWidth) + ScaleX(8) > (lpmi->rcWork).right)
+	if (xLoc + ScaleX(windowMaxWidth) + ScaleX(8) > (lpmi.rcWork).right)
 	{
 		const int xLocTemp = rect->left - (totalWindowWidth + ScaleX(8));
-		if (xLocTemp > (lpmi->rcWork).left)
+		if (xLocTemp > (lpmi.rcWork).left)
 		{
 			xLoc = xLocTemp;
 		}
 	}
-	if (yLoc + totalWindowHeight + ScaleX(24) > (lpmi->rcWork).bottom)
+	if (yLoc + totalWindowHeight + ScaleX(24) > (lpmi.rcWork).bottom)
 	{
 		const int yLocTemp = rect->bottom - (totalWindowHeight);
-		if (yLocTemp > (lpmi->rcWork).top)
+		if (yLocTemp > (lpmi.rcWork).top)
 		{
 			yLoc = yLocTemp;
 		}
 	}
-
-	delete lpmi;
 
 	// The two flags at the end ensure that we don't loose focus of the popup menu.
 	SetWindowPos(GetHandle(), HWND_TOPMOST, xLoc, yLoc, totalWindowWidth, totalWindowHeight, SWP_NOACTIVATE | SWP_NOSENDCHANGING);

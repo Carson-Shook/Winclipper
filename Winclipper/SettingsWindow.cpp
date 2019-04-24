@@ -86,8 +86,14 @@ LRESULT SettingsWindow::SettingsWndProc(HWND hWnd, UINT message, WPARAM wParam, 
 		case CHK_SHOW_PREVIEW:
 			pThis->WmCommandChkShowPreview(hWnd, wParam, lParam);
 			break;
+		case CHK_SAVE_IMAGES:
+			pThis->WmCommandChkSaveImages(hWnd, wParam, lParam);
+			break;
 		case HKY_SHOW_CLIPS_MENU:
 			pThis->WmCommandHkyShowClipsMenu(hWnd, wParam, lParam);
+			break;
+		case TXT_MAX_IMG_CACHE_MB:
+			pThis->WmCommandTxtMaxImageCacheMb(hWnd, wParam, lParam);
 			break;
 		default:
 			return DefWindowProcW(hWnd, message, wParam, lParam);
@@ -122,7 +128,7 @@ LRESULT SettingsWindow::WmCommandTxtMaxClipsDisplay(HWND hWnd, WPARAM wParam, LP
 {
 	if (HIWORD(wParam) == EN_KILLFOCUS)
 	{
-		const int value = GetDlgItemInt(hWnd, TXT_MAX_CLIPS_DISPLAY, NULL, false);
+		const int value = GetDlgItemInt(hWnd, TXT_MAX_CLIPS_DISPLAY, nullptr, false);
 
 		if (value < MAX_DISPLAY_LOWER)
 		{
@@ -137,7 +143,7 @@ LRESULT SettingsWindow::WmCommandTxtMaxClipsDisplay(HWND hWnd, WPARAM wParam, LP
 	}
 	else if (HIWORD(wParam) == EN_CHANGE)
 	{
-		const int value = GetDlgItemInt(hWnd, TXT_MAX_CLIPS_DISPLAY, NULL, false);
+		const int value = GetDlgItemInt(hWnd, TXT_MAX_CLIPS_DISPLAY, nullptr, false);
 
 		if (value >= MAX_DISPLAY_LOWER && value <= MAX_DISPLAY_UPPER)
 		{
@@ -156,7 +162,7 @@ LRESULT SettingsWindow::WmCommandTxtMaxClipsSaved(HWND hWnd, WPARAM wParam, LPAR
 {
 	if (HIWORD(wParam) == EN_KILLFOCUS)
 	{
-		const int value = GetDlgItemInt(hWnd, TXT_MAX_CLIPS_SAVED, NULL, false);
+		const int value = GetDlgItemInt(hWnd, TXT_MAX_CLIPS_SAVED, nullptr, false);
 
 		if (value < uSettings.MaxDisplayClips())
 		{
@@ -171,11 +177,11 @@ LRESULT SettingsWindow::WmCommandTxtMaxClipsSaved(HWND hWnd, WPARAM wParam, LPAR
 	}
 	else if (HIWORD(wParam) == EN_CHANGE)
 	{
-		const int value = GetDlgItemInt(hWnd, TXT_MAX_CLIPS_SAVED, NULL, false);
+		const int value = GetDlgItemInt(hWnd, TXT_MAX_CLIPS_SAVED, nullptr, false);
 
 		if (value <= MAX_SAVED_UPPER && value >= uSettings.MaxDisplayClips())
 		{
-			uSettings.SetMaxSavedClips(GetDlgItemInt(hWnd, TXT_MAX_CLIPS_SAVED, NULL, false));
+			uSettings.SetMaxSavedClips(GetDlgItemInt(hWnd, TXT_MAX_CLIPS_SAVED, nullptr, false));
 		}
 	}
 	return 0;
@@ -185,7 +191,7 @@ LRESULT SettingsWindow::WmCommandTxtMenuDispChars(HWND hWnd, WPARAM wParam, LPAR
 {
 	if (HIWORD(wParam) == EN_KILLFOCUS)
 	{
-		const int value = GetDlgItemInt(hWnd, TXT_MENU_DISP_CHARS, NULL, false);
+		const int value = GetDlgItemInt(hWnd, TXT_MENU_DISP_CHARS, nullptr, false);
 
 		if (value < MENU_CHARS_LOWER)
 		{
@@ -200,7 +206,7 @@ LRESULT SettingsWindow::WmCommandTxtMenuDispChars(HWND hWnd, WPARAM wParam, LPAR
 	}
 	else if (HIWORD(wParam) == EN_CHANGE)
 	{
-		const int value = GetDlgItemInt(hWnd, TXT_MENU_DISP_CHARS, NULL, false);
+		const int value = GetDlgItemInt(hWnd, TXT_MENU_DISP_CHARS, nullptr, false);
 
 		if (value >= MENU_CHARS_LOWER && value <= MENU_CHARS_UPPER)
 		{
@@ -282,6 +288,57 @@ LRESULT SettingsWindow::WmCommandChkShowPreview(HWND hWnd, WPARAM wParam, LPARAM
 	return 0;
 }
 
+LRESULT SettingsWindow::WmCommandChkSaveImages(HWND hWnd, WPARAM wParam, LPARAM lParam)
+{
+	if (HIWORD(wParam) == BN_CLICKED)
+	{
+		if (IsDlgButtonChecked(hWnd, CHK_SAVE_IMAGES))
+		{
+			uSettings.SetSaveImages(false);
+			CheckDlgButton(hWnd, CHK_SAVE_IMAGES, BST_UNCHECKED);
+			EnableWindow(GetDlgItem(hWnd, UD_MAX_IMG_CACHE_MB), false);
+			EnableWindow(GetDlgItem(hWnd, TXT_MAX_IMG_CACHE_MB), false);
+		}
+		else
+		{
+			uSettings.SetSaveImages(true);
+			CheckDlgButton(hWnd, CHK_SAVE_IMAGES, BST_CHECKED);
+			EnableWindow(GetDlgItem(hWnd, UD_MAX_IMG_CACHE_MB), true);
+			EnableWindow(GetDlgItem(hWnd, TXT_MAX_IMG_CACHE_MB), true);
+		}
+	}
+	return 0;
+}
+
+LRESULT SettingsWindow::WmCommandTxtMaxImageCacheMb(HWND hWnd, WPARAM wParam, LPARAM lParam)
+{
+	if (HIWORD(wParam) == EN_KILLFOCUS)
+	{
+		const unsigned int value = GetDlgItemInt(hWnd, TXT_MAX_IMG_CACHE_MB, nullptr, false);
+
+		if (value < MAX_CACHE_MBYTES_LOWER)
+		{
+			SetDlgItemInt(hWnd, TXT_MAX_IMG_CACHE_MB, MAX_CACHE_MBYTES_LOWER, false);
+		}
+		else if (value > MAX_CACHE_MBYTES_UPPER)
+		{
+			SetDlgItemInt(hWnd, TXT_MAX_IMG_CACHE_MB, MAX_CACHE_MBYTES_UPPER, false);
+		}
+
+		return 0; // set focus on the main window again
+	}
+	else if (HIWORD(wParam) == EN_CHANGE)
+	{
+		const unsigned int value = GetDlgItemInt(hWnd, TXT_MAX_IMG_CACHE_MB, nullptr, false);
+
+		if (value >= MAX_CACHE_MBYTES_LOWER && value <= MAX_CACHE_MBYTES_UPPER)
+		{
+			uSettings.SetMaxCacheMegabytes(value);
+		}
+	}
+	return 0;
+}
+
 LRESULT SettingsWindow::WmCommandHkyShowClipsMenu(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
 	if (HIWORD(wParam) == EN_CHANGE)
@@ -328,7 +385,7 @@ bool SettingsWindow::WriteRegistryRun()
 	HKEY hOpened;
 	wchar_t pPath[MAX_PATH];
 
-	GetModuleFileNameW(0, pPath, MAX_PATH);
+	GetModuleFileNameW(nullptr, pPath, MAX_PATH);
 
 	//OpenRegistryRun(hOpened);
 	RegOpenKeyExW(HKEY_CURRENT_USER, L"Software\\Microsoft\\Windows\\CurrentVersion\\Run", 0, KEY_ALL_ACCESS, &hOpened);
@@ -366,7 +423,7 @@ SettingsWindow::SettingsWindow(HINSTANCE hInstance, UserSettings & userSettings)
 	NONCLIENTMETRICS hfDefault;
 	hfDefault.cbSize = sizeof(NONCLIENTMETRICS);
 	SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, sizeof(NONCLIENTMETRICS), &hfDefault, 0);
-	hFontStd = CreateFontIndirectW(&hfDefault.lfCaptionFont);
+	hFontStd = CreateFontIndirectW(&hfDefault.lfMessageFont);
 
 	LoadStringW(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
 	LoadStringW(hInstance, IDC_WINCSETTINGS, szSettingsWindowClass, MAX_LOADSTRING);
@@ -383,7 +440,7 @@ SettingsWindow::~SettingsWindow()
 bool SettingsWindow::InitSettingsWindow(HINSTANCE hInstance)
 {
 	HWND hWnd = CreateWindowExW(0, szSettingsWindowClass, szTitle, WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU,
-		CW_USEDEFAULT, CW_USEDEFAULT, ScaleX(260), ScaleY(284), nullptr, nullptr, hInstance, this);
+		CW_USEDEFAULT, CW_USEDEFAULT, ScaleX(260), ScaleY(340), nullptr, nullptr, hInstance, this);
 
 	if (!hWnd)
 	{
@@ -410,12 +467,16 @@ bool SettingsWindow::InitSettingsWindow(HINSTANCE hInstance)
 	AddCheckbox(hWnd, hFontStd, 10, 154, hInstance, L"Run Winclipper at startup", CHK_RUN_AT_STARTUP);
 	AddCheckbox(hWnd, hFontStd, 10, 178, hInstance, L"Auto-select second clip", CHK_SLCT_2ND_CLIP);
 	AddCheckbox(hWnd, hFontStd, 10, 202, hInstance, L"Show clip preview", CHK_SHOW_PREVIEW);
+	AddCheckbox(hWnd, hFontStd, 10, 226, hInstance, L"Save images to the clipboard", CHK_SAVE_IMAGES);
+
+	AddLabel(hWnd, hFontStd, 28, 250, hInstance, L"Max image cache size (MB):", LBL_MAX_IMG_CACHE_MB);
+	AddSpinner(hWnd, hFontStd, 180, 250, hInstance, MAX_CACHE_MBYTES_LOWER, MAX_CACHE_MBYTES_UPPER, UD_MAX_IMG_CACHE_MB, TXT_MAX_IMG_CACHE_MB);
 
 	// Load values from user settings
 	SetDlgItemInt(hWnd, TXT_MAX_CLIPS_DISPLAY, uSettings.MaxDisplayClips(), false);
 	SetDlgItemInt(hWnd, TXT_MAX_CLIPS_SAVED, uSettings.MaxSavedClips(), false);
-
 	SetDlgItemInt(hWnd, TXT_MENU_DISP_CHARS, uSettings.MenuDisplayChars(), false);
+	SetDlgItemInt(hWnd, TXT_MAX_IMG_CACHE_MB, uSettings.MaxCacheMegabytes(), false);
 
 	HKEY hOpened;
 	if (RegOpenKeyExW(HKEY_CURRENT_USER, L"Software\\Microsoft\\Windows\\CurrentVersion\\Run", 0, KEY_ALL_ACCESS, &hOpened) == ERROR_SUCCESS)
@@ -437,6 +498,17 @@ bool SettingsWindow::InitSettingsWindow(HINSTANCE hInstance)
 	if (uSettings.ShowPreview())
 	{
 		CheckDlgButton(hWnd, CHK_SHOW_PREVIEW, BST_CHECKED);
+	}
+	if (uSettings.SaveImages())
+	{
+		CheckDlgButton(hWnd, CHK_SAVE_IMAGES, BST_CHECKED);
+		EnableWindow(GetDlgItem(hWnd, UD_MAX_IMG_CACHE_MB), true);
+		EnableWindow(GetDlgItem(hWnd, TXT_MAX_IMG_CACHE_MB), true);
+	}
+	else
+	{
+		EnableWindow(GetDlgItem(hWnd, UD_MAX_IMG_CACHE_MB), false);
+		EnableWindow(GetDlgItem(hWnd, TXT_MAX_IMG_CACHE_MB), false);
 	}
 
 	SendMessageW(hHotKey, HKM_SETHOTKEY, uSettings.ClipsMenuHotkey(), 0);

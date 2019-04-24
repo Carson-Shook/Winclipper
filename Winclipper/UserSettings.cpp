@@ -71,14 +71,18 @@ UserSettings::UserSettings()
     }
     else
     {
+		SaveSettingsAsync();
+
         // Set all defaults for first time run
-        SetMaxDisplayClips(20);
+       /* SetMaxDisplayClips(20);
         SetMaxSavedClips(50);
         SetMenuDisplayChars(64);
         SetClipsMenuHotkey(CMENU_HOTKEY_DEF);
         SetSaveToDisk(SAVE_TO_DISK_DEF);
         SetSelect2ndClip(SLCT_2ND_CLIP_DEF);
         SetShowPreview(SHOW_PREVIEW_DEF);
+		SetSaveImages(SAVE_IMAGES_DEF);
+		SetMaxCacheMegabytes(100);*/
     }
 }
 
@@ -297,6 +301,55 @@ void UserSettings::SetShowPreview(bool showPreview)
     }
 }
 
+bool UserSettings::SaveImages()
+{
+	return UserSettings::saveImages;
+}
+
+void UserSettings::SetSaveImages(bool saveImages)
+{
+	if (saveImages != UserSettings::saveImages)
+	{
+		UserSettings::saveImages = saveImages;
+		SendNotifcation(NTF_SAVEIMAGES_CHANGED, nullptr);
+		SaveSettingsAsync();
+	}
+}
+
+unsigned int UserSettings::MaxCacheMegabytes()
+{
+	if (maxCacheMegabytes < MENU_CHARS_LOWER)
+	{
+		maxCacheMegabytes = MENU_CHARS_LOWER;
+	}
+	else if (maxCacheMegabytes > MENU_CHARS_UPPER)
+	{
+		maxCacheMegabytes = MENU_CHARS_UPPER;
+	}
+	return maxCacheMegabytes;
+}
+
+void UserSettings::SetMaxCacheMegabytes(unsigned int maxCacheMegabytes)
+{
+	if (maxCacheMegabytes != UserSettings::maxCacheMegabytes)
+	{
+		if (maxCacheMegabytes < MAX_CACHE_MBYTES_LOWER)
+		{
+			UserSettings::maxCacheMegabytes = MAX_CACHE_MBYTES_LOWER;
+		}
+		else if (maxCacheMegabytes > MAX_CACHE_MBYTES_UPPER)
+		{
+			UserSettings::maxCacheMegabytes = MAX_CACHE_MBYTES_UPPER;
+		}
+		else
+		{
+			UserSettings::maxCacheMegabytes = maxCacheMegabytes;
+		}
+		SendNotifcation(NTF_MAXCACHEMBYTES_CHANGED, nullptr);
+		SaveSettingsAsync();
+	}
+}
+
 // Writes a serialized version of the current settings to disk.
 void UserSettings::WriteSettings()
 {
@@ -318,7 +371,9 @@ std::vector<std::wstring> UserSettings::Serialize()
         (std::to_wstring(CMENU_HOTKEY) + SEPARATOR + std::to_wstring(ClipsMenuHotkey())),
         (std::to_wstring(SAVE_TO_DISK) + SEPARATOR + std::to_wstring(SaveToDisk())),
         (std::to_wstring(SLCT_2ND_CLIP) + SEPARATOR + std::to_wstring(Select2ndClip())),
-        (std::to_wstring(SHOW_PREVIEW) + SEPARATOR + std::to_wstring(ShowPreview()))
+		(std::to_wstring(SHOW_PREVIEW) + SEPARATOR + std::to_wstring(ShowPreview())),
+		(std::to_wstring(SAVE_IMAGES) + SEPARATOR + std::to_wstring(SaveImages())),
+		(std::to_wstring(MAX_CACHE_MBYTES) + SEPARATOR + std::to_wstring(MaxCacheMegabytes()))
     };
 
     return retVal;
@@ -384,6 +439,15 @@ void UserSettings::Deserialize(std::vector<std::wstring> srData)
                 SetShowPreview(result);
             }
             break;
+		case SAVE_IMAGES:
+			{
+				bool result = pair.second.compare(std::to_wstring(true)) == 0;
+				SetSaveImages(result);
+			}
+		break;
+		case MAX_CACHE_MBYTES:
+			SetMaxCacheMegabytes(stoi(pair.second));
+			break;
         default:
             break;
         }

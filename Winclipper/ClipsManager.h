@@ -24,6 +24,7 @@ typedef struct {
 class ClipsManager
 {
 private:
+	ClipsManager();
 	unsigned int					windows10ReleaseId = 0;
 
     std::wstring                    fullClipsPath;
@@ -31,7 +32,8 @@ private:
     unsigned int                    displayClips = 20;
     unsigned int                    maxClips = 200;
     unsigned int                    menuDispChars = 64;
-    bool                            saveToDisk = true;
+	bool                            saveToDisk = true;
+	bool                            saveImages = true;
 
     int                             clipsWriterWaitCount = 0;
     bool                            isWriterFinished = true;
@@ -40,33 +42,37 @@ private:
     static void                     DelayClipsWriter(int* waitCount, ClipsManager* cs);
     void                            WriteClips();
     void                            ReadClips();
-	unsigned int					SendPasteInput(void);
+	unsigned int					SendPasteInput(void) noexcept;
+	void							ClearBitmaps();
 
 public:
-    ClipsManager();
-    ClipsManager(int displayClips, int maxClips, int menuChars, bool saveToDisk);
+    ClipsManager(int displayClips, int maxClips, int menuChars, bool saveToDisk, bool saveImages);
     ~ClipsManager();
 
-    bool                            NoPendingClipWrites();
+    bool                            NoPendingClipWrites() noexcept;
 	bool							ClipLock = false;
 
-    unsigned int                    DisplayClips();
-    void                            SetDisplayClips(unsigned int displayClips);
+    unsigned int                    DisplayClips() noexcept;
+    void                            SetDisplayClips(unsigned int displayClips) noexcept;
 
-    unsigned int                    MaxClips();
+    unsigned int                    MaxClips() noexcept;
     void                            SetMaxClips(unsigned int maxClips);
 
-    unsigned int                    MenuDisplayChars();
-    void                            SetMenuDisplayChars(unsigned int menuDispChars);
+    unsigned int                    MenuDisplayChars() noexcept;
+    void                            SetMenuDisplayChars(unsigned int menuDispChars) noexcept;
 
-    bool                            SaveToDisk();
+    bool                            SaveToDisk() noexcept;
     void                            SetSaveToDisk(bool saveToDisk);
+
+	bool                            SaveImages() noexcept;
+	void                            SetSaveImages(bool saveToDisk);
 
     void                            ClearClips(void);
     bool                            AddToClips(HWND hWnd);
     bool                            SetClipboardToClipAtIndex(HWND hWnd, int index);
 	const size_t					GetSize() noexcept;
+	void							DeleteClipAt(size_t index);
 	std::shared_ptr<Clip>			GetClipAt(size_t index);
-	void							ShowClipsMenu(HWND hWnd, LPPOINT cPos, bool showExit);
+	void							ShowClipsMenu(HWND hWnd, const LPPOINT cPos, bool showExit);
 	void							SelectDefaultMenuItem(bool select2ndClip) noexcept;
 };

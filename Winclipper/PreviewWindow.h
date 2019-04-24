@@ -57,7 +57,7 @@ private:
 	unsigned long long			clipSizeInKb = 0;
 	wchar_t						szPreviewWindowClass[MAX_LOADSTRING];       // the text preview window
 	HWND						windowHandle = nullptr;
-	bool						bitmapReady;
+	bool						bitmapReady = false;
 
 	ATOM						RegisterPreviewWindowClass(HINSTANCE);
 	static LRESULT CALLBACK		PreviewWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);

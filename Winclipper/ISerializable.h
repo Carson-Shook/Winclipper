@@ -7,7 +7,7 @@ class ISerializable
 {
 public:
 	ISerializable();
-	~ISerializable();
+	virtual ~ISerializable();
 
 	// Should return a wstring of all writeable
 	// values of the derived class.

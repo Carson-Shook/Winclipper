@@ -4,11 +4,11 @@
 int _InitX()
 {
     int dpiX;
-    HDC hdc = GetDC(NULL);
+    HDC hdc = GetDC(nullptr);
     if (hdc)
     {
         dpiX = GetDeviceCaps(hdc, LOGPIXELSX);
-        ReleaseDC(NULL, hdc);
+        ReleaseDC(nullptr, hdc);
     }
     else
     {
@@ -20,11 +20,11 @@ int _InitX()
 int _InitY()
 {
     int dpiY;
-    HDC hdc = GetDC(NULL);
+    HDC hdc = GetDC(nullptr);
     if (hdc)
     {
         dpiY = GetDeviceCaps(hdc, LOGPIXELSY);
-        ReleaseDC(NULL, hdc);
+        ReleaseDC(nullptr, hdc);
     }
     else
     {
@@ -46,32 +46,30 @@ float ScaleY(float y) { return (y * _dpiY) / 96.0F; }
 // required to draw the text in a dialog.
 void MeasureString(LPCWSTR text, HFONT font, LPRECT rect)
 {
-    HDC hDC = GetDC(NULL);
+    HDC hDC = GetDC(nullptr);
     SelectObject(hDC, font);
     DrawTextW(hDC, text, -1, rect, DT_CALCRECT);
-    ReleaseDC(NULL, hDC);
+    ReleaseDC(nullptr, hDC);
     return;
 }
 
 // Creates an instance of a label object with a specified font and custom text.
 HWND AddLabel(HWND hWnd, HFONT font, int x, int y, HINSTANCE hIn, LPCWSTR text, UINT_PTR id)
 {
-    LPRECT boxsize = new RECT();
-    MeasureString(text, font, boxsize);
+    RECT boxsize;
+    MeasureString(text, font, &boxsize);
     
     HWND hControl = CreateWindowExW(WS_EX_LEFT,
         WC_STATIC,
         text,
         WS_CHILD | WS_VISIBLE,
         ScaleX(x), ScaleY(y),
-        (*boxsize).right, (*boxsize).bottom,
+        boxsize.right, boxsize.bottom,
         hWnd,
         (HMENU)id,
         hIn,
-        NULL);
+		nullptr);
     SendMessageW(hControl, WM_SETFONT, (WPARAM)font, MAKELPARAM(false, 0));
-    //SetWindowText(hControl, text);
-    delete boxsize;
     return hControl;
 }
 
@@ -107,7 +105,7 @@ HWND AddEdit(HWND hWnd, HFONT font, int x, int y, int width, int height, HINSTAN
         hWnd,
         (HMENU)id,
         hIn,
-        NULL);
+		nullptr);
 
     SendMessageW(hControl, WM_SETFONT, (WPARAM)font, MAKELPARAM(false, 0));
     if (vScroll)
@@ -124,22 +122,21 @@ HWND AddEdit(HWND hWnd, HFONT font, int x, int y, int width, int height, HINSTAN
 // Creates an instance of a checkbox object with a specified font and custom text for the associated label.
 HWND AddCheckbox(HWND hWnd, HFONT font, int x, int y, HINSTANCE hIn, LPCWSTR text, UINT_PTR id)
 {
-    LPRECT boxsize = new RECT();
-    MeasureString(text, font, boxsize);
+    RECT boxsize;
+    MeasureString(text, font, &boxsize);
 
     HWND hControl = CreateWindowExW(WS_EX_LEFT,
         WC_BUTTON,
         text,
         WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_CHECKBOX,
         ScaleX(x), ScaleY(y),
-        (*boxsize).right + ScaleX(20), (*boxsize).bottom,
+        boxsize.right + ScaleX(20), boxsize.bottom,
         hWnd,
         (HMENU)id,
         hIn,
         nullptr);
 
     SendMessageW(hControl, WM_SETFONT, (WPARAM)font, MAKELPARAM(false, 0));
-    delete boxsize;
     return hControl;
 }
 
@@ -148,7 +145,7 @@ HWND CreateUpDnBuddy(HWND hWnd, HFONT font, int x, int y, HINSTANCE hIn, UINT_PT
 {
     HWND hControl = CreateWindowEx(WS_EX_LEFT | WS_EX_CLIENTEDGE,    //Extended window styles.
         WC_EDIT,
-        NULL,
+		nullptr,
         WS_CHILDWINDOW | WS_VISIBLE | WS_TABSTOP   // Window styles.
         | ES_NUMBER | ES_LEFT,                     // Edit control styles.
         ScaleX(x), ScaleY(y),
@@ -156,7 +153,7 @@ HWND CreateUpDnBuddy(HWND hWnd, HFONT font, int x, int y, HINSTANCE hIn, UINT_PT
         hWnd,
         (HMENU)id,
         hIn,
-        NULL);
+		nullptr);
 
     SendMessageW(hControl, WM_SETFONT, (WPARAM)font, MAKELPARAM(false, 0));
     return (hControl);
@@ -167,15 +164,15 @@ HWND CreateUpDnCtl(HWND hWnd, HFONT font, int x, int y, HINSTANCE hIn, int min, 
 {
     HWND hControl = CreateWindowEx(WS_EX_LEFT | WS_EX_LTRREADING,
         UPDOWN_CLASS,
-        NULL,
+		nullptr,
         WS_CHILDWINDOW | WS_VISIBLE
         | UDS_AUTOBUDDY | UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_ARROWKEYS | UDS_HOTTRACK,
         0, 0,
         0, 0,         // Set to zero to automatically size to fit the buddy window.
         hWnd,
         (HMENU)id,
-        NULL,
-        NULL);
+		nullptr,
+		nullptr);
 
     SendMessageW(hControl, UDM_SETRANGE, 0, MAKELPARAM(max, min));    // Sets the controls direction 
                                                                      // and range.
@@ -209,7 +206,7 @@ HWND AddHotkeyCtrl(HWND hWnd, HFONT font, int x, int y, int width, int height, H
         hWnd,
         (HMENU)id,
         hIn,
-        NULL);
+		nullptr);
 
     SendMessageW(hControl, WM_SETFONT, (WPARAM)font, MAKELPARAM(false, 0));
 

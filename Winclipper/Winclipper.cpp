@@ -12,35 +12,42 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 	RunUpdater();
 
-	HRESULT hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
+	const HRESULT hr = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
 	MSG msg;
 
 	if (SUCCEEDED(hr))
 	{
-		UserSettings uSettings = UserSettings();
-
-		SettingsWindow settingsWindow = SettingsWindow(hInstance, uSettings);
-		MainWindow mainWindow = MainWindow(hInstance, uSettings, settingsWindow);
-
-		hInst = hInstance; // Store instance handle in our global variable
-
-		HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_WINCSETTINGS));
-
-
-		// Main message loop:
-		while (GetMessage(&msg, nullptr, 0, 0))
+		try
 		{
-			if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg))
+			UserSettings uSettings = UserSettings();
+
+			SettingsWindow settingsWindow = SettingsWindow(hInstance, uSettings);
+			MainWindow mainWindow = MainWindow(hInstance, uSettings, settingsWindow);
+
+			hInst = hInstance; // Store instance handle in our global variable
+
+			HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_WINCSETTINGS));
+
+
+			// Main message loop:
+			while (GetMessage(&msg, nullptr, 0, 0))
 			{
-				if (!IsDialogMessage(GetAncestor(msg.hwnd, GA_ROOTOWNER), &msg))
+				if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg))
 				{
-					TranslateMessage(&msg);
-					DispatchMessage(&msg);
+					if (!IsDialogMessage(GetAncestor(msg.hwnd, GA_ROOTOWNER), &msg))
+					{
+						TranslateMessage(&msg);
+						DispatchMessage(&msg);
+					}
 				}
 			}
-		}
 
-		CoUninitialize();
+			CoUninitialize();
+		}
+		catch (const std::exception& e)
+		{
+			MessageBoxA(nullptr, (std::string("A fatal error occured:\r\n\"") + e.what() + "\"\r\n\r\nWinclipper will now close.").c_str(), "Winclipper", MB_OK | MB_ICONERROR | MB_TASKMODAL | MB_SETFOREGROUND);
+		}
 	}
 
     return 0;

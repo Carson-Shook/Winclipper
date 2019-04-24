@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "Clip.h"
 
-Clip::Clip()
+Clip::Clip() noexcept
 {
 }
 
@@ -101,8 +101,8 @@ void Clip::Deserialize(std::string serializationData)
 								// ensure the clip is not created.
 								throw std::exception("Cached bitmap missing.");
 							}
-							bitmapHeight = std::stoi(units.at(2));
-							bitmapWidth = std::stoi(units.at(3));
+							bitmapHeight = std::stol(units.at(2));
+							bitmapWidth = std::stol(units.at(3));
 							thumbnail = OnDemandBitmapManager::GetThumbnail(bitmapGuid);
 							break;
 						default:
@@ -172,8 +172,8 @@ bool Clip::ContainsFormat(DWORD clipboardFormat)
 
 void Clip::SetDibBitmap(std::shared_ptr<BITMAPINFOHEADER> pBmiHeader, std::vector<RGBQUAD> quads, std::shared_ptr<BYTE> bits)
 {
-	bitmapWidth = static_cast<unsigned int>(pBmiHeader->biWidth);
-	bitmapHeight = static_cast<unsigned int>(pBmiHeader->biHeight);
+	bitmapWidth = pBmiHeader->biWidth;
+	bitmapHeight = pBmiHeader->biHeight;
 	auto bitmap = std::make_shared<Bitmap>(pBmiHeader, quads, bits);
 
 	bitmapGuid = OnDemandBitmapManager::Add(bitmap);
@@ -181,7 +181,7 @@ void Clip::SetDibBitmap(std::shared_ptr<BITMAPINFOHEADER> pBmiHeader, std::vecto
 	pBitmap = OnDemandBitmapManager::Get(bitmapGuid);
 }
 
-bool Clip::BitmapReady()
+bool Clip::BitmapReady() noexcept
 {
 	if (!inCriticalSection)
 	{
@@ -210,7 +210,7 @@ void Clip::EnsureBitmapAsync()
 
 const std::shared_ptr<BITMAPINFOHEADER> Clip::DibBitmapInfoHeader()
 {
-	auto p = EnsureBitmap();
+	const auto p = EnsureBitmap();
 	return p->DibBitmapInfoHeader();
 }
 
@@ -228,16 +228,16 @@ const std::vector<RGBQUAD> Clip::RgbQuadCollection()
 
 const std::shared_ptr<BYTE> Clip::DibBitmapBits()
 {
-	auto p = EnsureBitmap();
+	const auto p = EnsureBitmap();
 	return p->DibBitmapBits();
 }
 
-unsigned int Clip::DibHeight()
+long Clip::DibHeight() noexcept
 {
 	return bitmapHeight;
 }
 
-unsigned int Clip::DibWidth()
+long Clip::DibWidth() noexcept
 {
 	return bitmapWidth;
 }
@@ -254,12 +254,12 @@ HBITMAP Clip::GetHbitmap()
 	return p->GetHbitmap();
 }
 
-HBITMAP Clip::GetThumbnail()
+HBITMAP Clip::GetThumbnail() noexcept
 {
 	return thumbnail;
 }
 
-void Clip::SetUnicodeText(wchar_t * unicodeText)
+void Clip::SetUnicodeText(const wchar_t * unicodeText)
 {
 	Clip::unicodeText.assign(unicodeText);
 }
@@ -322,7 +322,7 @@ std::string Clip::GetBase64FromWString(const std::wstring data)
 {
 	std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
 	std::string anotherTemp = converter.to_bytes(data);
-	return base64_encode(reinterpret_cast<const unsigned char *>(anotherTemp.c_str()), static_cast<unsigned int>(strlen(anotherTemp.c_str()) + 1));
+	return base64_encode(reinterpret_cast<const unsigned char *>(anotherTemp.c_str()), unsigned int{ strlen(anotherTemp.c_str()) + 1 });
 }
 
 std::wstring Clip::GetWStringFromBase64(const std::string base64)

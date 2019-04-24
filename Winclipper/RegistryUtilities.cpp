@@ -18,7 +18,7 @@ unsigned int RegistryUtilities::GetWindows10ReleaseId()
 			// Really should check if ERROR_MORE_DATA is returned, but in practice this
 			// string should never be longer than 5 wchar_t, and if it ever is, we'll
 			// probably find plenty of time to prepare.
-			if (RegQueryValueExW(hOpened, L"ReleaseId", NULL, NULL, reinterpret_cast<LPBYTE>(&data), &cbData) == ERROR_SUCCESS)
+			if (RegQueryValueExW(hOpened, L"ReleaseId", nullptr, nullptr, reinterpret_cast<LPBYTE>(&data), &cbData) == ERROR_SUCCESS)
 			{
 				try
 				{

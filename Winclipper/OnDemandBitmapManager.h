@@ -17,7 +17,7 @@ public:
 	static bool						Exists(std::string guid);
 
 	unsigned long long				MaxBytes();
-	void							SetMaxBytes(unsigned long long newMaxBytes);
+	static void						SetMaxBytes(unsigned long long newMaxBytes);
 
 	static HBITMAP					CreateAndSaveThumbnail(std::string guid, std::shared_ptr<Bitmap> bitmap);
 	static HBITMAP					GetThumbnail(std::string guid);
@@ -26,6 +26,8 @@ public:
 	static std::string				CreateGuidString();
 
 	static void						UpdateUsage(std::string guid);
+
+	static void						SafeClose();
 
 private:
 	OnDemandBitmapManager() {};
@@ -44,6 +46,7 @@ private:
 	static unsigned long long		maxBytes;
 	static unsigned int				cleanupWaitCount;
 	static bool						inCriticalSection;
+	static bool						safeClosing;
 	static std::mutex				cleanupMutex;
 };
 

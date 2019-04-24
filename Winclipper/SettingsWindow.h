@@ -22,9 +22,14 @@
 #define CHK_SAVE_TO_DISK        210
 #define CHK_SLCT_2ND_CLIP       211
 #define CHK_SHOW_PREVIEW        212
+#define CHK_SAVE_IMAGES	        213
 
-#define LBL_SHOW_CLIPS_HOTK     213
-#define HKY_SHOW_CLIPS_MENU     214
+#define LBL_SHOW_CLIPS_HOTK     214
+#define HKY_SHOW_CLIPS_MENU     215
+
+#define LBL_MAX_IMG_CACHE_MB    216
+#define TXT_MAX_IMG_CACHE_MB    217
+#define UD_MAX_IMG_CACHE_MB     218
 
 
 class SettingsWindow : public Notify
@@ -48,6 +53,8 @@ private:
 	LRESULT						WmCommandChkSaveToDisk(HWND hWnd, WPARAM wParam, LPARAM lParam);
 	LRESULT						WmCommandChkSlct2ndClip(HWND hWnd, WPARAM wParam, LPARAM lParam);
 	LRESULT						WmCommandChkShowPreview(HWND hWnd, WPARAM wParam, LPARAM lParam);
+	LRESULT						WmCommandChkSaveImages(HWND hWnd, WPARAM wParam, LPARAM lParam);
+	LRESULT						WmCommandTxtMaxImageCacheMb(HWND hWnd, WPARAM wParam, LPARAM lParam);
 	LRESULT						WmCommandHkyShowClipsMenu(HWND hWnd, WPARAM wParam, LPARAM lParam);
 	LRESULT						WmLbuttondown(HWND hWnd);
 	LRESULT						WmClose(HWND hWnd);

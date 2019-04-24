@@ -36,8 +36,8 @@ const std::wstring File::GetAppDir()
 {
 	if (appDir.empty())
 	{
-		wchar_t * tempClipsPath;
-		if (SUCCEEDED(SHGetKnownFolderPath(FOLDERID_LocalAppData, KF_FLAG_DEFAULT, NULL, &tempClipsPath)))
+		wchar_t * tempClipsPath = nullptr;
+		if (SUCCEEDED(SHGetKnownFolderPath(FOLDERID_LocalAppData, KF_FLAG_DEFAULT, nullptr, &tempClipsPath)))
 		{
 			// Ends with DIR_SEP since 99% of the time we're appending a filename.
 			appDir = JoinPath(tempClipsPath, L"\\Winclipper\\Winclipper\\");
@@ -55,8 +55,8 @@ const std::wstring File::GetAppDir()
 // Determines whether or not a file eixists
 bool File::Exists(const wchar_t *name)
 {
-    int retval = PathFileExistsW(name);
-    if (retval == 1)
+    const int checkVal = PathFileExistsW(name);
+    if (checkVal == 1)
     {
         return true;
     }
@@ -76,7 +76,7 @@ void File::Write(std::wstring filename, std::string data)
 {
 	if (!File::Exists(filename.c_str()))
 	{
-		SHCreateDirectoryExW(NULL, (GetDirName(filename).c_str()), NULL);
+		SHCreateDirectoryExW(nullptr, (GetDirName(filename).c_str()), nullptr);
 	}
 	std::ofstream outStream(filename, std::ios::out | std::ios::binary);
 
@@ -107,7 +107,7 @@ void File::WriteAllLines(const wchar_t* name, std::vector<std::wstring> lines)
 {
     if (!File::Exists(name))
     {
-        SHCreateDirectoryExW(NULL, (GetDirName(name).c_str()), NULL);
+        SHCreateDirectoryExW(nullptr, (GetDirName(name).c_str()), nullptr);
     }
     std::wofstream output_file(name);
     std::ostream_iterator<std::wstring, wchar_t> output_iterator(output_file, L"\n");

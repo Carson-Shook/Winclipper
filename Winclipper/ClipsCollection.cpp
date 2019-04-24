@@ -2,7 +2,7 @@
 #include "ClipsCollection.h"
 
 
-ClipsCollection::ClipsCollection()
+ClipsCollection::ClipsCollection() noexcept
 {
 }
 
@@ -19,8 +19,16 @@ std::string ClipsCollection::Serialize()
 	std::string data;
 	for (auto clip : clips)
 	{
-		data.append(clip->Serialize());
-		data.append("\r\n");
+		try
+		{
+			data.append(clip->Serialize());
+			data.append("\r\n");
+		}
+		catch (const std::exception&)
+		{
+			// no op because maybe we just ran into a weird data edge case.
+			// we wouldn't want to save that to the clipboard anyway.
+		}
 	}
 	return data;
 }
@@ -38,7 +46,7 @@ void ClipsCollection::Deserialize(std::string serializationData)
 
 		while (std::getline(stream, readData))
 		{
-			std::shared_ptr<Clip> clip(new Clip);
+			std::shared_ptr<Clip> clip = std::make_shared<Clip>();
 
 			try
 			{
@@ -101,6 +109,27 @@ void ClipsCollection::RemoveBack()
 	}
 }
 
+void ClipsCollection::RemoveAllOfFormat(DWORD format)
+{
+	if (format != 0)
+	{
+		std::deque<std::shared_ptr<Clip>>::iterator it = clips.begin()++;
+		while (it != clips.end())
+		{
+			std::shared_ptr<Clip> clip = *it;
+			if (clip->ContainsFormat(format))
+			{
+				clip->MarkForDelete();
+				it = clips.erase(it);
+			}
+			else
+			{
+				it++;
+			}
+		}
+	}
+}
+
 std::shared_ptr<Clip> ClipsCollection::RemoveAt(size_t index)
 {
 	std::shared_ptr<Clip> clip(nullptr);
@@ -131,12 +160,12 @@ std::shared_ptr<Clip> ClipsCollection::Front()
 	return clips.front();
 }
 
-unsigned int ClipsCollection::Size()
+unsigned int ClipsCollection::Size() noexcept
 {
 	return clips.size();
 }
 
-unsigned int ClipsCollection::MaxSize()
+unsigned int ClipsCollection::MaxSize() noexcept
 {
 	return maxSize;
 }
@@ -157,7 +186,7 @@ void ClipsCollection::SetMaxSize(unsigned int newMaxSize)
 
 void ClipsCollection::Clear()
 {
-	size_t size = clips.size();
+	const size_t size = clips.size();
 	for (size_t i = 0; i < size; i++)
 	{
 		clips.at(i)->MarkForDelete();
