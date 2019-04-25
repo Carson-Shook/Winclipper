@@ -27,10 +27,10 @@ std::string Bitmap::Serialize()
 {
 	std::string data;
 
-	const size_t bmSize = Size();
+	const DWORD bmSize = Size();
 	BITMAPFILEHEADER header;
 	header.bfType = 0x4d42;
-	header.bfOffBits = sizeof(BITMAPFILEHEADER) + pDibBitmapInfoHeader->biSize + (rgbQuadCollection.size() * sizeof(RGBQUAD));
+	header.bfOffBits = static_cast<DWORD>(sizeof(BITMAPFILEHEADER) + pDibBitmapInfoHeader->biSize + (rgbQuadCollection.size() * sizeof(RGBQUAD)));
 	header.bfReserved1 = 0;
 	header.bfReserved2 = 0;
 	header.bfSize = header.bfOffBits + bmSize;
@@ -83,7 +83,7 @@ void Bitmap::Deserialize(std::string serializationData)
 
 		for (unsigned int i = 0; i < colorBytes; i++)
 		{
-			RGBQUAD quad;
+			RGBQUAD quad = { 0, 0, 0, 0 };
 			stream.readsome(reinterpret_cast<char *>(&quad), sizeof(RGBQUAD));
 
 			quads.push_back(quad);
@@ -132,7 +132,7 @@ HBITMAP Bitmap::GetHbitmap()
 	if (hBitmap == nullptr)
 	{
 		HDC screen = GetDC(nullptr);
-		BITMAPINFO * bmi = (BITMAPINFO *)new BYTE[pDibBitmapInfoHeader->biSize + rgbQuadCollection.size() * sizeof(RGBQUAD)];
+		BITMAPINFO * bmi = reinterpret_cast<BITMAPINFO *>(new BYTE[pDibBitmapInfoHeader->biSize + rgbQuadCollection.size() * sizeof(RGBQUAD)]);
 
 		bmi->bmiHeader = *pDibBitmapInfoHeader;
 		for (size_t i = 0; i < rgbQuadCollection.size(); i++)
@@ -149,16 +149,16 @@ HBITMAP Bitmap::GetHbitmap()
 			DIB_RGB_COLORS
 		);
 
-		delete[](BYTE *)bmi;
+		delete[] reinterpret_cast<BYTE *>(bmi);
 		ReleaseDC(nullptr, screen);
 	}
 	return hBitmap;
 }
 
 // Returns the size of the image in bytes.
-size_t Bitmap::Size() noexcept
+DWORD Bitmap::Size() noexcept
 {
-	size_t retVal = 0;
+	DWORD retVal = 0;
 	if (pDibBitmapInfoHeader != nullptr)
 	{
 		retVal = pDibBitmapInfoHeader->biSizeImage

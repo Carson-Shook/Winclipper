@@ -130,7 +130,7 @@ void ClipsCollection::RemoveAllOfFormat(DWORD format)
 	}
 }
 
-std::shared_ptr<Clip> ClipsCollection::RemoveAt(size_t index)
+std::shared_ptr<Clip> ClipsCollection::RemoveAt(unsigned int index)
 {
 	std::shared_ptr<Clip> clip(nullptr);
 
@@ -162,7 +162,7 @@ std::shared_ptr<Clip> ClipsCollection::Front()
 
 unsigned int ClipsCollection::Size() noexcept
 {
-	return clips.size();
+	return static_cast<unsigned int>(clips.size());
 }
 
 unsigned int ClipsCollection::MaxSize() noexcept
@@ -192,4 +192,13 @@ void ClipsCollection::Clear()
 		clips.at(i)->MarkForDelete();
 	}
 	clips.clear();
+}
+
+void ClipsCollection::PurgeThumbnails()
+{
+	const size_t size = clips.size();
+	for (size_t i = 0; i < size; i++)
+	{
+		clips.at(i)->PurgeThumbnail();
+	}
 }

@@ -67,12 +67,14 @@ public:
 	bool                            SaveImages() noexcept;
 	void                            SetSaveImages(bool saveToDisk);
 
+	void                            RecreateThumbnails();
+
     void                            ClearClips(void);
     bool                            AddToClips(HWND hWnd);
-    bool                            SetClipboardToClipAtIndex(HWND hWnd, int index);
-	const size_t					GetSize() noexcept;
-	void							DeleteClipAt(size_t index);
-	std::shared_ptr<Clip>			GetClipAt(size_t index);
+    bool                            SetClipboardToClipAtIndex(HWND hWnd, unsigned int index);
+	const unsigned int				GetSize() noexcept;
+	void							DeleteClipAt(unsigned int index);
+	std::shared_ptr<Clip>			GetClipAt(unsigned int index);
 	void							ShowClipsMenu(HWND hWnd, const LPPOINT cPos, bool showExit);
 	void							SelectDefaultMenuItem(bool select2ndClip) noexcept;
 };

@@ -56,7 +56,7 @@ void ClipsManager::ReadClips()
 		}
 		catch (const std::exception& e)
 		{
-			MessageBoxA(nullptr, e.what(), "Winclipper", MB_OK | MB_ICONWARNING | MB_TASKMODAL | MB_SETFOREGROUND);
+			MessageBoxA(nullptr, e.what(), "Winclipper", MB_OK | MB_ICONINFORMATION | MB_TASKMODAL | MB_SETFOREGROUND);
 		}
     }
 }
@@ -192,6 +192,11 @@ void ClipsManager::SetSaveImages(bool saveImages)
 	}
 }
 
+void ClipsManager::RecreateThumbnails()
+{
+	clips.PurgeThumbnails();
+}
+
 void ClipsManager::ClearClips()
 {
 	clips.Clear();
@@ -272,7 +277,7 @@ bool ClipsManager::AddToClips(HWND hWnd)
 					: ((((bitmapInfoHeader->biWidth * bitmapInfoHeader->biBitCount) + 31) & ~31) >> 3) * bitmapInfoHeader->biHeight;
 
 				std::shared_ptr<BYTE> pMyBits(new BYTE[size], array_deleter<BYTE>());
-				memcpy_s(pMyBits.get(), size, ((BYTE *)tempBitmapInfo) + offset, size);
+				memcpy_s(pMyBits.get(), size, (reinterpret_cast<const BYTE *>(tempBitmapInfo)) + offset, size);
 
 				GlobalUnlock(psClipboardData);
 
@@ -307,7 +312,7 @@ bool ClipsManager::AddToClips(HWND hWnd)
     return true;
 }
 
-bool ClipsManager::SetClipboardToClipAtIndex(HWND hWnd, int index)
+bool ClipsManager::SetClipboardToClipAtIndex(HWND hWnd, unsigned int index)
 {
     if (!OpenClipboard(hWnd))
     {
@@ -348,7 +353,7 @@ bool ClipsManager::SetClipboardToClipAtIndex(HWND hWnd, int index)
 			auto bmiHeader = clip->DibBitmapInfoHeader();
 			auto quadCollection = clip->RgbQuadCollection();
 			const size_t rgbQuadsCount = quadCollection.size();
-			const size_t bitmapSize = clip->DibSize();
+			const DWORD bitmapSize = clip->DibSize();
 
 			HGLOBAL hClipboardData = GlobalAlloc(GMEM_MOVEABLE, bmiHeader->biSize + rgbQuadsCount * sizeof(RGBQUAD) + bitmapSize);
 
@@ -365,7 +370,7 @@ bool ClipsManager::SetClipboardToClipAtIndex(HWND hWnd, int index)
 						bmi->bmiColors[i] = quadCollection[i];
 					}
 
-					memcpy_s((BYTE *)bmi + (bmiHeader->biSize + rgbQuadsCount * sizeof(RGBQUAD)), bitmapSize, clip->DibBitmapBits().get(), bitmapSize);
+					memcpy_s(reinterpret_cast<BYTE *>(bmi) + (bmiHeader->biSize + rgbQuadsCount * sizeof(RGBQUAD)), bitmapSize, clip->DibBitmapBits().get(), bitmapSize);
 
 					GlobalUnlock(hClipboardData);
 					
@@ -391,18 +396,19 @@ bool ClipsManager::SetClipboardToClipAtIndex(HWND hWnd, int index)
     return true;
 }
 
-const size_t ClipsManager::GetSize() noexcept
+const unsigned int ClipsManager::GetSize() noexcept
 {
 	return clips.Size();
 }
 
-void ClipsManager::DeleteClipAt(size_t index)
+void ClipsManager::DeleteClipAt(unsigned int index)
 {
 	auto clip = clips.RemoveAt(index);
 	clip->MarkForDelete();
+	SaveClipsAsync();
 }
 
-std::shared_ptr<Clip> ClipsManager::GetClipAt(size_t index)
+std::shared_ptr<Clip> ClipsManager::GetClipAt(unsigned int index)
 {
 	try
 	{
@@ -465,13 +471,13 @@ void ClipsManager::ShowClipsMenu(HWND hWnd, const LPPOINT cPos, bool showExit)
 
         HMENU menu = CreatePopupMenu();
 
-        const size_t curSize = GetSize();
+        const unsigned int curSize = GetSize();
 
         if (curSize > 0)
         {
-            size_t j = curSize > DisplayClips() ? DisplayClips() : curSize;
+            unsigned int j = curSize > DisplayClips() ? DisplayClips() : curSize;
 
-            for (size_t i = 0; i < j; i++)
+            for (unsigned int i = 0; i < j; i++)
             {
                 std::shared_ptr<Clip> clip = GetClipAt(i);
                 if (clip != nullptr)
@@ -485,8 +491,8 @@ void ClipsManager::ShowClipsMenu(HWND hWnd, const LPPOINT cPos, bool showExit)
 					}
 					else if (clip->ContainsFormat(CF_DIB))
 					{
-						AppendMenuW(menu, MF_STRING, UINT_PTR{ i } +1, (L"[IMAGE] " + std::to_wstring(clip->DibHeight()) + L" x " + std::to_wstring(clip->DibWidth())).c_str());
-						SetMenuItemBitmaps(menu, UINT_PTR{ i } +1, MF_BYCOMMAND, clip->GetThumbnail(), clip->GetThumbnail());
+						AppendMenuW(menu, MF_STRING, UINT_PTR{ i } + 1, (L"[IMAGE] " + std::to_wstring(clip->DibHeight()) + L" x " + std::to_wstring(clip->DibWidth())).c_str());
+						SetMenuItemBitmaps(menu, UINT{ i } + 1, MF_BYCOMMAND, clip->GetThumbnail(), clip->GetThumbnail());
 					}
                 }
             }
@@ -509,7 +515,7 @@ void ClipsManager::ShowClipsMenu(HWND hWnd, const LPPOINT cPos, bool showExit)
 						else if (clip->ContainsFormat(CF_DIB))
 						{
 							AppendMenuW(sMenu, MF_STRING, UINT_PTR{ j } + 1, (L"[IMAGE] " + std::to_wstring(clip->DibHeight()) + L" x " + std::to_wstring(clip->DibWidth())).c_str());
-							SetMenuItemBitmaps(sMenu, UINT_PTR{ j } +1, MF_BYCOMMAND, clip->GetThumbnail(), clip->GetThumbnail());
+							SetMenuItemBitmaps(sMenu, UINT{ j } + 1, MF_BYCOMMAND, clip->GetThumbnail(), clip->GetThumbnail());
 						}
 					}
                 }

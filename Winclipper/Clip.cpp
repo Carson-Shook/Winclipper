@@ -13,8 +13,16 @@ Clip::~Clip()
 	}
 	if (!bitmapGuid.empty() && shouldDelete)
 	{
-		OnDemandBitmapManager::Remove(bitmapGuid);
-		OnDemandBitmapManager::RemoveThumbnail(bitmapGuid);
+		try
+		{
+			OnDemandBitmapManager::Remove(bitmapGuid);
+			OnDemandBitmapManager::RemoveThumbnail(bitmapGuid, true);
+		}
+		catch (const std::exception&)
+		{
+			// we're tearing down anyway.
+			// could be bad, but no way to handle.
+		}
 	}
 }
 
@@ -242,7 +250,7 @@ long Clip::DibWidth() noexcept
 	return bitmapWidth;
 }
 
-size_t Clip::DibSize()
+DWORD Clip::DibSize()
 {
 	auto p = EnsureBitmap();
 	return p->Size();
@@ -256,7 +264,32 @@ HBITMAP Clip::GetHbitmap()
 
 HBITMAP Clip::GetThumbnail() noexcept
 {
+	if (thumbnail == nullptr)
+	{
+		thumbnail = OnDemandBitmapManager::GetThumbnail(bitmapGuid);
+	}
 	return thumbnail;
+}
+
+void Clip::PurgeThumbnail()
+{
+	if (thumbnail != nullptr)
+	{
+		HBITMAP tempThumb = thumbnail;
+		thumbnail = nullptr;
+		DeleteObject(tempThumb);
+	}
+	if (!bitmapGuid.empty())
+	{
+		try
+		{
+			OnDemandBitmapManager::RemoveThumbnail(bitmapGuid, false);
+		}
+		catch (const std::exception&)
+		{
+			// no thumbnail to remove? Problem solved? /shrug
+		}
+	}
 }
 
 void Clip::SetUnicodeText(const wchar_t * unicodeText)
@@ -322,7 +355,7 @@ std::string Clip::GetBase64FromWString(const std::wstring data)
 {
 	std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
 	std::string anotherTemp = converter.to_bytes(data);
-	return base64_encode(reinterpret_cast<const unsigned char *>(anotherTemp.c_str()), unsigned int{ strlen(anotherTemp.c_str()) + 1 });
+	return base64_encode(reinterpret_cast<const unsigned char *>(anotherTemp.c_str()), anotherTemp.length() + 1);
 }
 
 std::wstring Clip::GetWStringFromBase64(const std::string base64)

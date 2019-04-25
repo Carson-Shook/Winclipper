@@ -25,15 +25,15 @@ public:
 	static std::wstring JoinPath(const std::wstring& path1, const std::wstring& path2);
 	static const std::wstring GetAppDir();
 
-    static bool Exists(const wchar_t* name);
-    static bool Delete(const wchar_t* name);
+    static bool Exists(const wchar_t* name) noexcept;
+    static bool Delete(const wchar_t* name) noexcept;
 	static void Write(std::wstring filename, std::string data);
 	static std::string Read(std::wstring filename);
     static void WriteAllLines(const wchar_t* name, std::vector<std::wstring> lines);
     static std::vector<std::wstring> ReadAllLines(const wchar_t* name);
 
 private:
-	File() {};
+	File() noexcept {};
 	~File() {};
 
 	static std::wstring appDir;

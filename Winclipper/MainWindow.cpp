@@ -62,6 +62,9 @@ LRESULT MainWindow::MainWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
 		case IDM_CLEARCLIPS:
 			pThis->WmCommandIdmClearClips(hWnd, wParam, lParam);
 			break;
+		case IDM_RECREATE_THUMBNAILS:
+			pThis->WmCommandIdmRecreateThumbnails(hWnd, wParam, lParam);
+			break;
 		case IDM_SETTINGS:
 			pThis->WmCommandIdmSettings(hWnd, wParam, lParam);
 			break;
@@ -168,7 +171,20 @@ INT_PTR CALLBACK MainWindow::About(HWND hDlg, UINT message, WPARAM wParam, LPARA
 
 LRESULT MainWindow::WmCommandIdmClearClips(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
-	cManager->ClearClips();
+	int choice = MessageBoxA(hWnd,
+		"This will delete all clips on the Winclipper clipboard.\r\n\r\n Are you sure you want to do this?", "Winclipper",
+		MB_YESNO | MB_ICONWARNING | MB_DEFBUTTON2 | MB_TASKMODAL | MB_SETFOREGROUND);
+
+	if (choice == IDYES)
+	{
+		cManager->ClearClips();
+	}
+	return 0;
+}
+
+LRESULT MainWindow::WmCommandIdmRecreateThumbnails(HWND hWnd, WPARAM wParam, LPARAM lParam)
+{
+	cManager->RecreateThumbnails();
 	return 0;
 }
 
@@ -260,7 +276,7 @@ LRESULT MainWindow::WmappNCallNinKeySelect(HWND hWnd, WPARAM wParam, LPARAM lPar
 		const int xCoord GET_X_LPARAM(wParam);
 		const int yCoord GET_Y_LPARAM(wParam);
 
-		POINT cPos;
+		POINT cPos = { 0, 0 };
 		if (xCoord != NULL && yCoord != NULL)
 		{
 			cPos.x = xCoord;
@@ -293,7 +309,7 @@ LRESULT MainWindow::WmappNCallWmLButtonDblClk(HWND hWnd, WPARAM wParam, LPARAM l
 
 LRESULT MainWindow::WmappNCallWmContextMenu(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
-	POINT cPos;
+	POINT cPos = { 0, 0 };
 	if (!GetCursorPos(&cPos))
 	{
 		cPos.x = 10;
@@ -330,7 +346,7 @@ LRESULT MainWindow::WmHotkey(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
 	// When the global hotkey is called, get the current window
 	// so we can reactivate it later, and then show the clips menu.
-	POINT cPos;
+	POINT cPos = { 0, 0 };
 	if (!GetCursorPos(&cPos))
 	{
 		cPos.x = 10;
@@ -383,7 +399,7 @@ LRESULT MainWindow::WmMenuRButtonUp(HWND hWnd, WPARAM wParam, LPARAM lParam)
 	HMENU menu = CreatePopupMenu();
 	AppendMenuW(menu, MF_STRING, 1, L"Delete");
 
-	POINT cPos;
+	POINT cPos = { 0, 0 };
 	if (!GetCursorPos(&cPos))
 	{
 		cPos.x = 10;
@@ -460,7 +476,7 @@ LRESULT MainWindow::WmMenuSelect(HWND hWnd, WPARAM wParam, LPARAM lParam)
 				// and subtracting it's bottom value from the original first
 				// item's rect top, and then we can use the resulting value
 				// as an offset in pixels to subtract from our desired item.
-				RECT hitTestRect = { 0,0,0,0 };
+				RECT hitTestRect = { 0, 0, 0, 0 };
 				int hitTestDelta = 0;
 				long sizeOffset = 0;
 				if (GetMenuItemRect(hWnd, activePopupMenu, 0, &hitTestRect))
@@ -468,14 +484,14 @@ LRESULT MainWindow::WmMenuSelect(HWND hWnd, WPARAM wParam, LPARAM lParam)
 					POINT hitTest = { hitTestRect.left + 1, hitTestRect.top + 1 };
 					hitTestDelta = MenuItemFromPoint(hWnd, activePopupMenu, hitTest);
 
-					RECT currentRect;
+					RECT currentRect = { 0, 0, 0, 0 };
 					if (GetMenuItemRect(hWnd, activePopupMenu, hitTestDelta - offset, &currentRect))
 					{
 						sizeOffset = currentRect.bottom - hitTestRect.top;
 					}
 				}
 
-				RECT menuItemDims;
+				RECT menuItemDims = { 0, 0, 0, 0 };
 				if (GetMenuItemRect(hWnd, activePopupMenu, i - offset, &menuItemDims))
 				{
 					menuItemDims.top = menuItemDims.top - sizeOffset;
@@ -505,7 +521,7 @@ LRESULT MainWindow::WndProcDefault(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
 	if (previewWindow != nullptr && IsWindowVisible(previewWindow->GetHandle()))
 	{
-		POINT cPos;
+		POINT cPos = { 0, 0 };
 		if (GetCursorPos(&cPos))
 		{
 			if (cPos.x != previousMouseLoc->x || cPos.y != previousMouseLoc->y)

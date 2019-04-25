@@ -90,6 +90,7 @@ bool RunUpdater()
 	}
 	CloseHandle(pi.hProcess);
 	CloseHandle(pi.hThread);
+	delete[] commandLine;
 	return true;
 }
 

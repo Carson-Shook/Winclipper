@@ -41,7 +41,7 @@ std::weak_ptr<Bitmap> OnDemandBitmapManager::Get(std::string guid)
 		std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
 		auto path = File::JoinPath(GetCacheDir(), converter.from_bytes(guid));
 
-		std::shared_ptr<Bitmap> bitmap(new Bitmap);
+		std::shared_ptr<Bitmap> bitmap = std::make_shared<Bitmap>();
 
 		bitmap->Deserialize(File::Read(path));
 		retVal = bitmapCache[guid] = bitmap;
@@ -62,18 +62,22 @@ void OnDemandBitmapManager::Remove(std::string guid)
 	std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
 	auto path = File::JoinPath(GetCacheDir(), converter.from_bytes(guid));
 
-	std::thread(File::Delete, path.c_str()).detach();
-
-	bitmapCache.erase(guid);
 	while (inCriticalSection)
 	{
 		Sleep(10);
 	}
 	inCriticalSection = true;
-	auto findValue = std::find(usageList.begin(), usageList.end(), guid);
-	if (findValue != usageList.end())
+
+	std::thread(File::Delete, path.c_str()).detach();
+	bitmapCache.erase(guid);
+
+	if (!usageList.empty())
 	{
-		usageList.erase(findValue);
+		auto findValue = std::find(usageList.begin(), usageList.end(), guid);
+		if (findValue != usageList.end())
+		{
+			usageList.erase(findValue);
+		}
 	}
 	inCriticalSection = false;
 }
@@ -86,7 +90,7 @@ bool OnDemandBitmapManager::Exists(std::string guid)
 	return File::Exists(path.c_str());
 }
 
-unsigned long long OnDemandBitmapManager::MaxBytes()
+unsigned long long OnDemandBitmapManager::MaxBytes() noexcept
 {
 	return maxBytes;
 }
@@ -251,8 +255,10 @@ HBITMAP OnDemandBitmapManager::CreateAndSaveThumbnail(std::string guid, std::sha
 
 	if (SUCCEEDED(hr))
 	{
-		std::vector<BYTE> buffer(width * height * 4);
-		pConvertedSourceBitmap->CopyPixels(nullptr, width * 4, buffer.size(), buffer.data());
+		UINT bufferSize = width * height * 4;
+		std::vector<BYTE> buffer;
+		buffer.reserve(size_t{ bufferSize });
+		pConvertedSourceBitmap->CopyPixels(nullptr, width * 4, bufferSize, buffer.data());
 
 		retVal = CreateBitmap(width, height, 1, 32, buffer.data());
 	}
@@ -277,7 +283,7 @@ HBITMAP OnDemandBitmapManager::GetThumbnail(std::string guid)
 	path += L"-thumb";
 	if (File::Exists(path.c_str()))
 	{
-		retVal = (HBITMAP)LoadImageW(nullptr, path.c_str(), IMAGE_BITMAP, 0, 0, LR_DEFAULTSIZE | LR_LOADFROMFILE);
+		retVal = static_cast<HBITMAP>(LoadImageW(nullptr, path.c_str(), IMAGE_BITMAP, 0, 0, LR_DEFAULTSIZE | LR_LOADFROMFILE));
 	}
 	else
 	{
@@ -291,13 +297,19 @@ HBITMAP OnDemandBitmapManager::GetThumbnail(std::string guid)
 	return retVal;
 }
 
-// Removes a thumbnail asynchronously. Do not use for recreating thumbnails.
-void OnDemandBitmapManager::RemoveThumbnail(std::string guid)
+void OnDemandBitmapManager::RemoveThumbnail(std::string guid, bool async)
 {
 	std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
 	auto path = File::JoinPath(GetCacheDir(), converter.from_bytes(guid));
-
-	std::thread(File::Delete, (path + L"-thumb").c_str()).detach();
+	
+	if (async)
+	{
+		std::thread(File::Delete, (path + L"-thumb").c_str()).detach();
+	}
+	else
+	{
+		File::Delete((path + L"-thumb").c_str());
+	}
 }
 
 std::string OnDemandBitmapManager::CreateGuidString()
@@ -414,7 +426,7 @@ void OnDemandBitmapManager::RunCleanupInternal()
 		{
 			// We multiply by two because each Bitmap is roughly the size of
 			// itself plus the HBITMAP used in other parts of the program.
-			currentSize += (unsigned long long{ it->second->Size() } *2);
+			currentSize += static_cast<unsigned long long>(it->second->Size()) * 2;
 		}
 
 		long references = 0;
@@ -424,7 +436,7 @@ void OnDemandBitmapManager::RunCleanupInternal()
 			references = bitmapCache.at(key).use_count();
 			if (references < 2)
 			{
-				currentSize -= (unsigned long long{ bitmapCache.at(key)->Size() } *2);
+				currentSize -= static_cast<unsigned long long>(bitmapCache.at(key)->Size()) * 2;
 				bitmapCache.erase(key);
 				usageList.pop_back();
 			}

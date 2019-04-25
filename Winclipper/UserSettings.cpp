@@ -72,17 +72,6 @@ UserSettings::UserSettings()
     else
     {
 		SaveSettingsAsync();
-
-        // Set all defaults for first time run
-       /* SetMaxDisplayClips(20);
-        SetMaxSavedClips(50);
-        SetMenuDisplayChars(64);
-        SetClipsMenuHotkey(CMENU_HOTKEY_DEF);
-        SetSaveToDisk(SAVE_TO_DISK_DEF);
-        SetSelect2ndClip(SLCT_2ND_CLIP_DEF);
-        SetShowPreview(SHOW_PREVIEW_DEF);
-		SetSaveImages(SAVE_IMAGES_DEF);
-		SetMaxCacheMegabytes(100);*/
     }
 }
 

@@ -16,7 +16,7 @@ public:
 	const std::vector<RGBQUAD>					RgbQuadCollection();
 	const std::shared_ptr<BYTE>					DibBitmapBits() noexcept;
 	HBITMAP										GetHbitmap();
-	size_t										Size() noexcept;
+	DWORD										Size() noexcept;
 
 private:
 	std::shared_ptr<BITMAPINFOHEADER>			pDibBitmapInfoHeader = nullptr;

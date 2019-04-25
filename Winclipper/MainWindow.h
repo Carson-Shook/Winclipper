@@ -31,6 +31,7 @@ private:
 	static INT_PTR CALLBACK		About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
 
 	LRESULT						WmCommandIdmClearClips(HWND hWnd, WPARAM wParam, LPARAM lParam);
+	LRESULT						WmCommandIdmRecreateThumbnails(HWND hWnd, WPARAM wParam, LPARAM lParam);
 	LRESULT						WmCommandIdmSettings(HWND hWnd, WPARAM wParam, LPARAM lParam);
 	LRESULT						WmCommandIdmAbout(HWND hWnd, WPARAM wParam, LPARAM lParam);
 	LRESULT						WmCommandIdmExit(HWND hWnd, WPARAM wParam, LPARAM lParam);

@@ -30,6 +30,7 @@
 */
 // NOTE: Minor organizational changes have been made, but the overall function
 // of this cpp file and it's respective h file has been unaltered.
+// in_len changed from unsigned int to size_t
 
 #include "stdafx.h"
 #include "base64.h"
@@ -44,7 +45,7 @@ static inline bool is_base64(unsigned char c) {
   return (isalnum(c) || (c == '+') || (c == '/'));
 }
 
-std::string base64_encode(unsigned char const* bytes_to_encode, unsigned int in_len) {
+std::string base64_encode(unsigned char const* bytes_to_encode, size_t in_len) {
   std::string ret;
   int i = 0;
   int j = 0;

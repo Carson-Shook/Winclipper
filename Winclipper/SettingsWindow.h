@@ -46,6 +46,7 @@ private:
 	static LRESULT CALLBACK		SettingsWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 	LRESULT						WmCommandIdmAbout(HWND hWnd, WPARAM wParam, LPARAM lParam);
 	LRESULT						WmCommandIdmExit();
+	LRESULT						WmCommandIdmRecreateThumbnails();
 	LRESULT						WmCommandTxtMaxClipsDisplay(HWND hWnd, WPARAM wParam, LPARAM lParam);
 	LRESULT						WmCommandTxtMaxClipsSaved(HWND hWnd, WPARAM wParam, LPARAM lParam);
 	LRESULT						WmCommandTxtMenuDispChars(HWND hWnd, WPARAM wParam, LPARAM lParam);

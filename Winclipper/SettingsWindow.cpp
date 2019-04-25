@@ -65,6 +65,9 @@ LRESULT SettingsWindow::SettingsWndProc(HWND hWnd, UINT message, WPARAM wParam, 
 		case IDM_EXIT:
 			pThis->WmCommandIdmExit();
 			break;
+		case IDM_RECREATE_THUMBNAILS:
+			pThis->WmCommandIdmRecreateThumbnails();
+			break;
 		case TXT_MAX_CLIPS_DISPLAY:
 			pThis->WmCommandTxtMaxClipsDisplay(hWnd, wParam, lParam);
 			break;
@@ -121,6 +124,12 @@ LRESULT SettingsWindow::WmCommandIdmAbout(HWND hWnd, WPARAM wParam, LPARAM lPara
 LRESULT SettingsWindow::WmCommandIdmExit()
 {
 	SendNotifcation(IDM_EXIT, GetHandle());
+	return 0;
+}
+
+LRESULT SettingsWindow::WmCommandIdmRecreateThumbnails()
+{
+	SendNotifcation(IDM_RECREATE_THUMBNAILS, GetHandle());
 	return 0;
 }
 
@@ -294,10 +303,17 @@ LRESULT SettingsWindow::WmCommandChkSaveImages(HWND hWnd, WPARAM wParam, LPARAM 
 	{
 		if (IsDlgButtonChecked(hWnd, CHK_SAVE_IMAGES))
 		{
-			uSettings.SetSaveImages(false);
-			CheckDlgButton(hWnd, CHK_SAVE_IMAGES, BST_UNCHECKED);
-			EnableWindow(GetDlgItem(hWnd, UD_MAX_IMG_CACHE_MB), false);
-			EnableWindow(GetDlgItem(hWnd, TXT_MAX_IMG_CACHE_MB), false);
+			int choice = MessageBoxA(hWnd, 
+				"This will delete all images on the Winclipper clipboard.\r\n\r\n Are you sure you want to do this?", "Winclipper", 
+				MB_YESNO | MB_ICONWARNING | MB_DEFBUTTON2 | MB_TASKMODAL | MB_SETFOREGROUND);
+
+			if (choice == IDYES)
+			{
+				uSettings.SetSaveImages(false);
+				CheckDlgButton(hWnd, CHK_SAVE_IMAGES, BST_UNCHECKED);
+				EnableWindow(GetDlgItem(hWnd, UD_MAX_IMG_CACHE_MB), false);
+				EnableWindow(GetDlgItem(hWnd, TXT_MAX_IMG_CACHE_MB), false);
+			}
 		}
 		else
 		{
@@ -439,7 +455,7 @@ SettingsWindow::~SettingsWindow()
 
 bool SettingsWindow::InitSettingsWindow(HINSTANCE hInstance)
 {
-	HWND hWnd = CreateWindowExW(0, szSettingsWindowClass, szTitle, WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU,
+	HWND hWnd = CreateWindowExW(0, szSettingsWindowClass, szTitle, WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_SIZEBOX,
 		CW_USEDEFAULT, CW_USEDEFAULT, ScaleX(260), ScaleY(340), nullptr, nullptr, hInstance, this);
 
 	if (!hWnd)

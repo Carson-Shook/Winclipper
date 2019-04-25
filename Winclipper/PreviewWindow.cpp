@@ -486,7 +486,7 @@ HRESULT PreviewWindow::CreateDeviceDependentResources(HWND hWnd) noexcept
 {
 	HRESULT hr = S_OK;
 
-	RECT rc;
+	RECT rc = { 0, 0, 0, 0 };
 	GetClientRect(hWnd, &rc);
 
 	if (pRT == nullptr)

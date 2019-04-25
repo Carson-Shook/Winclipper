@@ -1,10 +1,10 @@
 #pragma once
 #include "resource.h"
 
-int ScaleX(int x);
-int ScaleY(int y);
-float ScaleX(float x);
-float ScaleY(float y);
+int ScaleX(int x) noexcept;
+int ScaleY(int y) noexcept;
+float ScaleX(float x) noexcept;
+float ScaleY(float y) noexcept;
 
 void MeasureString(LPCWSTR text, HFONT font, LPRECT rect);
 

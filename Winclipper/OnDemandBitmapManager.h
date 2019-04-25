@@ -16,12 +16,12 @@ public:
 	static void						Remove(std::string guid);
 	static bool						Exists(std::string guid);
 
-	unsigned long long				MaxBytes();
+	unsigned long long				MaxBytes() noexcept;
 	static void						SetMaxBytes(unsigned long long newMaxBytes);
 
 	static HBITMAP					CreateAndSaveThumbnail(std::string guid, std::shared_ptr<Bitmap> bitmap);
 	static HBITMAP					GetThumbnail(std::string guid);
-	static void						RemoveThumbnail(std::string guid);
+	static void						RemoveThumbnail(std::string guid, bool async);
 
 	static std::string				CreateGuidString();
 
@@ -30,7 +30,7 @@ public:
 	static void						SafeClose();
 
 private:
-	OnDemandBitmapManager() {};
+	OnDemandBitmapManager() noexcept {};
 	~OnDemandBitmapManager() {};
 
 	static void						RunCleanupAsync();

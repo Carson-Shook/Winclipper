@@ -34,9 +34,10 @@ public:
 	const std::shared_ptr<BYTE>					DibBitmapBits();
 	long										DibHeight() noexcept;
 	long										DibWidth() noexcept;
-	size_t										DibSize();
+	DWORD										DibSize();
 	HBITMAP										GetHbitmap();
 	HBITMAP										GetThumbnail() noexcept;
+	void										PurgeThumbnail();
 
 	void						SetUnicodeText(const wchar_t * unicodeText);
 	void						SetUnicodeText(std::wstring unicodeText);

@@ -53,7 +53,7 @@ const std::wstring File::GetAppDir()
 }
 
 // Determines whether or not a file eixists
-bool File::Exists(const wchar_t *name)
+bool File::Exists(const wchar_t *name) noexcept
 {
     const int checkVal = PathFileExistsW(name);
     if (checkVal == 1)
@@ -63,7 +63,7 @@ bool File::Exists(const wchar_t *name)
     return false;
 }
 
-bool File::Delete(const wchar_t * name)
+bool File::Delete(const wchar_t * name) noexcept
 {
     if (DeleteFileW(name) == 0)
     {
