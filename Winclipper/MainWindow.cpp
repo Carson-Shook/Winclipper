@@ -485,7 +485,7 @@ LRESULT MainWindow::WmMenuSelect(HWND hWnd, WPARAM wParam, LPARAM lParam)
 					hitTestDelta = MenuItemFromPoint(hWnd, activePopupMenu, hitTest);
 
 					RECT currentRect = { 0, 0, 0, 0 };
-					if (GetMenuItemRect(hWnd, activePopupMenu, hitTestDelta - offset, &currentRect))
+					if (GetMenuItemRect(hWnd, activePopupMenu, hitTestDelta - 1, &currentRect))
 					{
 						sizeOffset = currentRect.bottom - hitTestRect.top;
 					}
