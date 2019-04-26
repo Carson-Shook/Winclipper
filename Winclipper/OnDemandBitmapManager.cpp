@@ -373,6 +373,12 @@ void OnDemandBitmapManager::UpdateUsage(std::string guid)
 void OnDemandBitmapManager::SafeClose()
 {
 	safeClosing = true;
+
+	while (inCriticalSection)
+	{
+		Sleep(10);
+	}
+
 	while (!cleanupMutex.try_lock())
 	{
 		Sleep(1);

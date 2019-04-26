@@ -68,6 +68,9 @@ LRESULT SettingsWindow::SettingsWndProc(HWND hWnd, UINT message, WPARAM wParam, 
 		case IDM_RECREATE_THUMBNAILS:
 			pThis->WmCommandIdmRecreateThumbnails();
 			break;
+		case IDM_CLEARCLIPS:
+			pThis->WmCommandIdmClearClips();
+			break;
 		case TXT_MAX_CLIPS_DISPLAY:
 			pThis->WmCommandTxtMaxClipsDisplay(hWnd, wParam, lParam);
 			break;
@@ -130,6 +133,12 @@ LRESULT SettingsWindow::WmCommandIdmExit()
 LRESULT SettingsWindow::WmCommandIdmRecreateThumbnails()
 {
 	SendNotifcation(IDM_RECREATE_THUMBNAILS, GetHandle());
+	return 0;
+}
+
+LRESULT SettingsWindow::WmCommandIdmClearClips()
+{
+	SendNotifcation(IDM_CLEARCLIPS, GetHandle());
 	return 0;
 }
 

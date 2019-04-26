@@ -47,6 +47,7 @@ private:
 	LRESULT						WmCommandIdmAbout(HWND hWnd, WPARAM wParam, LPARAM lParam);
 	LRESULT						WmCommandIdmExit();
 	LRESULT						WmCommandIdmRecreateThumbnails();
+	LRESULT						WmCommandIdmClearClips();
 	LRESULT						WmCommandTxtMaxClipsDisplay(HWND hWnd, WPARAM wParam, LPARAM lParam);
 	LRESULT						WmCommandTxtMaxClipsSaved(HWND hWnd, WPARAM wParam, LPARAM lParam);
 	LRESULT						WmCommandTxtMenuDispChars(HWND hWnd, WPARAM wParam, LPARAM lParam);

@@ -15,8 +15,8 @@ Clip::~Clip()
 	{
 		try
 		{
-			OnDemandBitmapManager::Remove(bitmapGuid);
 			OnDemandBitmapManager::RemoveThumbnail(bitmapGuid, true);
+			OnDemandBitmapManager::Remove(bitmapGuid);
 		}
 		catch (const std::exception&)
 		{
