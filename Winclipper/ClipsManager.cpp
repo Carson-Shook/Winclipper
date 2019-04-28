@@ -110,6 +110,7 @@ ClipsManager::ClipsManager(int displayClips, int maxClips, int menuChars, bool s
 	SetDisplayClips(displayClips);
     SetMaxClips(maxClips);
     SetMenuDisplayChars(menuChars);
+	SaveClipsAsync();
 }
 
 ClipsManager::~ClipsManager()
