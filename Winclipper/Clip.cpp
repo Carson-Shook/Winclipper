@@ -204,7 +204,15 @@ std::shared_ptr<Bitmap> Clip::EnsureBitmap()
 	std::shared_ptr<Bitmap> p = pBitmap.lock();
 	if (!p)
 	{
-		pBitmap = OnDemandBitmapManager::Get(bitmapGuid);
+		try
+		{
+			pBitmap = OnDemandBitmapManager::Get(bitmapGuid);
+		}
+		catch (const std::exception& e)
+		{
+			MarkForDelete();
+			throw e;
+		}
 		p = pBitmap.lock();
 	}
 	OnDemandBitmapManager::UpdateUsage(bitmapGuid);
@@ -375,7 +383,14 @@ void Clip::EnsureBitmapAsyncInternal(Clip * clip)
 	if (!clip->inCriticalSection)
 	{
 		clip->inCriticalSection = true;
-		clip->pBitmap = OnDemandBitmapManager::Get(clip->bitmapGuid);
+		try
+		{
+			clip->pBitmap = OnDemandBitmapManager::Get(clip->bitmapGuid);
+		}
+		catch (const std::exception&)
+		{
+			clip->MarkForDelete();
+		}
 		clip->inCriticalSection = false;
 	}
 }

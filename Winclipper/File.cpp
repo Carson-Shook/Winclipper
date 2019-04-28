@@ -72,6 +72,22 @@ bool File::Delete(const wchar_t * name) noexcept
     return false;
 }
 
+void File::DeleteDir(std::wstring dirName)
+{
+	SHFILEOPSTRUCT shFileOp = {
+		nullptr,
+		FO_DELETE,
+		(dirName += L"\0").c_str(),
+		nullptr,
+		FOF_NOCONFIRMATION |
+		FOF_NOERRORUI |
+		FOF_SILENT,
+		false,
+		nullptr,
+		nullptr};
+	SHFileOperation(&shFileOp);
+}
+
 void File::Write(std::wstring filename, std::string data)
 {
 	if (!File::Exists(filename.c_str()))

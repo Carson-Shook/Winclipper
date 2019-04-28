@@ -170,6 +170,13 @@ void ClipsManager::SetSaveToDisk(bool saveToDisk)
     if (saveToDisk != ClipsManager::saveToDisk)
     {
         ClipsManager::saveToDisk = saveToDisk;
+		OnDemandBitmapManager::SetSaveToDisk(saveToDisk);
+
+		if (!ClipsManager::saveToDisk)
+		{
+			clips.LoadAllResources();
+			OnDemandBitmapManager::DeleteAllFromDisk();
+		}
         SaveClipsAsync();
     }
 }

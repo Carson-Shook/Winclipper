@@ -59,47 +59,58 @@ void Bitmap::Deserialize(std::string serializationData)
 	const size_t dataLength = serializationData.length();
 	if (dataLength != 0)
 	{
-		BITMAPFILEHEADER header;
-		std::shared_ptr<BITMAPINFOHEADER> bmih = std::make_shared<BITMAPINFOHEADER>();
-		std::vector<RGBQUAD> quads;
-
-		std::istringstream stream(serializationData);
-
-		stream.readsome(reinterpret_cast<char *>(&header), sizeof(BITMAPFILEHEADER));
-		stream.readsome(reinterpret_cast<char *>(bmih.get()), sizeof(BITMAPINFOHEADER));
-
-		unsigned int colorBytes = bmih->biClrUsed;
-		if (!colorBytes)
+		try
 		{
-			if (bmih->biBitCount <= 8)
-			{
-				colorBytes = 1 << bmih->biBitCount;
-			}
-			else if (bmih->biBitCount != 24 && bmih->biCompression == BI_BITFIELDS)
-			{
-				colorBytes = 3;
-			}
-		}
+			BITMAPFILEHEADER header;
+			std::shared_ptr<BITMAPINFOHEADER> bmih = std::make_shared<BITMAPINFOHEADER>();
+			std::vector<RGBQUAD> quads;
 
-		for (unsigned int i = 0; i < colorBytes; i++)
+			std::istringstream stream(serializationData);
+
+			stream.readsome(reinterpret_cast<char *>(&header), sizeof(BITMAPFILEHEADER));
+			stream.readsome(reinterpret_cast<char *>(bmih.get()), sizeof(BITMAPINFOHEADER));
+
+			unsigned int colorBytes = bmih->biClrUsed;
+			if (!colorBytes)
+			{
+				if (bmih->biBitCount <= 8)
+				{
+					colorBytes = 1 << bmih->biBitCount;
+				}
+				else if (bmih->biBitCount != 24 && bmih->biCompression == BI_BITFIELDS)
+				{
+					colorBytes = 3;
+				}
+			}
+
+			for (unsigned int i = 0; i < colorBytes; i++)
+			{
+				RGBQUAD quad = { 0, 0, 0, 0 };
+				stream.readsome(reinterpret_cast<char *>(&quad), sizeof(RGBQUAD));
+
+				quads.push_back(quad);
+			}
+
+			const size_t bmSize = header.bfSize - header.bfOffBits;
+
+			std::shared_ptr<BYTE> bits(new BYTE[bmSize], array_deleter<BYTE>());
+
+			stream.readsome(reinterpret_cast<char *>(bits.get()), bmSize);
+
+			pDibBitmapInfoHeader = bmih;
+			rgbQuadCollection = quads;
+			pDibBitmapBits = bits;
+
+			GetHbitmap();
+		}
+		catch (const std::exception&)
 		{
-			RGBQUAD quad = { 0, 0, 0, 0 };
-			stream.readsome(reinterpret_cast<char *>(&quad), sizeof(RGBQUAD));
-
-			quads.push_back(quad);
+			throw std::exception("Image data is corrupt and could not be loaded.");
 		}
-
-		const size_t bmSize = header.bfSize - header.bfOffBits;
-
-		std::shared_ptr<BYTE> bits(new BYTE[bmSize], array_deleter<BYTE>());
-
-		stream.readsome(reinterpret_cast<char *>(bits.get()), bmSize);
-
-		pDibBitmapInfoHeader = bmih;
-		rgbQuadCollection = quads;
-		pDibBitmapBits = bits;
-
-		GetHbitmap();
+	}
+	else
+	{
+		throw std::exception("Image data is empty or missing.");
 	}
 }
 

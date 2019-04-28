@@ -15,10 +15,14 @@ std::wstring OnDemandBitmapManager::GetCacheDir()
 std::string OnDemandBitmapManager::Add(std::shared_ptr<Bitmap> bitmap)
 {
 	std::string guid(CreateGuidString());
-	std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
-	auto path = File::JoinPath(GetCacheDir(), converter.from_bytes(guid));
-	
-	std::thread(File::Write, path, bitmap->Serialize()).detach();
+
+	if (saveToDisk)
+	{
+		std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
+		auto path = File::JoinPath(GetCacheDir(), converter.from_bytes(guid));
+
+		std::thread(File::Write, path, bitmap->Serialize()).detach();
+	}
 
 	bitmapCache[guid] = bitmap;
 
@@ -102,6 +106,42 @@ void OnDemandBitmapManager::SetMaxBytes(unsigned long long newMaxBytes)
 		maxBytes = newMaxBytes;
 		RunCleanupAsync();
 	}
+}
+
+void OnDemandBitmapManager::SetSaveToDisk(bool newSaveToDisk)
+{
+	if (newSaveToDisk != saveToDisk)
+	{
+		saveToDisk = newSaveToDisk;
+
+		while (inCriticalSection)
+		{
+			Sleep(10);
+		}
+
+		while (!cleanupMutex.try_lock())
+		{
+			Sleep(1);
+		}
+		cleanupMutex.unlock();
+
+		if (saveToDisk)
+		{
+			for (const auto &pair : bitmapCache)
+			{
+				std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
+				auto path = File::JoinPath(GetCacheDir(), converter.from_bytes(pair.first));
+				File::Write(path, pair.second->Serialize());
+				CreateAndSaveThumbnail(pair.first, pair.second);
+				UpdateUsage(pair.first);
+			}
+		}
+	}
+}
+
+void OnDemandBitmapManager::DeleteAllFromDisk()
+{
+	File::DeleteDir(GetCacheDir());
 }
 
 HBITMAP OnDemandBitmapManager::CreateAndSaveThumbnail(std::string guid, std::shared_ptr<Bitmap> bitmap)
@@ -388,14 +428,17 @@ void OnDemandBitmapManager::SafeClose()
 
 void OnDemandBitmapManager::RunCleanupAsync()
 {
-	if (cleanupWaitCount == 0)
+	if (saveToDisk)
 	{
-		cleanupWaitCount++;
-		std::thread(RunCleanupInternal).detach();
-	}
-	else
-	{
-		cleanupWaitCount++;
+		if (cleanupWaitCount == 0)
+		{
+			cleanupWaitCount++;
+			std::thread(RunCleanupInternal).detach();
+		}
+		else
+		{
+			cleanupWaitCount++;
+		}
 	}
 }
 
@@ -476,6 +519,7 @@ std::deque<std::string> OnDemandBitmapManager::usageList;
 
 unsigned long long OnDemandBitmapManager::maxBytes = 104857600; // 100 MB
 unsigned int OnDemandBitmapManager::cleanupWaitCount = 0;
+bool OnDemandBitmapManager::saveToDisk = true;
 bool OnDemandBitmapManager::inCriticalSection = false;
 bool OnDemandBitmapManager::safeClosing = false;
 std::mutex OnDemandBitmapManager::cleanupMutex;

@@ -594,7 +594,15 @@ HRESULT PreviewWindow::SetBitmapConverter()
 {
 	HRESULT hr = S_OK;
 
-	HBITMAP hBitmap = previewClip-> GetHbitmap();
+	HBITMAP hBitmap = nullptr;
+	try
+	{
+		hBitmap = previewClip->GetHbitmap();
+	}
+	catch (const std::exception&)
+	{
+		hBitmap = nullptr;
+	}
 	hr = hBitmap ? S_OK : E_FAIL;
 
 	IWICBitmap *pBitmap = nullptr;

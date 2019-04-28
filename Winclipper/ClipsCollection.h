@@ -22,6 +22,7 @@ public:
 	void									SetMaxSize(unsigned int maxSize);
 	void									Clear();
 	void									PurgeThumbnails();
+	void									LoadAllResources();
 
 private:
 	std::deque<std::shared_ptr<Clip>>		clips;

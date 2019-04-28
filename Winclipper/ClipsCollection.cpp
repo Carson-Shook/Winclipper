@@ -202,3 +202,16 @@ void ClipsCollection::PurgeThumbnails()
 		clips.at(i)->PurgeThumbnail();
 	}
 }
+
+void ClipsCollection::LoadAllResources()
+{
+	const size_t size = clips.size();
+	for (size_t i = 0; i < size; i++)
+	{
+		if (clips.at(i)->ContainsFormat(CF_DIB))
+		{
+			auto bitmap = clips.at(i)->EnsureBitmap();
+			clips.at(i)->GetThumbnail();
+		}
+	}
+}

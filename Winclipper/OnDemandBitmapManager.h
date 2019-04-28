@@ -16,8 +16,10 @@ public:
 	static void						Remove(std::string guid);
 	static bool						Exists(std::string guid);
 
-	unsigned long long				MaxBytes() noexcept;
+	static unsigned long long		MaxBytes() noexcept;
 	static void						SetMaxBytes(unsigned long long newMaxBytes);
+	static void						SetSaveToDisk(bool newSaveToDisk);
+	static void						DeleteAllFromDisk();
 
 	static HBITMAP					CreateAndSaveThumbnail(std::string guid, std::shared_ptr<Bitmap> bitmap);
 	static HBITMAP					GetThumbnail(std::string guid);
@@ -45,6 +47,7 @@ private:
 
 	static unsigned long long		maxBytes;
 	static unsigned int				cleanupWaitCount;
+	static bool						saveToDisk;
 	static bool						inCriticalSection;
 	static bool						safeClosing;
 	static std::mutex				cleanupMutex;

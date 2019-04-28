@@ -27,6 +27,7 @@ public:
 
     static bool Exists(const wchar_t* name) noexcept;
     static bool Delete(const wchar_t* name) noexcept;
+	static void DeleteDir(std::wstring dirName);
 	static void Write(std::wstring filename, std::string data);
 	static std::string Read(std::wstring filename);
     static void WriteAllLines(const wchar_t* name, std::vector<std::wstring> lines);

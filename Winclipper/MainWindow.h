@@ -19,8 +19,8 @@ private:
 	SettingsWindow &			settingsWindow;
 	ClipsManager * 				cManager = nullptr;
 	PreviewWindow * 			previewWindow = nullptr;
-	HMENU						topPopupMenu;
-	HMENU						activePopupMenu;
+	HMENU						topPopupMenu = nullptr;
+	HMENU						activePopupMenu = nullptr;
 	static UINT	const			WMAPP_NOTIFYCALLBACK = WM_APP + 1;			// user defined callback for notfiyicon actions
 	LPPOINT						previousMouseLoc = new POINT;
 
