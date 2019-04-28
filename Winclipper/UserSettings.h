@@ -38,7 +38,7 @@
 #define SHOW_PREVIEW_DEF    true
 
 #define SAVE_IMAGES			8
-#define SAVE_IMAGES_DEF		false
+#define SAVE_IMAGES_DEF		true
 
 #define MAX_CACHE_MBYTES		9
 #define MAX_CACHE_MBYTES_UPPER	999
