@@ -12,6 +12,22 @@ You will need Visual Studio 2017 to build Winclipper. The solution file should c
 
 ## Changelog
 
+**1.3** - 2019-05-01
+
+This release of Winclipper includes the biggest addition since its original release: Bitmap support! Now you can copy images and paste them at a later time, and of course, if you don't want to do that (or you want to reduce or increase the amount of memory to cache images) you can change that in the settings.
+- Bitmaps can now be copied and pasted just like Unicode text. They appear in the menu with a tiny thumbnail and the dimentions of the image, and the pop-up preview shows the image with a max height or width of 500px.
+- Added the long-awaited Delete feature. Now you can right click on a clip and click "Delete" to remove it from the list.
+- The Clip format has been reworked to support multiple types of data. Your clips file will be upgraded to the new format the first time that you run this update.
+- Text previews are now cached after they draw so that viewing large text previews is much faster.
+- You'll now be warned when clicking "Clear Clips", giving you an oportunity to cancel in case you misclicked it.
+
+It also includes the following bug fixes:
+- Fixes a handful of tiny memory leaks.
+- Fixed an issue with the Microsoft edge hack. It isn't actually needed in Windows 10 1809, and it should work a tiny bit better in previous versions.
+- Clips should copy more reliably now.
+- Preview offset is now more accurate, and handles differently sized menu items.
+- Several security issues were fixed regarding buffer overflows and typecasting.
+
 **1.2** - 2018-09-15
 
 This release of Winclipper includes yet another rewritten text-preview, this time using DirectWrite, and do you know what that means? Color emojis and improved Unicode support!
