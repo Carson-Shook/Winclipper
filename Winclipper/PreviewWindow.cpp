@@ -109,7 +109,69 @@ LRESULT PreviewWindow::WmPaint(HWND hWnd, UINT message, WPARAM wParam, LPARAM lP
 
 	hr = CreateDeviceDependentResources(hWnd);
 
-	if (previewClip->ContainsFormat(CF_UNICODETEXT))
+	
+	if (previewClip->ContainsFormat(CF_DIB))
+	{ 
+		if (SUCCEEDED(hr))
+		{
+			if (bitmapReady && pConvertedSourceBitmap != nullptr)
+			{
+				// Need to release the previous D2DBitmap if there is one
+				SafeRelease(&pD2DBitmap);
+				hr = pRT->CreateBitmapFromWicBitmap(pConvertedSourceBitmap, nullptr, &pD2DBitmap);
+			}
+			else if (pD2DLoadingBitmap == nullptr)
+			{
+				hr = pRT->CreateBitmapFromWicBitmap(pConvertedLoadingBitmap, nullptr, &pD2DLoadingBitmap);
+			}
+		}
+
+		if (SUCCEEDED(hr))
+		{
+			pRT->BeginDraw();
+
+			pRT->SetTransform(D2D1::Matrix3x2F::Identity());
+
+			pRT->Clear(WindowColor);
+
+			const auto rect = D2D1::RectF(
+				windowBorderWidth,
+				windowBorderWidth,
+				pRT->GetSize().width - windowBorderWidth,
+				pRT->GetSize().height - windowBorderWidth);
+
+			pRT->FillRectangle(
+				rect,
+				pWhiteBrush);
+
+			if (bitmapReady)
+			{
+				pRT->DrawBitmap(pD2DBitmap, rect);
+			}
+			else
+			{
+				const float left = (windowBorderWidth + rect.right) / 2.0F;
+				const float bottom = (windowBorderWidth + rect.bottom) / 2.0F;
+				const auto loadingRect = D2D1::RectF(
+					left - (pD2DLoadingBitmap->GetSize().width / ScaleX(2.0F)),
+					bottom - (pD2DLoadingBitmap->GetSize().height / ScaleY(2.0F)),
+					left + (pD2DLoadingBitmap->GetSize().width / ScaleX(2.0F)),
+					bottom + (pD2DLoadingBitmap->GetSize().height / ScaleY(2.0F))
+				);
+				pRT->DrawBitmap(pD2DLoadingBitmap, loadingRect);
+			}
+
+			pRT->DrawRectangle(
+				rect,
+				pLightGrayBrush, 0.5F);
+
+			hr = pRT->EndDraw();
+
+			SafeRelease(&pD2DBitmap);
+			SafeRelease(&pConvertedSourceBitmap);
+		}
+	}
+	else if (previewClip->ContainsFormat(CF_UNICODETEXT))
 	{
 		std::wstring infoBreakText;
 
@@ -198,67 +260,6 @@ LRESULT PreviewWindow::WmPaint(HWND hWnd, UINT message, WPARAM wParam, LPARAM lP
 			hr = pRT->EndDraw();
 		}
 		SafeRelease(&pDWriteInfoBreakLayout);
-	}
-	else if (previewClip->ContainsFormat(CF_DIB))
-	{ 
-		if (SUCCEEDED(hr))
-		{
-			if (bitmapReady)
-			{
-				// Need to release the previous D2DBitmap if there is one
-				SafeRelease(&pD2DBitmap);
-				hr = pRT->CreateBitmapFromWicBitmap(pConvertedSourceBitmap, nullptr, &pD2DBitmap);
-			}
-			else if (pD2DLoadingBitmap == nullptr)
-			{
-				hr = pRT->CreateBitmapFromWicBitmap(pConvertedLoadingBitmap, nullptr, &pD2DLoadingBitmap);
-			}
-		}
-
-		if (SUCCEEDED(hr))
-		{
-			pRT->BeginDraw();
-
-			pRT->SetTransform(D2D1::Matrix3x2F::Identity());
-
-			pRT->Clear(WindowColor);
-
-			const auto rect = D2D1::RectF(
-				windowBorderWidth,
-				windowBorderWidth,
-				pRT->GetSize().width - windowBorderWidth,
-				pRT->GetSize().height - windowBorderWidth);
-
-			pRT->FillRectangle(
-				rect,
-				pWhiteBrush);
-
-			if (bitmapReady)
-			{
-				pRT->DrawBitmap(pD2DBitmap, rect);
-			}
-			else
-			{
-				const float left = (windowBorderWidth + rect.right) / 2.0F;
-				const float bottom = (windowBorderWidth + rect.bottom) / 2.0F;
-				const auto loadingRect = D2D1::RectF(
-					left - (pD2DLoadingBitmap->GetSize().width / ScaleX(2.0F)),
-					bottom - (pD2DLoadingBitmap->GetSize().height / ScaleY(2.0F)),
-					left + (pD2DLoadingBitmap->GetSize().width / ScaleX(2.0F)),
-					bottom + (pD2DLoadingBitmap->GetSize().height / ScaleY(2.0F))
-				);
-				pRT->DrawBitmap(pD2DLoadingBitmap, loadingRect);
-			}
-
-			pRT->DrawRectangle(
-				rect,
-				pLightGrayBrush, 0.5F);
-
-			hr = pRT->EndDraw();
-
-			SafeRelease(&pD2DBitmap);
-			SafeRelease(&pConvertedSourceBitmap);
-		}
 	}
 	if (hr == D2DERR_RECREATE_TARGET)
 	{
@@ -715,7 +716,39 @@ void PreviewWindow::MoveRelativeToRect(const LPRECT rect, unsigned int index)
 	float renderingWidth = layoutMaxWidth;
 	float renderingHeight = layoutMaxHeight;
 
-	if (previewClip->ContainsFormat(CF_UNICODETEXT))
+	if (previewClip->ContainsFormat(CF_DIB))
+	{
+		if (previewClip->BitmapReady())
+		{
+			hr = SetBitmapConverter();
+		}
+		else
+		{
+			previewClip->EnsureBitmapAsync();
+			bitmapReady = false;
+			SetTimer(GetHandle(), IDT_BITMAPTIMER, 100, nullptr);
+		}
+
+		renderingHeight = static_cast<float>(previewClip->DibHeight());
+		renderingWidth = static_cast<float>(previewClip->DibWidth());
+
+		if (renderingWidth > layoutMaxWidth || renderingHeight > layoutMaxHeight)
+		{
+			if (renderingWidth >= renderingHeight)
+			{
+				const float ratio = layoutMaxWidth / renderingWidth;
+				renderingWidth = layoutMaxWidth;
+				renderingHeight = renderingHeight * ratio;
+			}
+			else
+			{
+				const float ratio = layoutMaxHeight / renderingHeight;
+				renderingHeight = layoutMaxHeight;
+				renderingWidth = renderingWidth * ratio;
+			}
+		}
+	}
+	else if (previewClip->ContainsFormat(CF_UNICODETEXT))
 	{
 		const size_t clipLength = previewClip->UnicodeTextWString().length();
 
@@ -812,39 +845,7 @@ void PreviewWindow::MoveRelativeToRect(const LPRECT rect, unsigned int index)
 			remainingTextLines = 0;
 		}
 	}
-	else if (previewClip->ContainsFormat(CF_DIB))
-	{
-		if (previewClip->BitmapReady())
-		{
-			hr = SetBitmapConverter();
-		}
-		else
-		{
-			previewClip->EnsureBitmapAsync();
-			bitmapReady = false;
-			SetTimer(GetHandle(), IDT_BITMAPTIMER, 100, nullptr);
-		}
-
-		renderingHeight = static_cast<float>(previewClip->DibHeight());
-		renderingWidth = static_cast<float>(previewClip->DibWidth());
-
-		if (renderingWidth > layoutMaxWidth || renderingHeight > layoutMaxHeight)
-		{
-			if (renderingWidth >= renderingHeight)
-			{
-				const float ratio = layoutMaxWidth / renderingWidth;
-				renderingWidth = layoutMaxWidth;
-				renderingHeight = renderingHeight * ratio;
-			}
-			else
-			{
-				const float ratio = layoutMaxHeight / renderingHeight;
-				renderingHeight = layoutMaxHeight;
-				renderingWidth = renderingWidth * ratio;
-			}
-		}
-	}
-
+	
 	const int totalWindowWidth = static_cast<int>(ScaleX(renderingWidth + (windowBorderWidth * 2.0f) + (textMarginWidth * 2.0f)));
 	const int totalWindowHeight = static_cast<int>(ScaleY(renderingHeight + (windowBorderWidth * 2.0f) + (textMarginHeight * 2.0f)));
 

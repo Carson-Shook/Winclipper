@@ -495,7 +495,11 @@ void ClipsManager::ShowClipsMenu(HWND hWnd, const LPPOINT cPos, bool showExit)
 						std::wstring menuText;
 						menuText = clip->GetUnicodeMenuText(MenuDisplayChars());
 
-						AppendMenuW(menu, MF_STRING, UINT_PTR{ i } + 1, menuText.c_str());
+						AppendMenuW(menu, MF_STRING, UINT_PTR{ i } +1, menuText.c_str());
+						if (clip->ContainsFormat(CF_DIB))
+						{
+							SetMenuItemBitmaps(menu, UINT{ i } +1, MF_BYCOMMAND, clip->GetThumbnail(), clip->GetThumbnail());
+						}
 					}
 					else if (clip->ContainsFormat(CF_DIB))
 					{
@@ -519,6 +523,10 @@ void ClipsManager::ShowClipsMenu(HWND hWnd, const LPPOINT cPos, bool showExit)
 							menuText = clip->GetUnicodeMenuText(MenuDisplayChars());
 
 							AppendMenuW(sMenu, MF_STRING, UINT_PTR{ j } + 1, menuText.c_str());
+							if (clip->ContainsFormat(CF_DIB))
+							{
+								SetMenuItemBitmaps(sMenu, UINT{ j } + 1, MF_BYCOMMAND, clip->GetThumbnail(), clip->GetThumbnail());
+							}
 						}
 						else if (clip->ContainsFormat(CF_DIB))
 						{

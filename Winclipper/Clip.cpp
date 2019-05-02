@@ -155,8 +155,23 @@ bool Clip::Equals(std::shared_ptr<Clip> other)
 
 		if (format == CF_DIB)
 		{
-			isEqual = false;
-			break;
+			if (other->bitmapHeight != bitmapHeight || other->bitmapWidth != bitmapWidth)
+			{
+				isEqual = false;
+				break;
+			}
+			auto mySize = DibSize();
+			if (other->DibSize() != mySize)
+			{
+				isEqual = false;
+				break;
+			}
+
+			if (std::memcmp(other->DibBitmapBits().get(), DibBitmapBits().get(), mySize))
+			{
+				isEqual = false;
+				break;
+			}
 		}
 	}
 

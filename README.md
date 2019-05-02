@@ -12,6 +12,13 @@ You will need Visual Studio 2017 to build Winclipper. The solution file should c
 
 ## Changelog
 
+**1.3.1** - 2019-05-01
+
+This release of Winclipper includes the following bug fixes:
+- Adds a de-duplication comparison to bitmaps. Unfortunately the issue did not occur on any of my test machines, only the machines of my coworkers, so I missed it. Thanks guys for helping me work out the bugs!
+- It now prioritizes previewing bitmaps over text.
+- If a clip contains both a bitmap and text, then the bitmap thumbnail will display alongside the text, but without the image size.
+
 **1.3** - 2019-05-01
 
 This release of Winclipper includes the biggest addition since its original release: Bitmap support! Now you can copy images and paste them at a later time, and of course, if you don't want to do that (or you want to reduce or increase the amount of memory to cache images) you can change that in the settings.
