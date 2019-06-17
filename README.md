@@ -12,7 +12,7 @@ You will need Visual Studio 2017 to build Winclipper. The solution file should c
 
 ## Changelog
 
-**1.3.2** - 2019-06-15
+**1.3.2** - 2019-06-17
 
 This release of Winclipper includes the following bug fixes:
 - Fixed a race condition that caused a build-up of orphaned bitmaps on disk. If you want to clean up any existing orphaned bitmaps, I recommend unchecking "Save clips to disk" in the Settings window, waiting at least 5 seconds (or a little longer for non-SSDs), and then checking the box again. Those who did not use this setting in the first place were not affected. Unfortunately this fix might lead to a slight loss in performance when copying large amounts of data quickly.
