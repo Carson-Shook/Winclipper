@@ -11,6 +11,7 @@
 #define AGNOSTIC_USERDATA		GWL_USERDATA
 #endif
 
+#define CF_PNG 0xc11e
 #define MAX_LOADSTRING 100
 #define ID_REG_HOTKEY 100
 

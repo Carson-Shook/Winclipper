@@ -241,13 +241,29 @@ bool ClipsManager::AddToClips(HWND hWnd)
 
 	if (SaveImages() && IsClipboardFormatAvailable(CF_DIB))
 	{
+		bool hasTransparentBitmapFormat = false;
+
+		UINT currentFormat = 0;
+		do
+		{
+			currentFormat = EnumClipboardFormats(currentFormat);
+			// If CF_BITMAP is listed before the other better formats, then we can assume
+			// that it was "real" format and the others are synthesized.
+			if (currentFormat == CF_BITMAP)
+			{
+				currentFormat = 0;
+			}
+			hasTransparentBitmapFormat = currentFormat == CF_DIBV5 || currentFormat == CF_DIB || currentFormat == CF_PNG;
+		} while (currentFormat != 0 && !hasTransparentBitmapFormat);
+
 		HANDLE psClipboardData = GetClipboardData(CF_DIB);
 
 		if (psClipboardData != nullptr)
 		{
 			const BITMAPINFO * tempBitmapInfo = static_cast<BITMAPINFO *>(GlobalLock(psClipboardData));
 
-			if (tempBitmapInfo != nullptr)
+			// See: https://docs.microsoft.com/en-us/windows/desktop/api/d2d1/nf-d2d1-id2d1rendertarget-getmaximumbitmapsize
+			if (tempBitmapInfo != nullptr && tempBitmapInfo->bmiHeader.biHeight < 16384 && tempBitmapInfo->bmiHeader.biWidth < 16384)
 			{
 				unsigned int colorBytes = tempBitmapInfo->bmiHeader.biClrUsed;
 				if (!colorBytes)
@@ -280,12 +296,20 @@ bool ClipsManager::AddToClips(HWND hWnd)
 
 				// If not zero, use biSizeImage, otherwise calculate it using
 				// Microsoft's reccomended algorithm.
-				const size_t size = bitmapInfoHeader->biSizeImage 
+				const DWORD size = bitmapInfoHeader->biSizeImage 
 					? bitmapInfoHeader->biSizeImage 
 					: ((((bitmapInfoHeader->biWidth * bitmapInfoHeader->biBitCount) + 31) & ~31) >> 3) * bitmapInfoHeader->biHeight;
 
 				std::shared_ptr<BYTE> pMyBits(new BYTE[size], array_deleter<BYTE>());
 				memcpy_s(pMyBits.get(), size, (reinterpret_cast<const BYTE *>(tempBitmapInfo)) + offset, size);
+
+				if (bitmapInfoHeader->biBitCount == 32 && !hasTransparentBitmapFormat)
+				{
+					for (DWORD i = 3; i < size - 1; i += 4)
+					{
+						pMyBits.get()[i] = 255;
+					}
+				}
 
 				GlobalUnlock(psClipboardData);
 
@@ -302,6 +326,11 @@ bool ClipsManager::AddToClips(HWND hWnd)
 				{
 					// Not really sure I should put up a message if this fails
 				}
+			}
+			else
+			{
+				GlobalUnlock(psClipboardData);
+				
 			}
 		}
 	}

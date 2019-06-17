@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include <comdef.h>
 #include "PreviewWindow.h"
 
 ATOM PreviewWindow::RegisterPreviewWindowClass(HINSTANCE hInstance)
@@ -87,16 +88,25 @@ LRESULT PreviewWindow::WmTimer()
 {
 	if (!clipChanged && previewClip->BitmapReady())
 	{
+		timerAttempts = 0;
+		KillTimer(GetHandle(), IDT_BITMAPTIMER);
+
 		const HRESULT hr = SetBitmapConverter();
 		if (SUCCEEDED(hr))
 		{
 			RedrawWindow(GetHandle(), nullptr, nullptr, RDW_INVALIDATE);
 		}
 	}
-	else if (timerAttempts < 100)
+	else if (timerAttempts < 200)
 	{
+		timerAttempts++;
 		bitmapReady = false;
 		SetTimer(GetHandle(), IDT_BITMAPTIMER, 100, nullptr);
+	}
+	else
+	{
+		timerAttempts = 0;
+		KillTimer(GetHandle(), IDT_BITMAPTIMER);
 	}
 	clipChanged = false;
 
@@ -119,6 +129,7 @@ LRESULT PreviewWindow::WmPaint(HWND hWnd, UINT message, WPARAM wParam, LPARAM lP
 				// Need to release the previous D2DBitmap if there is one
 				SafeRelease(&pD2DBitmap);
 				hr = pRT->CreateBitmapFromWicBitmap(pConvertedSourceBitmap, nullptr, &pD2DBitmap);
+
 			}
 			else if (pD2DLoadingBitmap == nullptr)
 			{
@@ -169,6 +180,14 @@ LRESULT PreviewWindow::WmPaint(HWND hWnd, UINT message, WPARAM wParam, LPARAM lP
 
 			SafeRelease(&pD2DBitmap);
 			SafeRelease(&pConvertedSourceBitmap);
+		}
+		else
+		{
+			// Might use for debugging later.
+			/*_com_error err(hr);
+			LPCTSTR errMsg = err.ErrorMessage();
+			OutputDebugString(errMsg);*/
+			SafeRelease(&pD2DBitmap);
 		}
 	}
 	else if (previewClip->ContainsFormat(CF_UNICODETEXT))
@@ -739,12 +758,20 @@ void PreviewWindow::MoveRelativeToRect(const LPRECT rect, unsigned int index)
 				const float ratio = layoutMaxWidth / renderingWidth;
 				renderingWidth = layoutMaxWidth;
 				renderingHeight = renderingHeight * ratio;
+				if (renderingHeight < 4)
+				{
+					renderingHeight = 4.0f;
+				}
 			}
 			else
 			{
 				const float ratio = layoutMaxHeight / renderingHeight;
 				renderingHeight = layoutMaxHeight;
 				renderingWidth = renderingWidth * ratio;
+				if (renderingWidth < 4)
+				{
+					renderingWidth = 4.0f;
+				}
 			}
 		}
 	}

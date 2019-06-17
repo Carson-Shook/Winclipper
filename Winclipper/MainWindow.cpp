@@ -210,8 +210,8 @@ LRESULT MainWindow::WmCommandIdmAbout(HWND hWnd, WPARAM wParam, LPARAM lParam)
 
 LRESULT MainWindow::WmCommandIdmExit(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
-	// wait until finished writing, or give up after 6 seconds (should be long enough)
-	int waitUntilFinishedAttempts = 3;
+	// wait until finished writing, or give up after 10 seconds (should be long enough)
+	int waitUntilFinishedAttempts = 5;
 	while (!(cManager->NoPendingClipWrites() && uSettings.NoPendingSettingWrites()) && waitUntilFinishedAttempts > 0)
 	{
 		Sleep(2000);

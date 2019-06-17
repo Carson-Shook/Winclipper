@@ -98,6 +98,10 @@ void ClipsCollection::AddFront(std::shared_ptr<Clip> clip)
 				RemoveBack();
 			}
 		}
+		else
+		{
+			clip->MarkForDelete();
+		}
 	}
 }
 

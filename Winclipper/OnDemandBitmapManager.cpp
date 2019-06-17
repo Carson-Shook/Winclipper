@@ -21,7 +21,7 @@ std::string OnDemandBitmapManager::Add(std::shared_ptr<Bitmap> bitmap)
 		std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
 		auto path = File::JoinPath(GetCacheDir(), converter.from_bytes(guid));
 
-		std::thread(File::Write, path, bitmap->Serialize()).detach();
+		File::Write(path, bitmap->Serialize());
 	}
 
 	bitmapCache[guid] = bitmap;
