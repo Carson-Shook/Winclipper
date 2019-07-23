@@ -155,21 +155,29 @@ LRESULT PreviewWindow::WmPaint(HWND hWnd, UINT message, WPARAM wParam, LPARAM lP
 				rect,
 				pWhiteBrush);
 
-			if (bitmapReady)
+			try
 			{
-				pRT->DrawBitmap(pD2DBitmap, rect);
+				if (bitmapReady)
+				{
+					pRT->DrawBitmap(pD2DBitmap, rect);
+				}
+				else
+				{
+					const float left = (windowBorderWidth + rect.right) / 2.0F;
+					const float bottom = (windowBorderWidth + rect.bottom) / 2.0F;
+					const auto loadingRect = D2D1::RectF(
+						left - (pD2DLoadingBitmap->GetSize().width / ScaleX(2.0F)),
+						bottom - (pD2DLoadingBitmap->GetSize().height / ScaleY(2.0F)),
+						left + (pD2DLoadingBitmap->GetSize().width / ScaleX(2.0F)),
+						bottom + (pD2DLoadingBitmap->GetSize().height / ScaleY(2.0F))
+					);
+					pRT->DrawBitmap(pD2DLoadingBitmap, loadingRect);
+				}
 			}
-			else
+			catch (const std::exception&)
 			{
-				const float left = (windowBorderWidth + rect.right) / 2.0F;
-				const float bottom = (windowBorderWidth + rect.bottom) / 2.0F;
-				const auto loadingRect = D2D1::RectF(
-					left - (pD2DLoadingBitmap->GetSize().width / ScaleX(2.0F)),
-					bottom - (pD2DLoadingBitmap->GetSize().height / ScaleY(2.0F)),
-					left + (pD2DLoadingBitmap->GetSize().width / ScaleX(2.0F)),
-					bottom + (pD2DLoadingBitmap->GetSize().height / ScaleY(2.0F))
-				);
-				pRT->DrawBitmap(pD2DLoadingBitmap, loadingRect);
+				// This may be overkill, but better safe than sorry.
+				hr = D2DERR_RECREATE_TARGET;
 			}
 
 			pRT->DrawRectangle(
@@ -284,6 +292,7 @@ LRESULT PreviewWindow::WmPaint(HWND hWnd, UINT message, WPARAM wParam, LPARAM lP
 	{
 		DestroyDeviceDependentResources();
 	}
+	bitmapReady = false;
 
 	return hr;
 }

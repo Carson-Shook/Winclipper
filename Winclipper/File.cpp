@@ -96,12 +96,19 @@ void File::Write(std::wstring filename, std::string data)
 	}
 	std::ofstream outStream(filename, std::ios::out | std::ios::binary);
 
-	if (outStream)
+	try
 	{
-		outStream << data;
-		outStream.close();
+		if (outStream)
+		{
+			outStream << data;
+			outStream.close();
+		}
 	}
-	// Add error handling
+	catch (const std::exception&)
+	{
+		outStream.close();
+		throw std::exception("Could not write clips.");
+	}
 }
 
 std::string File::Read(std::wstring filename)

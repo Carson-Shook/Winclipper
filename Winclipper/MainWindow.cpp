@@ -143,8 +143,14 @@ LRESULT MainWindow::MainWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
 		pThis->WmMenuSelect(hWnd, wParam, lParam);
 		break;
 	default:
-		pThis->WndProcDefault(hWnd, wParam, lParam);
-		return DefWindowProcW(hWnd, message, wParam, lParam);
+		{
+			if (message == taskbarRestart)
+			{
+				pThis->WmRestartTaskbar(hWnd, wParam, lParam);
+			}
+			pThis->WndProcDefault(hWnd, wParam, lParam);
+			return DefWindowProcW(hWnd, message, wParam, lParam);
+		}
 	}
 	return 0;
 }
@@ -360,6 +366,7 @@ LRESULT MainWindow::WmHotkey(HWND hWnd, WPARAM wParam, LPARAM lParam)
 
 LRESULT MainWindow::WmCreate(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
+	taskbarRestart = RegisterWindowMessage(TEXT("TaskbarCreated"));
 	// Add the notification icon
 	if (!AddNotificationIcon(hWnd, ((LPCREATESTRUCT) lParam)->hInstance))
 	{
@@ -512,6 +519,19 @@ LRESULT MainWindow::WmMenuSelect(HWND hWnd, WPARAM wParam, LPARAM lParam)
 	}
 	return 0;
 }
+LRESULT MainWindow::WmRestartTaskbar(HWND hWnd, WPARAM wParam, LPARAM lParam)
+{
+	if (!AddNotificationIcon(hWnd, hInst))
+	{
+		MessageBox(hWnd,
+			L"There was an error adding the notification icon. You might want to try restarting your computer, or reinstalling this application.",
+			L"Error adding icon", MB_OK);
+
+		return -1;
+	}
+	return 0;
+}
+
 // This ensures that if the mouse is moved outside of the popup menu,
 // then the preview window will be hidden. This is achieved by 
 // comparing the previous mouse location against the current, and if
@@ -615,3 +635,6 @@ HWND MainWindow::GetHandle()
 {
 	return windowHandle;
 }
+
+UINT MainWindow::taskbarRestart = 0;
+

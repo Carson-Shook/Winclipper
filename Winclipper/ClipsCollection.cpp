@@ -28,7 +28,7 @@ std::string ClipsCollection::Serialize()
 		{
 			// no op because maybe we just ran into a weird data edge case.
 			// we wouldn't want to save that to the clipboard anyway.
-		}
+		}	
 	}
 	return data;
 }

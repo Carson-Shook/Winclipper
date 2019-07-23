@@ -22,9 +22,10 @@ private:
 	HMENU						topPopupMenu = nullptr;
 	HMENU						activePopupMenu = nullptr;
 	static UINT	const			WMAPP_NOTIFYCALLBACK = WM_APP + 1;			// user defined callback for notfiyicon actions
+	static UINT					taskbarRestart;
 	LPPOINT						previousMouseLoc = new POINT;
 
-	HWND						windowHandle;
+	HWND						windowHandle = nullptr;
 	
 	ATOM						RegisterMainWindowClass(HINSTANCE hInstance);
 	static LRESULT CALLBACK		MainWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
@@ -54,6 +55,7 @@ private:
 	LRESULT						WmInitMenuPopup(HWND hWnd, WPARAM wParam, LPARAM lParam);
 	LRESULT						WmUninitMenuPopup(HWND hWnd, WPARAM wParam, LPARAM lParam);
 	LRESULT						WmMenuSelect(HWND hWnd, WPARAM wParam, LPARAM lParam);
+	LRESULT						WmRestartTaskbar(HWND hWnd, WPARAM wParam, LPARAM lParam);
 	LRESULT						WndProcDefault(HWND hWnd, WPARAM wParam, LPARAM lParam);
 
 	bool						AddNotificationIcon(HWND hWnd, HINSTANCE hInstance);

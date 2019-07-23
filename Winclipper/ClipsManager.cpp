@@ -42,7 +42,14 @@ void ClipsManager::DelayClipsWriter(int * waitCount, ClipsManager * cs)
 void ClipsManager::WriteClips()
 {
     isWriterFinished = false;
-	File::Write(fullClipsPath, clips.Serialize());
+	try
+	{
+		File::Write(fullClipsPath, clips.Serialize());
+	}
+	catch (const std::exception& e)
+	{
+		MessageBoxA(nullptr, e.what(), "Winclipper", MB_OK | MB_ICONINFORMATION | MB_TASKMODAL | MB_SETFOREGROUND);
+	}
     isWriterFinished = true;
 }
 

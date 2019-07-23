@@ -10,6 +10,13 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     UNREFERENCED_PARAMETER(hPrevInstance);
     UNREFERENCED_PARAMETER(lpCmdLine);
 
+	const wchar_t uniqueApplicationMutex[] = L"com_carsonshook_winclipper";
+	HANDLE hHandle = CreateMutexW(nullptr, TRUE, uniqueApplicationMutex);
+	if (GetLastError() == ERROR_ALREADY_EXISTS)
+	{
+		return 1;
+	}
+
 	RunUpdater();
 
 	const HRESULT hr = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
@@ -46,10 +53,16 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		}
 		catch (const std::exception& e)
 		{
+			CoUninitialize();
 			MessageBoxA(nullptr, (std::string("A fatal error occured:\r\n\"") + e.what() + "\"\r\n\r\nWinclipper will now close.").c_str(), "Winclipper", MB_OK | MB_ICONERROR | MB_TASKMODAL | MB_SETFOREGROUND);
 		}
 	}
 
+	if (hHandle != nullptr)
+	{
+		ReleaseMutex(hHandle);
+		CloseHandle(hHandle);
+	}
     return 0;
 }
 
