@@ -12,7 +12,7 @@ You will need Visual Studio 2017 to build Winclipper. The solution file should c
 
 ## Changelog
 
-**1.3.3** - 2019-07-22
+**1.3.3** - 2019-07-23
 
 This release of Winclipper includes the following improvements and bug fixes:
 - Winclipper will now check to see whether or not it is already running, and will not open again if it's already running.
