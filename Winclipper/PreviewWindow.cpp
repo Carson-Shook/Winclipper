@@ -159,7 +159,7 @@ LRESULT PreviewWindow::WmPaint(HWND hWnd, UINT message, WPARAM wParam, LPARAM lP
 			{
 				if (bitmapReady)
 				{
-					pRT->DrawBitmap(pD2DBitmap, rect);
+					pRT->DrawBitmap(pD2DBitmap, rect, 1.0F, interpolationMode);
 				}
 				else
 				{
@@ -689,6 +689,7 @@ PreviewWindow::~PreviewWindow()
 {
 	DestroyDeviceDependentResources();
 	DestroyDeviceIndependentResources();
+	windowHandle = nullptr;
 }
 
 bool PreviewWindow::InitPreviewWindow(HINSTANCE hInstance, HWND hWndParent)
@@ -744,6 +745,9 @@ void PreviewWindow::MoveRelativeToRect(const LPRECT rect, unsigned int index)
 	float renderingWidth = layoutMaxWidth;
 	float renderingHeight = layoutMaxHeight;
 
+	int totalWindowWidth;
+	int totalWindowHeight;
+
 	if (previewClip->ContainsFormat(CF_DIB))
 	{
 		if (previewClip->BitmapReady())
@@ -762,6 +766,7 @@ void PreviewWindow::MoveRelativeToRect(const LPRECT rect, unsigned int index)
 
 		if (renderingWidth > layoutMaxWidth || renderingHeight > layoutMaxHeight)
 		{
+			interpolationMode = D2D1_BITMAP_INTERPOLATION_MODE_LINEAR;
 			if (renderingWidth >= renderingHeight)
 			{
 				const float ratio = layoutMaxWidth / renderingWidth;
@@ -783,6 +788,20 @@ void PreviewWindow::MoveRelativeToRect(const LPRECT rect, unsigned int index)
 				}
 			}
 		}
+		else
+		{
+			if (ScaleX(1) == 1)
+			{
+				interpolationMode = D2D1_BITMAP_INTERPOLATION_MODE_NEAREST_NEIGHBOR;
+			}
+			else
+			{
+				interpolationMode = D2D1_BITMAP_INTERPOLATION_MODE_LINEAR;
+			}
+		}
+
+		totalWindowWidth = static_cast<int>(ScaleX(renderingWidth + (windowBorderWidth * 2.0f)));
+		totalWindowHeight = static_cast<int>(ScaleY(renderingHeight + (windowBorderWidth * 2.0f)));
 	}
 	else if (previewClip->ContainsFormat(CF_UNICODETEXT))
 	{
@@ -880,10 +899,10 @@ void PreviewWindow::MoveRelativeToRect(const LPRECT rect, unsigned int index)
 		{
 			remainingTextLines = 0;
 		}
+
+		totalWindowWidth = static_cast<int>(ScaleX(renderingWidth + (windowBorderWidth * 2.0f) + (textMarginWidth * 2.0f)));
+		totalWindowHeight = static_cast<int>(ScaleY(renderingHeight + (windowBorderWidth * 2.0f) + (textMarginHeight * 2.0f)));
 	}
-	
-	const int totalWindowWidth = static_cast<int>(ScaleX(renderingWidth + (windowBorderWidth * 2.0f) + (textMarginWidth * 2.0f)));
-	const int totalWindowHeight = static_cast<int>(ScaleY(renderingHeight + (windowBorderWidth * 2.0f) + (textMarginHeight * 2.0f)));
 
 	int xLoc = rect->right + ScaleX(5);
 	int yLoc = rect->top;

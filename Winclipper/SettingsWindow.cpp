@@ -464,7 +464,7 @@ SettingsWindow::~SettingsWindow()
 
 bool SettingsWindow::InitSettingsWindow(HINSTANCE hInstance)
 {
-	HWND hWnd = CreateWindowExW(0, szSettingsWindowClass, szTitle, WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_SIZEBOX,
+	HWND hWnd = CreateWindowExW(0, szSettingsWindowClass, szTitle, WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU,
 		CW_USEDEFAULT, CW_USEDEFAULT, ScaleX(260), ScaleY(340), nullptr, nullptr, hInstance, this);
 
 	if (!hWnd)

@@ -42,7 +42,8 @@ private:
 	ID2D1SolidColorBrush *		pBlackBrush = nullptr;
 	ID2D1SolidColorBrush *		pLabelTextBrush = nullptr;
 	ID2D1SolidColorBrush *		pBlueGrayBrush = nullptr;
-
+	
+	D2D1_BITMAP_INTERPOLATION_MODE	interpolationMode = D2D1_BITMAP_INTERPOLATION_MODE_NEAREST_NEIGHBOR;
 	D2D1_DRAW_TEXT_OPTIONS		textDrawOptions = D2D1_DRAW_TEXT_OPTIONS_NONE;
 	DWRITE_FONT_WEIGHT			weight = DWRITE_FONT_WEIGHT_NORMAL;
 	D2D1::ColorF				WindowColor = D2D1::ColorF(0xF0F0F5);

@@ -388,6 +388,8 @@ LRESULT MainWindow::WmDestroy(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
 	delete previewWindow;
 	delete cManager;
+	previewWindow = nullptr;
+	cManager = nullptr;
 	DeleteNotificationIcon();
 	PostQuitMessage(0);
 	return 0;
