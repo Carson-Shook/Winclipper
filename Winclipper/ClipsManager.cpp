@@ -511,7 +511,7 @@ void ClipsManager::ShowClipsMenu(HWND hWnd, const LPPOINT cPos, bool showExit)
         AttachThreadInput(GetWindowThreadProcessId(curWin, nullptr), GetWindowThreadProcessId(hWnd, nullptr), true);
 		HWND actWin = GetActiveWindow();
 
-        SetForegroundWindow(hWnd);
+        //SetForegroundWindow(hWnd);
 
         HMENU menu = CreatePopupMenu();
 
@@ -608,23 +608,9 @@ void ClipsManager::ShowClipsMenu(HWND hWnd, const LPPOINT cPos, bool showExit)
         switch (menuSelection)
         {
 		case CANCELED_SELECTION:
-			{
-			SetForegroundWindow(curWin);
-			SetActiveWindow(actWin);
-				int retries = 10;
-				HWND temp = GetActiveWindow();
-				while (temp != actWin && retries > 0)
-				{
-					temp = GetActiveWindow();
-					retries--;
-					Sleep(20);
-				}
-			}
 			break;
         case CLEARCLIPS_SELECT:
             PostMessageW(hWnd, WM_COMMAND, IDM_CLEARCLIPS, 0);
-			SetForegroundWindow(curWin);
-			SetActiveWindow(actWin);
             break;
         case SETTINGS_SELECT:
             PostMessageW(hWnd, WM_COMMAND, IDM_SETTINGS, 0);
@@ -646,27 +632,18 @@ void ClipsManager::ShowClipsMenu(HWND hWnd, const LPPOINT cPos, bool showExit)
 				retries--;
 			}
 
-			// Attempts to set the active window. Usually succeeds immediately, but not always 
-			SetForegroundWindow(curWin);
-			SetActiveWindow(actWin);
-			retries = 10;
-			HWND temp = GetActiveWindow();
-			while (temp != actWin && retries > 0)
+			if (success)
 			{
-				Sleep(100);
-				temp = GetActiveWindow();
-				retries--;
+				retries = 10;
+				unsigned int inputCount = SendPasteInput();
+				while (inputCount != 4 && retries > 0)
+				{
+					Sleep(100);
+					inputCount = SendPasteInput();
+					retries--;
+				}
+				break;
 			}
-
-			retries = 10;
-			unsigned int inputCount = SendPasteInput();
-			while (inputCount != 4 && retries > 0)
-			{
-				Sleep(100);
-				inputCount = SendPasteInput();
-				retries--;
-			}
-            break;
         }
 
         // detatch from thread of the active window
