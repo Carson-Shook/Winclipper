@@ -260,7 +260,7 @@ LRESULT MainWindow::WmCommandNtfSaveToDiskChanged(HWND hWnd, WPARAM wParam, LPAR
 
 LRESULT MainWindow::WmCommandNtfSaveImagesChanged(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
-	cManager->ClearSavedImages();
+	cManager->UpdateSavedImages();
 	return 0;
 }
 

@@ -48,7 +48,7 @@ public:
 
     void                            UpdateMaxClips();
     void                            SetSaveToDisk(bool saveToDisk);
-	void                            ClearSavedImages();
+	void                            UpdateSavedImages();
 
 	void                            RecreateThumbnails();
 

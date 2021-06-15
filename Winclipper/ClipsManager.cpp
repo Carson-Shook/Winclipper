@@ -113,6 +113,7 @@ ClipsManager::ClipsManager()
 
 	ReadClips();
     UpdateMaxClips();
+	UpdateSavedImages();
 	SaveClipsAsync();
 }
 
@@ -144,10 +145,13 @@ void ClipsManager::SetSaveToDisk(bool saveToDisk)
     SaveClipsAsync();
 }
 
-void ClipsManager::ClearSavedImages()
+void ClipsManager::UpdateSavedImages()
 {
-	ClearBitmaps();
-	SaveClipsAsync();
+	if (UserSettings::SaveImages())
+	{
+		ClearBitmaps();
+		SaveClipsAsync();
+	}
 }
 
 void ClipsManager::RecreateThumbnails()
