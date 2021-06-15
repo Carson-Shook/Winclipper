@@ -15,7 +15,6 @@ private:
 	HINSTANCE					hInst;										// current instance
 	wchar_t						szMainWindowClass[MAX_LOADSTRING];          // the main window class name
 	wchar_t						szTitle[MAX_LOADSTRING];                    // The title bar text
-	UserSettings & 				uSettings;
 	SettingsWindow &			settingsWindow;
 	ClipsManager * 				cManager = nullptr;
 	PreviewWindow * 			previewWindow = nullptr;
@@ -61,7 +60,7 @@ private:
 	bool						AddNotificationIcon(HWND hWnd, HINSTANCE hInstance);
 	bool						DeleteNotificationIcon();
 public:
-								MainWindow(HINSTANCE hInstance, UserSettings & userSettings, SettingsWindow & settingsWindow);
+								MainWindow(HINSTANCE hInstance, SettingsWindow & settingsWindow);
 								~MainWindow();
 
 	bool					    InitMainWindow(HINSTANCE hInstance);

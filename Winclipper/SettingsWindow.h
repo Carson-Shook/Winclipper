@@ -37,7 +37,6 @@ class SettingsWindow : public Notify
 private:
 	wchar_t						szSettingsWindowClass[MAX_LOADSTRING];      // the settings window class name
 	wchar_t						szTitle[MAX_LOADSTRING];                    // The title bar text
-	UserSettings &				uSettings;
 	
 	HFONT						hFontStd;
 	HWND						windowHandle = nullptr;
@@ -64,7 +63,7 @@ private:
 	bool						WriteRegistryRun();
 	bool						DeleteRegistryRun();
 public:
-								SettingsWindow(HINSTANCE hInstance, UserSettings & userSettings);
+								SettingsWindow(HINSTANCE hInstance);
 								~SettingsWindow();
 
 	bool						InitSettingsWindow(HINSTANCE hInstance);

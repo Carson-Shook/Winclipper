@@ -218,7 +218,7 @@ LRESULT MainWindow::WmCommandIdmExit(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
 	// wait until finished writing, or give up after 10 seconds (should be long enough)
 	int waitUntilFinishedAttempts = 5;
-	while (!(cManager->NoPendingClipWrites() && uSettings.NoPendingSettingWrites()) && waitUntilFinishedAttempts > 0)
+	while (!(cManager->NoPendingClipWrites() && UserSettings::NoPendingSettingWrites()) && waitUntilFinishedAttempts > 0)
 	{
 		Sleep(2000);
 		waitUntilFinishedAttempts--;
@@ -232,43 +232,41 @@ LRESULT MainWindow::WmCommandIdmExit(HWND hWnd, WPARAM wParam, LPARAM lParam)
 LRESULT MainWindow::WmCommandNtfCmenuHotkeyChanged(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
 	UnregisterHotKey(GetHandle(), ID_REG_HOTKEY);
-	RegisterHotKey(GetHandle(), ID_REG_HOTKEY, HIBYTE(uSettings.ClipsMenuHotkeyTrl()), LOBYTE(uSettings.ClipsMenuHotkeyTrl()));
+	RegisterHotKey(GetHandle(), ID_REG_HOTKEY, HIBYTE(UserSettings::ClipsMenuHotkeyTrl()), LOBYTE(UserSettings::ClipsMenuHotkeyTrl()));
 	return 0;
 }
 
 LRESULT MainWindow::WmCommandNtfMaxDisplayChanged(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
-	cManager->SetDisplayClips(uSettings.MaxDisplayClips());
 	return 0;
 }
 
 LRESULT MainWindow::WmCommandNtfMaxSavedChanged(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
-	cManager->SetMaxClips(uSettings.MaxSavedClips());
+	cManager->UpdateMaxClips();
 	return 0;
 }
 
 LRESULT MainWindow::WmCommandNtfMenuCharsChanged(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
-	cManager->SetMenuDisplayChars(uSettings.MenuDisplayChars());
 	return 0;
 }
 
 LRESULT MainWindow::WmCommandNtfSaveToDiskChanged(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
-	cManager->SetSaveToDisk(uSettings.SaveToDisk());
+	cManager->SetSaveToDisk(UserSettings::SaveToDisk());
 	return 0;
 }
 
 LRESULT MainWindow::WmCommandNtfSaveImagesChanged(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
-	cManager->SetSaveImages(uSettings.SaveImages());
+	cManager->ClearSavedImages();
 	return 0;
 }
 
 LRESULT MainWindow::WmCommandNtfMaxcacheMBytesChanged(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
-	OnDemandBitmapManager::SetMaxBytes(unsigned long long{ uSettings.MaxCacheMegabytes() } * 1048576);
+	OnDemandBitmapManager::SetMaxBytes(unsigned long long{ UserSettings::MaxCacheMegabytes() } * 1048576);
 	return 0;
 }
 
@@ -377,10 +375,10 @@ LRESULT MainWindow::WmCreate(HWND hWnd, WPARAM wParam, LPARAM lParam)
 		return -1;
 	}
 
-	uSettings.Subscribe(hWnd);
-	settingsWindow.Subscribe(hWnd);
+	UserSettings::Subscribe(hWnd);
+	SettingsWindow::Subscribe(hWnd);
 
-	cManager = new ClipsManager(uSettings.MaxDisplayClips(), uSettings.MaxSavedClips(), uSettings.MenuDisplayChars(), uSettings.SaveToDisk(), uSettings.SaveImages());
+	cManager = new ClipsManager();
 	return 0;
 }
 
@@ -399,7 +397,7 @@ LRESULT MainWindow::WmInitMenu(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
 	// keep track of the top level menu to differentiate for display purposes
 	activePopupMenu = topPopupMenu = (HMENU)wParam;
-	cManager->SelectDefaultMenuItem(cManager->GetSize() > 1 ? uSettings.Select2ndClip() : false);
+	cManager->SelectDefaultMenuItem(cManager->GetSize() > 1 ? UserSettings::Select2ndClip() : false);
 	return 0;
 }
 
@@ -431,7 +429,7 @@ LRESULT MainWindow::WmMenuRButtonUp(HWND hWnd, WPARAM wParam, LPARAM lParam)
 
 		if (activePopupMenu != topPopupMenu)
 		{
-			index += cManager->DisplayClips();
+			index += UserSettings::MaxDisplayClips();
 		}
 		cManager->DeleteClipAt(index);
 
@@ -457,7 +455,7 @@ LRESULT MainWindow::WmUninitMenuPopup(HWND hWnd, WPARAM wParam, LPARAM lParam)
 
 LRESULT MainWindow::WmMenuSelect(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
-	if (uSettings.ShowPreview())
+	if (UserSettings::ShowPreview())
 	{
 		// Display preview window when user hovers on a clip
 		DWORD flags = HIWORD(wParam);
@@ -472,7 +470,7 @@ LRESULT MainWindow::WmMenuSelect(HWND hWnd, WPARAM wParam, LPARAM lParam)
 
 				if (activePopupMenu != topPopupMenu)
 				{
-					offset += cManager->DisplayClips();
+					offset += UserSettings::MaxDisplayClips();
 				}
 
 				/* BLACK MAGIC 0_0 */
@@ -587,8 +585,8 @@ bool MainWindow::DeleteNotificationIcon()
 	return Shell_NotifyIcon(NIM_DELETE, &nid);
 }
 
-MainWindow::MainWindow(HINSTANCE hInstance, UserSettings & userSettings, SettingsWindow & settingsWindow)
-	:uSettings(userSettings), settingsWindow(settingsWindow)
+MainWindow::MainWindow(HINSTANCE hInstance, SettingsWindow & settingsWindow)
+	:settingsWindow(settingsWindow)
 {
 	LoadStringW(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
 	LoadStringW(hInstance, IDC_WINCLIPPER, szMainWindowClass, MAX_LOADSTRING);
@@ -623,12 +621,12 @@ bool MainWindow::InitMainWindow(HINSTANCE hInstance)
 	AddClipboardFormatListener(hWnd);
 
 	// Register the hotkey that we have stored in settings
-	RegisterHotKey(hWnd, ID_REG_HOTKEY, HIBYTE(uSettings.ClipsMenuHotkeyTrl()), LOBYTE(uSettings.ClipsMenuHotkeyTrl()));
+	RegisterHotKey(hWnd, ID_REG_HOTKEY, HIBYTE(UserSettings::ClipsMenuHotkeyTrl()), LOBYTE(UserSettings::ClipsMenuHotkeyTrl()));
 
 	ShowWindow(hWnd, SW_HIDE);
 	UpdateWindow(hWnd);
 
-	OnDemandBitmapManager::SetMaxBytes(unsigned long long{ uSettings.MaxCacheMegabytes() } * 1048576);
+	OnDemandBitmapManager::SetMaxBytes(unsigned long long{ UserSettings::MaxCacheMegabytes() } * 1048576);
 
 	return true;
 }

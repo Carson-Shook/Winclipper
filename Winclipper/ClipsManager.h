@@ -24,16 +24,10 @@ typedef struct {
 class ClipsManager
 {
 private:
-	ClipsManager();
 	unsigned int					windows10ReleaseId = 0;
 
     std::wstring                    fullClipsPath;
     ClipsCollection					clips;
-    unsigned int                    displayClips = 20;
-    unsigned int                    maxClips = 200;
-    unsigned int                    menuDispChars = 64;
-	bool                            saveToDisk = true;
-	bool                            saveImages = true;
 
     int                             clipsWriterWaitCount = 0;
     bool                            isWriterFinished = true;
@@ -46,26 +40,15 @@ private:
 	void							ClearBitmaps();
 
 public:
-    ClipsManager(int displayClips, int maxClips, int menuChars, bool saveToDisk, bool saveImages);
+    ClipsManager();
     ~ClipsManager();
 
     bool                            NoPendingClipWrites() noexcept;
 	bool							ClipLock = false;
 
-    unsigned int                    DisplayClips() noexcept;
-    void                            SetDisplayClips(unsigned int displayClips) noexcept;
-
-    unsigned int                    MaxClips() noexcept;
-    void                            SetMaxClips(unsigned int maxClips);
-
-    unsigned int                    MenuDisplayChars() noexcept;
-    void                            SetMenuDisplayChars(unsigned int menuDispChars) noexcept;
-
-    bool                            SaveToDisk() noexcept;
+    void                            UpdateMaxClips();
     void                            SetSaveToDisk(bool saveToDisk);
-
-	bool                            SaveImages() noexcept;
-	void                            SetSaveImages(bool saveToDisk);
+	void                            ClearSavedImages();
 
 	void                            RecreateThumbnails();
 

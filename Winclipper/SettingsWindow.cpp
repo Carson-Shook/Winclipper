@@ -120,25 +120,25 @@ LRESULT SettingsWindow::SettingsWndProc(HWND hWnd, UINT message, WPARAM wParam, 
 
 LRESULT SettingsWindow::WmCommandIdmAbout(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
-	SendNotifcation(IDM_ABOUT, GetHandle());
+	SettingsWindow::SendNotifcation(IDM_ABOUT, GetHandle());
 	return 0;
 }
 
 LRESULT SettingsWindow::WmCommandIdmExit()
 {
-	SendNotifcation(IDM_EXIT, GetHandle());
+	SettingsWindow::SendNotifcation(IDM_EXIT, GetHandle());
 	return 0;
 }
 
 LRESULT SettingsWindow::WmCommandIdmRecreateThumbnails()
 {
-	SendNotifcation(IDM_RECREATE_THUMBNAILS, GetHandle());
+	SettingsWindow::SendNotifcation(IDM_RECREATE_THUMBNAILS, GetHandle());
 	return 0;
 }
 
 LRESULT SettingsWindow::WmCommandIdmClearClips()
 {
-	SendNotifcation(IDM_CLEARCLIPS, GetHandle());
+	SettingsWindow::SendNotifcation(IDM_CLEARCLIPS, GetHandle());
 	return 0;
 }
 
@@ -148,13 +148,13 @@ LRESULT SettingsWindow::WmCommandTxtMaxClipsDisplay(HWND hWnd, WPARAM wParam, LP
 	{
 		const int value = GetDlgItemInt(hWnd, TXT_MAX_CLIPS_DISPLAY, nullptr, false);
 
-		if (value < MAX_DISPLAY_LOWER)
+		if (value < UserSettings::MAX_DISPLAY_LOWER)
 		{
-			SetDlgItemInt(hWnd, TXT_MAX_CLIPS_DISPLAY, MAX_DISPLAY_LOWER, false);
+			SetDlgItemInt(hWnd, TXT_MAX_CLIPS_DISPLAY, UserSettings::MAX_DISPLAY_LOWER, false);
 		}
-		else if (value > MAX_DISPLAY_UPPER)
+		else if (value > UserSettings::MAX_DISPLAY_UPPER)
 		{
-			SetDlgItemInt(hWnd, TXT_MAX_CLIPS_DISPLAY, MAX_DISPLAY_UPPER, false);
+			SetDlgItemInt(hWnd, TXT_MAX_CLIPS_DISPLAY, UserSettings::MAX_DISPLAY_UPPER, false);
 		}
 
 		return 0; // set focus on the main window again
@@ -163,14 +163,14 @@ LRESULT SettingsWindow::WmCommandTxtMaxClipsDisplay(HWND hWnd, WPARAM wParam, LP
 	{
 		const int value = GetDlgItemInt(hWnd, TXT_MAX_CLIPS_DISPLAY, nullptr, false);
 
-		if (value >= MAX_DISPLAY_LOWER && value <= MAX_DISPLAY_UPPER)
+		if (value >= UserSettings::MAX_DISPLAY_LOWER && value <= UserSettings::MAX_DISPLAY_UPPER)
 		{
-			uSettings.SetMaxDisplayClips(value);
-			if (value > uSettings.MaxSavedClips())
+			UserSettings::SetMaxDisplayClips(value);
+			if (value > UserSettings::MaxSavedClips())
 			{
 				SetDlgItemInt(hWnd, TXT_MAX_CLIPS_SAVED, value, false);
 			}
-			SendDlgItemMessageW(hWnd, UD_MAX_CLIPS_SAVED, UDM_SETRANGE, 0, MAKELPARAM(MAX_SAVED_UPPER, value));
+			SendDlgItemMessageW(hWnd, UD_MAX_CLIPS_SAVED, UDM_SETRANGE, 0, MAKELPARAM(UserSettings::MAX_SAVED_UPPER, value));
 		}
 	}
 	return 0;
@@ -182,13 +182,13 @@ LRESULT SettingsWindow::WmCommandTxtMaxClipsSaved(HWND hWnd, WPARAM wParam, LPAR
 	{
 		const int value = GetDlgItemInt(hWnd, TXT_MAX_CLIPS_SAVED, nullptr, false);
 
-		if (value < uSettings.MaxDisplayClips())
+		if (value < UserSettings::MaxDisplayClips())
 		{
-			SetDlgItemInt(hWnd, TXT_MAX_CLIPS_SAVED, uSettings.MaxDisplayClips(), false);
+			SetDlgItemInt(hWnd, TXT_MAX_CLIPS_SAVED, UserSettings::MaxDisplayClips(), false);
 		}
-		else if (value > MAX_SAVED_UPPER)
+		else if (value > UserSettings::MAX_SAVED_UPPER)
 		{
-			SetDlgItemInt(hWnd, TXT_MAX_CLIPS_SAVED, MAX_SAVED_UPPER, false);
+			SetDlgItemInt(hWnd, TXT_MAX_CLIPS_SAVED, UserSettings::MAX_SAVED_UPPER, false);
 		}
 
 		return 0; // set focus on the main window again
@@ -197,9 +197,9 @@ LRESULT SettingsWindow::WmCommandTxtMaxClipsSaved(HWND hWnd, WPARAM wParam, LPAR
 	{
 		const int value = GetDlgItemInt(hWnd, TXT_MAX_CLIPS_SAVED, nullptr, false);
 
-		if (value <= MAX_SAVED_UPPER && value >= uSettings.MaxDisplayClips())
+		if (value <= UserSettings::MAX_SAVED_UPPER && value >= UserSettings::MaxDisplayClips())
 		{
-			uSettings.SetMaxSavedClips(GetDlgItemInt(hWnd, TXT_MAX_CLIPS_SAVED, nullptr, false));
+			UserSettings::SetMaxSavedClips(GetDlgItemInt(hWnd, TXT_MAX_CLIPS_SAVED, nullptr, false));
 		}
 	}
 	return 0;
@@ -211,13 +211,13 @@ LRESULT SettingsWindow::WmCommandTxtMenuDispChars(HWND hWnd, WPARAM wParam, LPAR
 	{
 		const int value = GetDlgItemInt(hWnd, TXT_MENU_DISP_CHARS, nullptr, false);
 
-		if (value < MENU_CHARS_LOWER)
+		if (value < UserSettings::MENU_CHARS_LOWER)
 		{
-			SetDlgItemInt(hWnd, TXT_MENU_DISP_CHARS, MENU_CHARS_LOWER, false);
+			SetDlgItemInt(hWnd, TXT_MENU_DISP_CHARS, UserSettings::MENU_CHARS_LOWER, false);
 		}
-		else if (value > MENU_CHARS_UPPER)
+		else if (value > UserSettings::MENU_CHARS_UPPER)
 		{
-			SetDlgItemInt(hWnd, TXT_MENU_DISP_CHARS, MENU_CHARS_UPPER, false);
+			SetDlgItemInt(hWnd, TXT_MENU_DISP_CHARS, UserSettings::MENU_CHARS_UPPER, false);
 		}
 
 		return 0; // set focus on the main window again
@@ -226,9 +226,9 @@ LRESULT SettingsWindow::WmCommandTxtMenuDispChars(HWND hWnd, WPARAM wParam, LPAR
 	{
 		const int value = GetDlgItemInt(hWnd, TXT_MENU_DISP_CHARS, nullptr, false);
 
-		if (value >= MENU_CHARS_LOWER && value <= MENU_CHARS_UPPER)
+		if (value >= UserSettings::MENU_CHARS_LOWER && value <= UserSettings::MENU_CHARS_UPPER)
 		{
-			uSettings.SetMenuDisplayChars(value);
+			UserSettings::SetMenuDisplayChars(value);
 		}
 	}
 	return 0;
@@ -258,12 +258,12 @@ LRESULT SettingsWindow::WmCommandChkSaveToDisk(HWND hWnd, WPARAM wParam, LPARAM 
 	{
 		if (IsDlgButtonChecked(hWnd, CHK_SAVE_TO_DISK))
 		{
-			uSettings.SetSaveToDisk(false);
+			UserSettings::SetSaveToDisk(false);
 			CheckDlgButton(hWnd, CHK_SAVE_TO_DISK, BST_UNCHECKED);
 		}
 		else
 		{
-			uSettings.SetSaveToDisk(true);
+			UserSettings::SetSaveToDisk(true);
 			CheckDlgButton(hWnd, CHK_SAVE_TO_DISK, BST_CHECKED);
 		}
 	}
@@ -276,12 +276,12 @@ LRESULT SettingsWindow::WmCommandChkSlct2ndClip(HWND hWnd, WPARAM wParam, LPARAM
 	{
 		if (IsDlgButtonChecked(hWnd, CHK_SLCT_2ND_CLIP))
 		{
-			uSettings.SetSelect2ndClip(false);
+			UserSettings::SetSelect2ndClip(false);
 			CheckDlgButton(hWnd, CHK_SLCT_2ND_CLIP, BST_UNCHECKED);
 		}
 		else
 		{
-			uSettings.SetSelect2ndClip(true);
+			UserSettings::SetSelect2ndClip(true);
 			CheckDlgButton(hWnd, CHK_SLCT_2ND_CLIP, BST_CHECKED);
 		}
 	}
@@ -294,12 +294,12 @@ LRESULT SettingsWindow::WmCommandChkShowPreview(HWND hWnd, WPARAM wParam, LPARAM
 	{
 		if (IsDlgButtonChecked(hWnd, CHK_SHOW_PREVIEW))
 		{
-			uSettings.SetShowPreview(false);
+			UserSettings::SetShowPreview(false);
 			CheckDlgButton(hWnd, CHK_SHOW_PREVIEW, BST_UNCHECKED);
 		}
 		else
 		{
-			uSettings.SetShowPreview(true);
+			UserSettings::SetShowPreview(true);
 			CheckDlgButton(hWnd, CHK_SHOW_PREVIEW, BST_CHECKED);
 		}
 	}
@@ -318,7 +318,7 @@ LRESULT SettingsWindow::WmCommandChkSaveImages(HWND hWnd, WPARAM wParam, LPARAM 
 
 			if (choice == IDYES)
 			{
-				uSettings.SetSaveImages(false);
+				UserSettings::SetSaveImages(false);
 				CheckDlgButton(hWnd, CHK_SAVE_IMAGES, BST_UNCHECKED);
 				EnableWindow(GetDlgItem(hWnd, UD_MAX_IMG_CACHE_MB), false);
 				EnableWindow(GetDlgItem(hWnd, TXT_MAX_IMG_CACHE_MB), false);
@@ -326,7 +326,7 @@ LRESULT SettingsWindow::WmCommandChkSaveImages(HWND hWnd, WPARAM wParam, LPARAM 
 		}
 		else
 		{
-			uSettings.SetSaveImages(true);
+			UserSettings::SetSaveImages(true);
 			CheckDlgButton(hWnd, CHK_SAVE_IMAGES, BST_CHECKED);
 			EnableWindow(GetDlgItem(hWnd, UD_MAX_IMG_CACHE_MB), true);
 			EnableWindow(GetDlgItem(hWnd, TXT_MAX_IMG_CACHE_MB), true);
@@ -341,13 +341,13 @@ LRESULT SettingsWindow::WmCommandTxtMaxImageCacheMb(HWND hWnd, WPARAM wParam, LP
 	{
 		const unsigned int value = GetDlgItemInt(hWnd, TXT_MAX_IMG_CACHE_MB, nullptr, false);
 
-		if (value < MAX_CACHE_MBYTES_LOWER)
+		if (value < UserSettings::MAX_CACHE_MBYTES_LOWER)
 		{
-			SetDlgItemInt(hWnd, TXT_MAX_IMG_CACHE_MB, MAX_CACHE_MBYTES_LOWER, false);
+			SetDlgItemInt(hWnd, TXT_MAX_IMG_CACHE_MB, UserSettings::MAX_CACHE_MBYTES_LOWER, false);
 		}
-		else if (value > MAX_CACHE_MBYTES_UPPER)
+		else if (value > UserSettings::MAX_CACHE_MBYTES_UPPER)
 		{
-			SetDlgItemInt(hWnd, TXT_MAX_IMG_CACHE_MB, MAX_CACHE_MBYTES_UPPER, false);
+			SetDlgItemInt(hWnd, TXT_MAX_IMG_CACHE_MB, UserSettings::MAX_CACHE_MBYTES_UPPER, false);
 		}
 
 		return 0; // set focus on the main window again
@@ -356,9 +356,9 @@ LRESULT SettingsWindow::WmCommandTxtMaxImageCacheMb(HWND hWnd, WPARAM wParam, LP
 	{
 		const unsigned int value = GetDlgItemInt(hWnd, TXT_MAX_IMG_CACHE_MB, nullptr, false);
 
-		if (value >= MAX_CACHE_MBYTES_LOWER && value <= MAX_CACHE_MBYTES_UPPER)
+		if (value >= UserSettings::MAX_CACHE_MBYTES_LOWER && value <= UserSettings::MAX_CACHE_MBYTES_UPPER)
 		{
-			uSettings.SetMaxCacheMegabytes(value);
+			UserSettings::SetMaxCacheMegabytes(value);
 		}
 	}
 	return 0;
@@ -377,7 +377,7 @@ LRESULT SettingsWindow::WmCommandHkyShowClipsMenu(HWND hWnd, WPARAM wParam, LPAR
 		if (wHotkey == 0)
 		{
 			SendMessageW(GetDlgItem(hWnd, HKY_SHOW_CLIPS_MENU), HKM_SETHOTKEY, CMENU_HOTKEY_DEF, 0);
-			uSettings.SetClipsMenuHotkey(CMENU_HOTKEY_DEF);
+			UserSettings::SetClipsMenuHotkey(CMENU_HOTKEY_DEF);
 		}
 		else
 		{
@@ -385,7 +385,7 @@ LRESULT SettingsWindow::WmCommandHkyShowClipsMenu(HWND hWnd, WPARAM wParam, LPAR
 			// hotkey info in the LOWORD side into the LOBYTE and HIBYTE
 			// intead of on each side of the WORD, so we have to split
 			// these out for consistency with storing in settings.
-			uSettings.SetClipsMenuHotkey(MAKEWORD(LOBYTE(LOWORD(wHotkey)), HIBYTE(LOWORD(wHotkey))));
+			UserSettings::SetClipsMenuHotkey(MAKEWORD(LOBYTE(LOWORD(wHotkey)), HIBYTE(LOWORD(wHotkey))));
 		}
 	}
 	return 0;
@@ -442,8 +442,7 @@ bool SettingsWindow::DeleteRegistryRun()
 	return true;
 }
 
-SettingsWindow::SettingsWindow(HINSTANCE hInstance, UserSettings & userSettings)
-	:uSettings(userSettings)
+SettingsWindow::SettingsWindow(HINSTANCE hInstance)
 {
 	NONCLIENTMETRICS hfDefault;
 	hfDefault.cbSize = sizeof(NONCLIENTMETRICS);
@@ -478,12 +477,12 @@ bool SettingsWindow::InitSettingsWindow(HINSTANCE hInstance)
 
 	// Add controls in tab order
 	AddLabel(hWnd, hFontStd, 10, 10, hInstance, L"Number of clips to display:", LBL_MAX_CLIPS_DISPLAY);
-	AddSpinner(hWnd, hFontStd, 180, 10, hInstance, MAX_DISPLAY_LOWER, MAX_DISPLAY_UPPER, UD_MAX_CLIPS_DISPLAY, TXT_MAX_CLIPS_DISPLAY);
+	AddSpinner(hWnd, hFontStd, 180, 10, hInstance, UserSettings::MAX_DISPLAY_LOWER, UserSettings::MAX_DISPLAY_UPPER, UD_MAX_CLIPS_DISPLAY, TXT_MAX_CLIPS_DISPLAY);
 	AddLabel(hWnd, hFontStd, 10, 40, hInstance, L"Maximum clips to save:", LBL_MAX_CLIPS_SAVED);
-	AddSpinner(hWnd, hFontStd, 180, 40, hInstance, MAX_SAVED_LOWER, MAX_SAVED_UPPER, UD_MAX_CLIPS_SAVED, TXT_MAX_CLIPS_SAVED);
+	AddSpinner(hWnd, hFontStd, 180, 40, hInstance, UserSettings::MAX_SAVED_LOWER, UserSettings::MAX_SAVED_UPPER, UD_MAX_CLIPS_SAVED, TXT_MAX_CLIPS_SAVED);
 
 	AddLabel(hWnd, hFontStd, 10, 70, hInstance, L"Number of preview characters:", LBL_MENU_DISP_CHARS);
-	AddSpinner(hWnd, hFontStd, 180, 70, hInstance, MENU_CHARS_LOWER, MENU_CHARS_UPPER, UD_MENU_DISP_CHARS, TXT_MENU_DISP_CHARS);
+	AddSpinner(hWnd, hFontStd, 180, 70, hInstance, UserSettings::MENU_CHARS_LOWER, UserSettings::MENU_CHARS_UPPER, UD_MENU_DISP_CHARS, TXT_MENU_DISP_CHARS);
 
 	AddLabel(hWnd, hFontStd, 10, 100, hInstance, L"Clips menu shortcut:", LBL_SHOW_CLIPS_HOTK);
 	HWND hHotKey = AddHotkeyCtrl(hWnd, hFontStd, 130, 100, 100, 20, hInstance, HKY_SHOW_CLIPS_MENU);
@@ -495,13 +494,13 @@ bool SettingsWindow::InitSettingsWindow(HINSTANCE hInstance)
 	AddCheckbox(hWnd, hFontStd, 10, 226, hInstance, L"Save images to the clipboard", CHK_SAVE_IMAGES);
 
 	AddLabel(hWnd, hFontStd, 28, 250, hInstance, L"Max image cache size (MB):", LBL_MAX_IMG_CACHE_MB);
-	AddSpinner(hWnd, hFontStd, 180, 250, hInstance, MAX_CACHE_MBYTES_LOWER, MAX_CACHE_MBYTES_UPPER, UD_MAX_IMG_CACHE_MB, TXT_MAX_IMG_CACHE_MB);
+	AddSpinner(hWnd, hFontStd, 180, 250, hInstance, UserSettings::MAX_CACHE_MBYTES_LOWER, UserSettings::MAX_CACHE_MBYTES_UPPER, UD_MAX_IMG_CACHE_MB, TXT_MAX_IMG_CACHE_MB);
 
 	// Load values from user settings
-	SetDlgItemInt(hWnd, TXT_MAX_CLIPS_DISPLAY, uSettings.MaxDisplayClips(), false);
-	SetDlgItemInt(hWnd, TXT_MAX_CLIPS_SAVED, uSettings.MaxSavedClips(), false);
-	SetDlgItemInt(hWnd, TXT_MENU_DISP_CHARS, uSettings.MenuDisplayChars(), false);
-	SetDlgItemInt(hWnd, TXT_MAX_IMG_CACHE_MB, uSettings.MaxCacheMegabytes(), false);
+	SetDlgItemInt(hWnd, TXT_MAX_CLIPS_DISPLAY, UserSettings::MaxDisplayClips(), false);
+	SetDlgItemInt(hWnd, TXT_MAX_CLIPS_SAVED, UserSettings::MaxSavedClips(), false);
+	SetDlgItemInt(hWnd, TXT_MENU_DISP_CHARS, UserSettings::MenuDisplayChars(), false);
+	SetDlgItemInt(hWnd, TXT_MAX_IMG_CACHE_MB, UserSettings::MaxCacheMegabytes(), false);
 
 	HKEY hOpened;
 	if (RegOpenKeyExW(HKEY_CURRENT_USER, L"Software\\Microsoft\\Windows\\CurrentVersion\\Run", 0, KEY_ALL_ACCESS, &hOpened) == ERROR_SUCCESS)
@@ -512,19 +511,19 @@ bool SettingsWindow::InitSettingsWindow(HINSTANCE hInstance)
 		}
 	}
 	RegCloseKey(hOpened);
-	if (uSettings.SaveToDisk())
+	if (UserSettings::SaveToDisk())
 	{
 		CheckDlgButton(hWnd, CHK_SAVE_TO_DISK, BST_CHECKED);
 	}
-	if (uSettings.Select2ndClip())
+	if (UserSettings::Select2ndClip())
 	{
 		CheckDlgButton(hWnd, CHK_SLCT_2ND_CLIP, BST_CHECKED);
 	}
-	if (uSettings.ShowPreview())
+	if (UserSettings::ShowPreview())
 	{
 		CheckDlgButton(hWnd, CHK_SHOW_PREVIEW, BST_CHECKED);
 	}
-	if (uSettings.SaveImages())
+	if (UserSettings::SaveImages())
 	{
 		CheckDlgButton(hWnd, CHK_SAVE_IMAGES, BST_CHECKED);
 		EnableWindow(GetDlgItem(hWnd, UD_MAX_IMG_CACHE_MB), true);
@@ -536,7 +535,7 @@ bool SettingsWindow::InitSettingsWindow(HINSTANCE hInstance)
 		EnableWindow(GetDlgItem(hWnd, TXT_MAX_IMG_CACHE_MB), false);
 	}
 
-	SendMessageW(hHotKey, HKM_SETHOTKEY, uSettings.ClipsMenuHotkey(), 0);
+	SendMessageW(hHotKey, HKM_SETHOTKEY, UserSettings::ClipsMenuHotkey(), 0);
 
 	// Hide the window and update the layout
 	ShowWindow(hWnd, SW_HIDE);

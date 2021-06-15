@@ -11,12 +11,10 @@
 class Notify
 {
 private:
-	std::set<HWND> internalCollection; 
+	static std::set<HWND> internalCollection; 
 public:
-	Notify() noexcept;
-	~Notify();
-	bool Subscribe(HWND hWnd);
-	bool Unsubscribe(HWND hWnd);
-	void SendNotifcation(WORD wmCommnadLoword, const HWND sender);
+	static bool Subscribe(HWND hWnd);
+	static bool Unsubscribe(HWND hWnd);
+	static void SendNotifcation(WORD wmCommnadLoword, const HWND sender);
 };
 

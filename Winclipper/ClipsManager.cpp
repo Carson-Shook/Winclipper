@@ -4,7 +4,7 @@
 
 void ClipsManager::SaveClipsAsync()
 {
-    if (SaveToDisk())
+    if (UserSettings::SaveToDisk())
     {
         if (clipsWriterWaitCount == 0)
         {
@@ -105,18 +105,14 @@ void ClipsManager::ClearBitmaps()
 	clips.RemoveAllOfFormat(CF_DIB);
 }
 
-ClipsManager::ClipsManager(int displayClips, int maxClips, int menuChars, bool saveToDisk, bool saveImages)
+ClipsManager::ClipsManager()
 {
 	fullClipsPath = File::JoinPath(File::GetAppDir(), L"clips.dat");
 
 	windows10ReleaseId = RegistryUtilities::GetWindows10ReleaseId();
 
-    ClipsManager::saveToDisk = saveToDisk;
 	ReadClips();
-	SetSaveImages(saveImages);
-	SetDisplayClips(displayClips);
-    SetMaxClips(maxClips);
-    SetMenuDisplayChars(menuChars);
+    UpdateMaxClips();
 	SaveClipsAsync();
 }
 
@@ -130,81 +126,28 @@ bool ClipsManager::NoPendingClipWrites() noexcept
 }
 
 
-unsigned int ClipsManager::DisplayClips() noexcept
+void ClipsManager::UpdateMaxClips()
 {
-    return displayClips;
-}
-
-void ClipsManager::SetDisplayClips(unsigned int displayClips) noexcept
-{
-    if (displayClips != ClipsManager::displayClips)
-    {
-        ClipsManager::displayClips = displayClips;
-    }
-}
-
-unsigned int ClipsManager::MaxClips() noexcept
-{
-    return maxClips;
-}
-
-void ClipsManager::SetMaxClips(unsigned int newMaxClips)
-{
-    if (newMaxClips != maxClips && newMaxClips > 1)
-    {
-        maxClips = newMaxClips;
-		clips.SetMaxSize(maxClips);
-        SaveClipsAsync();
-    }
-}
-
-unsigned int ClipsManager::MenuDisplayChars() noexcept
-{
-    return menuDispChars;
-}
-
-void ClipsManager::SetMenuDisplayChars(unsigned int menuDispChars) noexcept
-{
-    ClipsManager::menuDispChars = menuDispChars;
-}
-
-bool ClipsManager::SaveToDisk() noexcept
-{
-    return ClipsManager::saveToDisk;
+	clips.SetMaxSize(UserSettings::MaxSavedClips());
+    SaveClipsAsync();
 }
 
 void ClipsManager::SetSaveToDisk(bool saveToDisk)
 {
-    if (saveToDisk != ClipsManager::saveToDisk)
-    {
-        ClipsManager::saveToDisk = saveToDisk;
-		OnDemandBitmapManager::SetSaveToDisk(saveToDisk);
+	OnDemandBitmapManager::SetSaveToDisk(saveToDisk);
 
-		if (!ClipsManager::saveToDisk)
-		{
-			clips.LoadAllResources();
-			OnDemandBitmapManager::DeleteAllFromDisk();
-		}
-        SaveClipsAsync();
-    }
-}
-
-bool ClipsManager::SaveImages() noexcept
-{
-	return ClipsManager::saveImages;
-}
-
-void ClipsManager::SetSaveImages(bool saveImages)
-{
-	if (saveImages != ClipsManager::saveImages)
+	if (!UserSettings::SaveToDisk())
 	{
-		ClipsManager::saveImages = saveImages;
-		if (saveImages != true)
-		{
-			ClearBitmaps();
-			SaveClipsAsync();
-		}
+		clips.LoadAllResources();
+		OnDemandBitmapManager::DeleteAllFromDisk();
 	}
+    SaveClipsAsync();
+}
+
+void ClipsManager::ClearSavedImages()
+{
+	ClearBitmaps();
+	SaveClipsAsync();
 }
 
 void ClipsManager::RecreateThumbnails()
@@ -246,7 +189,7 @@ bool ClipsManager::AddToClips(HWND hWnd)
 		}
 	}
 
-	if (SaveImages() && IsClipboardFormatAvailable(CF_DIB))
+	if (UserSettings::SaveImages() && IsClipboardFormatAvailable(CF_DIB))
 	{
 		bool hasTransparentBitmapFormat = false;
 
@@ -519,7 +462,7 @@ void ClipsManager::ShowClipsMenu(HWND hWnd, const LPPOINT cPos, bool showExit)
 
         if (curSize > 0)
         {
-            unsigned int j = curSize > DisplayClips() ? DisplayClips() : curSize;
+            unsigned int j = curSize > UserSettings::MaxDisplayClips() ? UserSettings::MaxDisplayClips() : curSize;
 
             for (unsigned int i = 0; i < j; i++)
             {
@@ -529,7 +472,7 @@ void ClipsManager::ShowClipsMenu(HWND hWnd, const LPPOINT cPos, bool showExit)
 					if (clip->ContainsFormat(CF_UNICODETEXT))
 					{
 						std::wstring menuText;
-						menuText = clip->GetUnicodeMenuText(MenuDisplayChars());
+						menuText = clip->GetUnicodeMenuText(UserSettings::MenuDisplayChars());
 
 						AppendMenuW(menu, MF_STRING, UINT_PTR{ i } +1, menuText.c_str());
 						if (clip->ContainsFormat(CF_DIB))
@@ -544,7 +487,7 @@ void ClipsManager::ShowClipsMenu(HWND hWnd, const LPPOINT cPos, bool showExit)
 					}
                 }
             }
-            if (curSize > DisplayClips())
+            if (curSize > UserSettings::MaxDisplayClips())
             {
                 HMENU sMenu = CreatePopupMenu();
                 
@@ -556,7 +499,7 @@ void ClipsManager::ShowClipsMenu(HWND hWnd, const LPPOINT cPos, bool showExit)
 						if (clip->ContainsFormat(CF_UNICODETEXT))
 						{
 							std::wstring menuText;
-							menuText = clip->GetUnicodeMenuText(MenuDisplayChars());
+							menuText = clip->GetUnicodeMenuText(UserSettings::MenuDisplayChars());
 
 							AppendMenuW(sMenu, MF_STRING, UINT_PTR{ j } + 1, menuText.c_str());
 							if (clip->ContainsFormat(CF_DIB))

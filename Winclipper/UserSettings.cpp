@@ -1,6 +1,19 @@
 #include "stdafx.h"
 #include "UserSettings.h"
 
+std::wstring UserSettings::fullSettingPath;
+int	UserSettings::maxDisplayClips;
+int	UserSettings::maxSavedClips;
+int	UserSettings::menuDisplayChars;
+WORD UserSettings::clipsMenuHotkey;
+bool UserSettings::saveToDisk;
+bool UserSettings::select2ndClip;
+bool UserSettings::showPreview;
+bool UserSettings::saveImages;
+unsigned int UserSettings::maxCacheMegabytes;
+int	UserSettings::settingWriterWaitCount = 0;
+bool UserSettings::isWriterFinished = true;
+
 // stous - string to unsigned short
 // NOTE: May move to static utility class in future
 unsigned short stous(std::string str)
@@ -53,36 +66,44 @@ unsigned short stous(std::wstring str)
     }
 }
 
-// Attempt to load any settings from the disk if they exist.
-// If no settings can be found, set all defaults for first time run. 
-// They will only be written to disk once a change has been made.
-UserSettings::UserSettings()
-{
-	fullSettingPath = File::JoinPath(File::GetAppDir(), L"settings.dat");
-
-    if (File::Exists(fullSettingPath.c_str()))
-    {
-        std::vector<std::wstring> settings = File::ReadAllLines(fullSettingPath.c_str());
-
-        if (!settings.empty())
-        {
-            this->Deserialize(settings);
-        }
-    }
-    else
-    {
-		SaveSettingsAsync();
-    }
-}
-
-// Not used since this object should exist for the life of the program.
-UserSettings::~UserSettings()
-{
-}
-
 bool UserSettings::NoPendingSettingWrites()
 {
     return settingWriterWaitCount == 0 && isWriterFinished;
+}
+
+// Attempt to load any settings from the disk if they exist.
+// If no settings can be found, set all defaults for first time run. 
+// They will only be written to disk once a change has been made.
+void UserSettings::InitializeSettings()
+{
+	maxDisplayClips = MAX_DISPLAY_DEF;
+	maxSavedClips = MAX_SAVED_DEF;
+	menuDisplayChars = MENU_CHARS_DEF;
+	clipsMenuHotkey = CMENU_HOTKEY_DEF;
+	saveToDisk = SAVE_TO_DISK_DEF;
+	select2ndClip = SLCT_2ND_CLIP_DEF;
+	showPreview = SHOW_PREVIEW_DEF;
+	saveImages = SAVE_IMAGES_DEF;
+	maxCacheMegabytes = MAX_CACHE_MBYTES_DEF;
+
+	settingWriterWaitCount = 0;
+	isWriterFinished = true;
+
+	fullSettingPath = File::JoinPath(File::GetAppDir(), L"settings.dat");
+
+	if (File::Exists(fullSettingPath.c_str()))
+	{
+		std::vector<std::wstring> settings = File::ReadAllLines(fullSettingPath.c_str());
+
+		if (!settings.empty())
+		{
+			UserSettings::Deserialize(settings);
+		}
+	}
+	else
+	{
+		SaveSettingsAsync();
+	}
 }
 
 int UserSettings::MaxDisplayClips()
@@ -114,7 +135,6 @@ void UserSettings::SetMaxDisplayClips(int maxDisplayClips)
         {
             UserSettings::maxDisplayClips = maxDisplayClips;
         }
-		SendNotifcation(NTF_MAXDISPLAY_CHANGED, nullptr);
         SaveSettingsAsync();
     }
 }
@@ -148,7 +168,7 @@ void UserSettings::SetMaxSavedClips(int maxSavedClips)
         {
             UserSettings::maxSavedClips = maxSavedClips;
         }
-		SendNotifcation(NTF_MAXSAVED_CHANGED, nullptr);
+		UserSettings::SendNotifcation(NTF_MAXSAVED_CHANGED, nullptr);
         SaveSettingsAsync();
     }
 }
@@ -182,7 +202,6 @@ void UserSettings::SetMenuDisplayChars(int menuDisplayChars)
         {
             UserSettings::menuDisplayChars = menuDisplayChars;
         }
-		SendNotifcation(NTF_MENUCHARS_CHANGED, nullptr);
 		SaveSettingsAsync();
     }
 }
@@ -240,7 +259,7 @@ void UserSettings::SetClipsMenuHotkey(WORD clipsMenuHotkey)
     if (clipsMenuHotkey != UserSettings::clipsMenuHotkey)
     {
         UserSettings::clipsMenuHotkey = clipsMenuHotkey;
-		SendNotifcation(NTF_CMENUHOTKEY_CHANGED, nullptr);
+		UserSettings::SendNotifcation(NTF_CMENUHOTKEY_CHANGED, nullptr);
         SaveSettingsAsync();
     }
 }
@@ -255,7 +274,7 @@ void UserSettings::SetSaveToDisk(bool saveToDisk)
     if (saveToDisk != UserSettings::saveToDisk)
     {
         UserSettings::saveToDisk = saveToDisk;
-		SendNotifcation(NTF_SAVETODISK_CHANGED, nullptr);
+		UserSettings::SendNotifcation(NTF_SAVETODISK_CHANGED, nullptr);
         SaveSettingsAsync();
     }
 }
@@ -270,7 +289,6 @@ void UserSettings::SetSelect2ndClip(bool select2ndClip)
     if (select2ndClip != UserSettings::select2ndClip)
     {
         UserSettings::select2ndClip = select2ndClip;
-		SendNotifcation(NTF_SLCTSECONDCLIP_CHANGED, nullptr);
 		SaveSettingsAsync();
     }
 }
@@ -285,7 +303,6 @@ void UserSettings::SetShowPreview(bool showPreview)
     if (showPreview != UserSettings::showPreview)
     {
         UserSettings::showPreview = showPreview;
-		SendNotifcation(NTF_SHOWPREVIEW_CHANGED, nullptr);
 		SaveSettingsAsync();
     }
 }
@@ -300,7 +317,7 @@ void UserSettings::SetSaveImages(bool saveImages)
 	if (saveImages != UserSettings::saveImages)
 	{
 		UserSettings::saveImages = saveImages;
-		SendNotifcation(NTF_SAVEIMAGES_CHANGED, nullptr);
+		UserSettings::SendNotifcation(NTF_SAVEIMAGES_CHANGED, nullptr);
 		SaveSettingsAsync();
 	}
 }
@@ -334,7 +351,7 @@ void UserSettings::SetMaxCacheMegabytes(unsigned int maxCacheMegabytes)
 		{
 			UserSettings::maxCacheMegabytes = maxCacheMegabytes;
 		}
-		SendNotifcation(NTF_MAXCACHEMBYTES_CHANGED, nullptr);
+		UserSettings::SendNotifcation(NTF_MAXCACHEMBYTES_CHANGED, nullptr);
 		SaveSettingsAsync();
 	}
 }
@@ -343,7 +360,7 @@ void UserSettings::SetMaxCacheMegabytes(unsigned int maxCacheMegabytes)
 void UserSettings::WriteSettings()
 {
     isWriterFinished = false;
-    std::vector<std::wstring> settings = this->Serialize();
+    std::vector<std::wstring> settings = UserSettings::Serialize();
 
     File::WriteAllLines(fullSettingPath.c_str(), settings);
     isWriterFinished = true;
@@ -449,7 +466,7 @@ void UserSettings::SaveSettingsAsync()
     if (settingWriterWaitCount == 0)
     {
         settingWriterWaitCount++;
-        std::thread([&]() {DelaySettingWriter(&settingWriterWaitCount, this); }).detach();
+        std::thread([&]() {DelaySettingWriter(&settingWriterWaitCount); }).detach();
     }
     else
     {
@@ -460,7 +477,7 @@ void UserSettings::SaveSettingsAsync()
 // Sets the value pointed to by waitCount to 1, sleeps for an
 // amount of time, decrements the value by 1, and repeats if it does
 // not have a value of zero. If it does, it writes the settings file to disk.
-void UserSettings::DelaySettingWriter(int* waitCount, UserSettings* us)
+void UserSettings::DelaySettingWriter(int* waitCount)
 {
     while (*waitCount != 0)
     {
@@ -471,5 +488,6 @@ void UserSettings::DelaySettingWriter(int* waitCount, UserSettings* us)
         (*waitCount)--;
     }
 
-    us->WriteSettings();
+    UserSettings::WriteSettings();
 }
+

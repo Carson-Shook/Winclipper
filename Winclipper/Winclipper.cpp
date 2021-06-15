@@ -2,10 +2,7 @@
 #include "stdafx.h"
 #include "Winclipper.h"
 
-int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
-                     _In_opt_ HINSTANCE hPrevInstance,
-                     _In_ LPWSTR    lpCmdLine,
-                     _In_ int       nCmdShow)
+int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPWSTR lpCmdLine, _In_ int nCmdShow)
 {
     UNREFERENCED_PARAMETER(hPrevInstance);
     UNREFERENCED_PARAMETER(lpCmdLine);
@@ -26,10 +23,10 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	{
 		try
 		{
-			UserSettings uSettings = UserSettings();
+			UserSettings::InitializeSettings();
 
-			SettingsWindow settingsWindow = SettingsWindow(hInstance, uSettings);
-			MainWindow mainWindow = MainWindow(hInstance, uSettings, settingsWindow);
+			SettingsWindow settingsWindow = SettingsWindow(hInstance);
+			MainWindow mainWindow = MainWindow(hInstance, settingsWindow);
 
 			hInst = hInstance; // Store instance handle in our global variable
 

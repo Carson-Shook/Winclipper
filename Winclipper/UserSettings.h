@@ -11,18 +11,12 @@
 #define WRITE_DELAY         2000
 
 #define MAX_DISPLAY         1
-#define MAX_DISPLAY_UPPER   99
-#define MAX_DISPLAY_LOWER   1
 #define MAX_DISPLAY_DEF		20
 
 #define MAX_SAVED           2
-#define MAX_SAVED_UPPER     500
-#define MAX_SAVED_LOWER     1
 #define MAX_SAVED_DEF       50
 
 #define MENU_CHARS          3
-#define MENU_CHARS_UPPER    200
-#define MENU_CHARS_LOWER    5
 #define MENU_CHARS_DEF      48
 
 #define CMENU_HOTKEY        4
@@ -41,69 +35,81 @@
 #define SAVE_IMAGES_DEF		true
 
 #define MAX_CACHE_MBYTES		9
-#define MAX_CACHE_MBYTES_UPPER	999
-#define MAX_CACHE_MBYTES_LOWER	1
 #define MAX_CACHE_MBYTES_DEF	100
 
 // Save and load user settings to and from disk
 class UserSettings : public Notify
 {
 private:
-    std::wstring        fullSettingPath;
-    int                 maxDisplayClips = MAX_DISPLAY_DEF;
-    int                 maxSavedClips = MAX_SAVED_DEF;
-    int                 menuDisplayChars = MENU_CHARS_DEF;
-    WORD                clipsMenuHotkey = CMENU_HOTKEY_DEF;
-    bool                saveToDisk = SAVE_TO_DISK_DEF;
-    bool                select2ndClip = SLCT_2ND_CLIP_DEF;
-    bool                showPreview = SHOW_PREVIEW_DEF;
-	bool				saveImages = SAVE_IMAGES_DEF;
-	unsigned int		maxCacheMegabytes = MAX_CACHE_MBYTES_DEF;
+    static std::wstring		fullSettingPath;
+	static int				maxDisplayClips;
+    static int				maxSavedClips;
+    static int				menuDisplayChars;
+    static WORD				clipsMenuHotkey;
+    static bool				saveToDisk;
+    static bool				select2ndClip;
+    static bool				showPreview;
+	static bool				saveImages;
+	static unsigned int		maxCacheMegabytes;
 
-    int                 settingWriterWaitCount = 0;
-    bool                isWriterFinished = true;
+	static int				settingWriterWaitCount;
+	static bool				isWriterFinished;
 
-    void                SaveSettingsAsync();
-    static void         DelaySettingWriter(int* waitCount, UserSettings* us);
-    void                WriteSettings();
+    static void				SaveSettingsAsync();
+    static void				DelaySettingWriter(int* waitCount);
+    static void				WriteSettings();
 
 protected:
-    std::vector<std::wstring>  Serialize();
-    void                  Deserialize(std::vector<std::wstring> srData);
+	static std::vector<std::wstring>  Serialize();
+	static void                  Deserialize(std::vector<std::wstring> srData);
 
 public:
-    UserSettings();
-    ~UserSettings();
+	UserSettings() = delete;
+	~UserSettings() = delete;
 
-    bool                NoPendingSettingWrites();
+	static const int		MAX_DISPLAY_UPPER = 99;
+	static const int		MAX_DISPLAY_LOWER = 1;
 
-    int                 MaxDisplayClips();
-    void                SetMaxDisplayClips(int maxDisplayClips);
+	static const int		MAX_SAVED_UPPER = 500;
+	static const int		MAX_SAVED_LOWER = 1;
 
-    int                 MaxSavedClips();
-    void                SetMaxSavedClips(int maxSavedClips);
+	static const int		MENU_CHARS_UPPER = 200;
+	static const int		MENU_CHARS_LOWER = 5;
 
-    int                 MenuDisplayChars();
-    void                SetMenuDisplayChars(int menuDisplayChars);
+	static const int		MAX_CACHE_MBYTES_UPPER = 999;
+	static const int		MAX_CACHE_MBYTES_LOWER = 1;
 
-    WORD                ClipsMenuHotkey();
-    WORD                ClipsMenuHotkeyTrl();
-    void                SetClipsMenuHotkey(WORD clipsMenuHotkey);
+    static bool				NoPendingSettingWrites();
 
-    bool                SaveToDisk();
-    void                SetSaveToDisk(bool saveToDisk);
+	static void				InitializeSettings();
 
-    bool                Select2ndClip();
-    void                SetSelect2ndClip(bool select2ndClip);
+    static int				MaxDisplayClips();
+    static void				SetMaxDisplayClips(int maxDisplayClips);
 
-    bool                ShowPreview();
-    void                SetShowPreview(bool showPreview);
+	static int				MaxSavedClips();
+	static void				SetMaxSavedClips(int maxSavedClips);
 
-	bool				SaveImages();
-	void				SetSaveImages(bool saveImages);
+	static int				MenuDisplayChars();
+	static void				SetMenuDisplayChars(int menuDisplayChars);
 
-	unsigned int        MaxCacheMegabytes();
-	void                SetMaxCacheMegabytes(unsigned int maxCacheMegabytes);
+	static WORD				ClipsMenuHotkey();
+	static WORD				ClipsMenuHotkeyTrl();
+	static void				SetClipsMenuHotkey(WORD clipsMenuHotkey);
+
+	static bool				SaveToDisk();
+	static void				SetSaveToDisk(bool saveToDisk);
+
+	static bool				Select2ndClip();
+	static void				SetSelect2ndClip(bool select2ndClip);
+
+	static bool				ShowPreview();
+	static void				SetShowPreview(bool showPreview);
+
+	static bool				SaveImages();
+	static void				SetSaveImages(bool saveImages);
+
+	static unsigned int		MaxCacheMegabytes();
+	static void				SetMaxCacheMegabytes(unsigned int maxCacheMegabytes);
 
 };
 

@@ -1,14 +1,6 @@
 #include "stdafx.h"
 #include "Notify.h"
 
-Notify::Notify() noexcept
-{ }
-
-Notify::~Notify()
-{
-	internalCollection.clear();
-}
-
 // Subscribes a given hWnd to any messages
 // dispatched using NotifySubscribers().
 // Returns true if successfully added to the
@@ -59,3 +51,5 @@ void Notify::SendNotifcation(WORD wmCommandLoword, const HWND sender)
 		}
 	}
 }
+
+std::set<HWND> Notify::internalCollection;
