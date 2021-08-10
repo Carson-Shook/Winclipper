@@ -6,6 +6,5 @@
 // Windows Header Files:
 #include <windows.h>
 #include <WinUser.h>
-#define _WIN32_IE 0x0600
 #include <shellapi.h>
 #include <CommCtrl.h>

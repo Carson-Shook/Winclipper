@@ -79,6 +79,17 @@ Controls::Control::Control(HWND hWnd, UINT_PTR id, HINSTANCE hInstance)
 	Control::hInstance = hInstance;
 }
 
+void Controls::Control::PerformCustomLayout()
+{
+	/* 
+	 * Subclasses that need to set additional
+	 * properties during the layout phase
+	 * should override this method and make
+	 * calls to set the appropriate window values
+	 * for that control.
+	 */
+}
+
 void Controls::Control::PerformLayout()
 {
 	if (!LayoutSuspended())
@@ -89,10 +100,17 @@ void Controls::Control::PerformLayout()
 		}
 		else
 		{
-			SetPosition(x, y, width, height);
-			SetText(text);
+			// These are operations that are
+			// already performed during window creation.
+			// No need to do them again.
+			MoveWindow(handle, DpiScaleX(x), DpiScaleY(y), DpiScaleX(width), DpiScaleY(height), true);
+			SendMessageW(handle, WM_SETTEXT, NULL, (LPARAM)text);
 		}
-		SetFont(font);
+		if (exists)
+		{
+			SendMessageW(handle, WM_SETFONT, (WPARAM)font, MAKELPARAM(false, 0));
+			PerformCustomLayout();
+		}
 	}
 }
 

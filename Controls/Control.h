@@ -34,11 +34,10 @@ namespace Controls
 		virtual bool Create();
 
 	public:
-
-
 		Control();
 		Control(HWND hWnd, UINT_PTR id, HINSTANCE hInstance);
 		
+		virtual void PerformCustomLayout();
 		void PerformLayout();
 		void SuspendLayout();
 		void ResumeLayout(bool layoutImmediately = true);

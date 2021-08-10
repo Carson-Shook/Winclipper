@@ -537,8 +537,8 @@ bool SettingsWindow::InitSettingsWindow(HINSTANCE hInstance)
 	SpinnerMaxClipsDisplay.SuspendLayout();
 	SpinnerMaxClipsDisplay.SetX(180);
 	SpinnerMaxClipsDisplay.SetY(10);
-	SpinnerMaxClipsDisplay.MinValue = UserSettings::MAX_DISPLAY_LOWER;
-	SpinnerMaxClipsDisplay.MaxValue = UserSettings::MAX_DISPLAY_UPPER;
+	SpinnerMaxClipsDisplay.SetMinValue(UserSettings::MAX_DISPLAY_LOWER);
+	SpinnerMaxClipsDisplay.SetMaxValue(UserSettings::MAX_DISPLAY_UPPER);
 	SpinnerMaxClipsDisplay.ResumeLayout();
 
 	LabelMaxClipsSaved = Controls::Label(hWnd, LBL_MAX_CLIPS_SAVED, hInstance);
@@ -552,8 +552,8 @@ bool SettingsWindow::InitSettingsWindow(HINSTANCE hInstance)
 	SpinnerMaxClipsSaved.SuspendLayout();
 	SpinnerMaxClipsSaved.SetX(180);
 	SpinnerMaxClipsSaved.SetY(40);
-	SpinnerMaxClipsSaved.MinValue = UserSettings::MAX_SAVED_LOWER;
-	SpinnerMaxClipsSaved.MaxValue = UserSettings::MAX_SAVED_UPPER;
+	SpinnerMaxClipsSaved.SetMinValue(UserSettings::MAX_SAVED_LOWER);
+	SpinnerMaxClipsSaved.SetMaxValue(UserSettings::MAX_SAVED_UPPER);
 	SpinnerMaxClipsSaved.ResumeLayout();
 
 	LabelMenuDisplayChars = Controls::Label(hWnd, LBL_MENU_DISP_CHARS, hInstance);
@@ -567,8 +567,8 @@ bool SettingsWindow::InitSettingsWindow(HINSTANCE hInstance)
 	SpinnerMenuDisplayChars.SuspendLayout();
 	SpinnerMenuDisplayChars.SetX(180);
 	SpinnerMenuDisplayChars.SetY(70);
-	SpinnerMenuDisplayChars.MinValue = UserSettings::MENU_CHARS_LOWER;
-	SpinnerMenuDisplayChars.MaxValue = UserSettings::MENU_CHARS_UPPER;
+	SpinnerMenuDisplayChars.SetMinValue(UserSettings::MENU_CHARS_LOWER);
+	SpinnerMenuDisplayChars.SetMaxValue(UserSettings::MENU_CHARS_UPPER);
 	SpinnerMenuDisplayChars.ResumeLayout();
 	
 	LabelShowClipsHotkey = Controls::Label(hWnd, LBL_SHOW_CLIPS_HOTK, hInstance);
@@ -630,8 +630,8 @@ bool SettingsWindow::InitSettingsWindow(HINSTANCE hInstance)
 	SpinnerMaxCacheMbytes.SuspendLayout();
 	SpinnerMaxCacheMbytes.SetX(180);
 	SpinnerMaxCacheMbytes.SetY(250);
-	SpinnerMaxCacheMbytes.MinValue = UserSettings::MAX_CACHE_MBYTES_LOWER;
-	SpinnerMaxCacheMbytes.MaxValue = UserSettings::MAX_CACHE_MBYTES_UPPER;
+	SpinnerMaxCacheMbytes.SetMinValue(UserSettings::MAX_CACHE_MBYTES_LOWER);
+	SpinnerMaxCacheMbytes.SetMaxValue(UserSettings::MAX_CACHE_MBYTES_UPPER);
 	SpinnerMaxCacheMbytes.ResumeLayout();
 
 	// Load values from user settings

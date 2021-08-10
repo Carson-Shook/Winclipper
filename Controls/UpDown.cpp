@@ -14,8 +14,6 @@ bool Controls::UpDown::Create()
 		nullptr,
 		nullptr);
 
-	SendMessageW(handle, UDM_SETRANGE, 0, MAKELPARAM(MaxValue, MinValue));    // Sets the controls direction 
-
 	return handle != nullptr;
 }
 
@@ -26,3 +24,36 @@ Controls::UpDown::UpDown()
 Controls::UpDown::UpDown(HWND hWnd, UINT_PTR id, HINSTANCE hInstance)
 	: Control{ hWnd, id, hInstance }
 { }
+
+void Controls::UpDown::PerformCustomLayout()
+{
+	SendMessageW(handle, UDM_SETRANGE, 0, MAKELPARAM(maxValue, minValue));    // Sets the controls direction 
+}
+
+int Controls::UpDown::MinValue()
+{
+	return minValue;
+}
+
+void Controls::UpDown::SetMinValue(int value)
+{
+	minValue = value;
+	if (!LayoutSuspended())
+	{
+		SendMessageW(handle, UDM_SETRANGE, 0, MAKELPARAM(maxValue, minValue));
+	}
+}
+
+int Controls::UpDown::MaxValue()
+{
+	return maxValue;
+}
+
+void Controls::UpDown::SetMaxValue(int value)
+{
+	maxValue = value;
+	if (!LayoutSuspended())
+	{
+		SendMessageW(handle, UDM_SETRANGE, 0, MAKELPARAM(maxValue, minValue));
+	}
+}
