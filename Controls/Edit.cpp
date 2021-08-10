@@ -26,10 +26,10 @@ bool Controls::Edit::Create()
 
 	handle = CreateWindowEx(WS_EX_LEFT | WS_EX_CLIENTEDGE,
 		WC_EDIT,
-		Text,
+		text,
 		style,
-		DpiScaleX(X), DpiScaleY(Y),
-		DpiScaleX(Width), DpiScaleY(Height),
+		DpiScaleX(x), DpiScaleY(y),
+		DpiScaleX(width), DpiScaleY(height),
 		parentHandle,
 		(HMENU)id,
 		hInstance,

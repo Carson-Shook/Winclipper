@@ -16,6 +16,12 @@ namespace Controls
 		int dpiX = 96;
 		int dpiY = 96;
 		UINT_PTR id = 0;
+		int x = 0;
+		int y = 0;
+		int width = 10;
+		int height = 10;
+		bool enabled = true;
+		LPCWSTR text = nullptr;
 		HFONT font = Controls::Font::SystemDefault;
 		bool exists = false;
 
@@ -28,26 +34,41 @@ namespace Controls
 		virtual bool Create();
 
 	public:
+
+
 		Control();
 		Control(HWND hWnd, UINT_PTR id, HINSTANCE hInstance);
 		
 		void PerformLayout();
 		void SuspendLayout();
 		void ResumeLayout(bool layoutImmediately = true);
-
-		int X = 0;
-		int Y = 0;
-		int Width = 10;
-		int Height = 10;
-		LPCWSTR Text = nullptr;
+		bool LayoutSuspended();
 
 		HWND Handle();
 		HWND ParentHandle();
 		bool Exists();
-		bool LayoutSuspended();
 
+		virtual void SetPosition(int x, int y, int height, int width);
+
+		virtual int X();
+		virtual void SetX(int x);
+		
+		virtual int Y();
+		virtual void SetY(int y);
+		
+		virtual int Width();
+		virtual void SetWidth(int width);
+		
+		virtual int Height();
+		virtual void SetHeight(int height);
+
+		virtual bool Enabled();
 		virtual void SetEnabled(bool enabled);
-		void SetText(LPCWSTR text);
-		void SetFont(HFONT font);
+		
+		virtual LPCWSTR Text();
+		virtual void SetText(LPCWSTR text);
+		
+		virtual HFONT Font();
+		virtual void SetFont(HFONT font);
 	};
 }

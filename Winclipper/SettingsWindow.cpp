@@ -528,108 +528,108 @@ bool SettingsWindow::InitSettingsWindow(HINSTANCE hInstance)
 	// Add controls in tab order
 	LabelMaxClipsDisplay = Controls::Label(hWnd, LBL_MAX_CLIPS_DISPLAY, hInstance);
 	LabelMaxClipsDisplay.SuspendLayout();
-	LabelMaxClipsDisplay.X = 10;
-	LabelMaxClipsDisplay.Y = 10;
-	LabelMaxClipsDisplay.Text = L"Number of clips to display:";
+	LabelMaxClipsDisplay.SetX(10);
+	LabelMaxClipsDisplay.SetY(10);
+	LabelMaxClipsDisplay.SetText(L"Number of clips to display:");
 	LabelMaxClipsDisplay.ResumeLayout();
 
 	SpinnerMaxClipsDisplay = Controls::Spinner(hWnd, TXT_MAX_CLIPS_DISPLAY, UD_MAX_CLIPS_DISPLAY, hInstance);
 	SpinnerMaxClipsDisplay.SuspendLayout();
-	SpinnerMaxClipsDisplay.X = 180;
-	SpinnerMaxClipsDisplay.Y = 10;
+	SpinnerMaxClipsDisplay.SetX(180);
+	SpinnerMaxClipsDisplay.SetY(10);
 	SpinnerMaxClipsDisplay.MinValue = UserSettings::MAX_DISPLAY_LOWER;
 	SpinnerMaxClipsDisplay.MaxValue = UserSettings::MAX_DISPLAY_UPPER;
 	SpinnerMaxClipsDisplay.ResumeLayout();
 
 	LabelMaxClipsSaved = Controls::Label(hWnd, LBL_MAX_CLIPS_SAVED, hInstance);
 	LabelMaxClipsSaved.SuspendLayout();
-	LabelMaxClipsSaved.X = 10;
-	LabelMaxClipsSaved.Y = 40;
-	LabelMaxClipsSaved.Text = L"Maximum clips to save:";
+	LabelMaxClipsSaved.SetX(10);
+	LabelMaxClipsSaved.SetY(40);
+	LabelMaxClipsSaved.SetText(L"Maximum clips to save:");
 	LabelMaxClipsSaved.ResumeLayout();
 	
 	SpinnerMaxClipsSaved = Controls::Spinner(hWnd, TXT_MAX_CLIPS_SAVED, UD_MAX_CLIPS_SAVED, hInstance);
 	SpinnerMaxClipsSaved.SuspendLayout();
-	SpinnerMaxClipsSaved.X = 180;
-	SpinnerMaxClipsSaved.Y = 40;
+	SpinnerMaxClipsSaved.SetX(180);
+	SpinnerMaxClipsSaved.SetY(40);
 	SpinnerMaxClipsSaved.MinValue = UserSettings::MAX_SAVED_LOWER;
 	SpinnerMaxClipsSaved.MaxValue = UserSettings::MAX_SAVED_UPPER;
 	SpinnerMaxClipsSaved.ResumeLayout();
 
 	LabelMenuDisplayChars = Controls::Label(hWnd, LBL_MENU_DISP_CHARS, hInstance);
 	LabelMenuDisplayChars.SuspendLayout();
-	LabelMenuDisplayChars.X = 10;
-	LabelMenuDisplayChars.Y = 70;
-	LabelMenuDisplayChars.Text = L"Number of preview characters:";
+	LabelMenuDisplayChars.SetX(10);
+	LabelMenuDisplayChars.SetY(70);
+	LabelMenuDisplayChars.SetText(L"Number of preview characters:");
 	LabelMenuDisplayChars.ResumeLayout();
 	
 	SpinnerMenuDisplayChars = Controls::Spinner(hWnd, TXT_MENU_DISP_CHARS, UD_MENU_DISP_CHARS, hInstance);
 	SpinnerMenuDisplayChars.SuspendLayout();
-	SpinnerMenuDisplayChars.X = 180;
-	SpinnerMenuDisplayChars.Y = 70;
+	SpinnerMenuDisplayChars.SetX(180);
+	SpinnerMenuDisplayChars.SetY(70);
 	SpinnerMenuDisplayChars.MinValue = UserSettings::MENU_CHARS_LOWER;
 	SpinnerMenuDisplayChars.MaxValue = UserSettings::MENU_CHARS_UPPER;
 	SpinnerMenuDisplayChars.ResumeLayout();
 	
 	LabelShowClipsHotkey = Controls::Label(hWnd, LBL_SHOW_CLIPS_HOTK, hInstance);
 	LabelShowClipsHotkey.SuspendLayout();
-	LabelShowClipsHotkey.X = 10;
-	LabelShowClipsHotkey.Y = 100;
-	LabelShowClipsHotkey.Text = L"Clips menu shortcut:";
+	LabelShowClipsHotkey.SetX(10);
+	LabelShowClipsHotkey.SetY(100);
+	LabelShowClipsHotkey.SetText(L"Clips menu shortcut:");
 	LabelShowClipsHotkey.ResumeLayout();
 	HWND hHotKey = AddHotkeyCtrl(hWnd, hFontStd, 130, 100, 100, 20, hInstance, HKY_SHOW_CLIPS_MENU);
 
 	CheckboxSaveToDisk = Controls::Checkbox(hWnd, CHK_SAVE_TO_DISK, hInstance);
 	CheckboxSaveToDisk.SuspendLayout();
-	CheckboxSaveToDisk.X = 10;
-	CheckboxSaveToDisk.Y = 130;
-	CheckboxSaveToDisk.Text = L"Save clips to disk";
+	CheckboxSaveToDisk.SetX(10);
+	CheckboxSaveToDisk.SetY(130);
+	CheckboxSaveToDisk.SetText(L"Save clips to disk");
 	CheckboxSaveToDisk.UseBasicTheme = !useLightTheme;
 	CheckboxSaveToDisk.ResumeLayout();
 
 	CheckboxRunAtStartup = Controls::Checkbox(hWnd, CHK_RUN_AT_STARTUP, hInstance);
 	CheckboxRunAtStartup.SuspendLayout();
-	CheckboxRunAtStartup.X = 10;
-	CheckboxRunAtStartup.Y = 154;
-	CheckboxRunAtStartup.Text = L"Run Winclipper at startup";
+	CheckboxRunAtStartup.SetX(10);
+	CheckboxRunAtStartup.SetY(154);
+	CheckboxRunAtStartup.SetText(L"Run Winclipper at startup");
 	CheckboxRunAtStartup.UseBasicTheme = !useLightTheme;
 	CheckboxRunAtStartup.ResumeLayout();
 
 	CheckboxSelectSecondClip = Controls::Checkbox(hWnd, CHK_SLCT_2ND_CLIP, hInstance);
 	CheckboxSelectSecondClip.SuspendLayout();
-	CheckboxSelectSecondClip.X = 10;
-	CheckboxSelectSecondClip.Y = 178;
-	CheckboxSelectSecondClip.Text = L"Auto-select second clip";
+	CheckboxSelectSecondClip.SetX(10);
+	CheckboxSelectSecondClip.SetY(178);
+	CheckboxSelectSecondClip.SetText(L"Auto-select second clip");
 	CheckboxSelectSecondClip.UseBasicTheme = !useLightTheme;
 	CheckboxSelectSecondClip.ResumeLayout();
 
 	CheckboxShowPreview = Controls::Checkbox(hWnd, CHK_SHOW_PREVIEW, hInstance);
 	CheckboxShowPreview.SuspendLayout();
-	CheckboxShowPreview.X = 10;
-	CheckboxShowPreview.Y = 202;
-	CheckboxShowPreview.Text = L"Show clip preview";
+	CheckboxShowPreview.SetX(10);
+	CheckboxShowPreview.SetY(202);
+	CheckboxShowPreview.SetText(L"Show clip preview");
 	CheckboxShowPreview.UseBasicTheme = !useLightTheme;
 	CheckboxShowPreview.ResumeLayout();
 
 	CheckboxSaveImages = Controls::Checkbox(hWnd, CHK_SAVE_IMAGES, hInstance);
 	CheckboxSaveImages.SuspendLayout();
-	CheckboxSaveImages.X = 10;
-	CheckboxSaveImages.Y = 226;
-	CheckboxSaveImages.Text = L"Save images to the clipboard";
+	CheckboxSaveImages.SetX(10);
+	CheckboxSaveImages.SetY(226);
+	CheckboxSaveImages.SetText(L"Save images to the clipboard");
 	CheckboxSaveImages.UseBasicTheme = !useLightTheme;
 	CheckboxSaveImages.ResumeLayout();
 
 	LabelMaxCacheMbytes = Controls::Label(hWnd, LBL_MAX_IMG_CACHE_MB, hInstance);
 	LabelMaxCacheMbytes.SuspendLayout();
-	LabelMaxCacheMbytes.X = 28;
-	LabelMaxCacheMbytes.Y = 250;
-	LabelMaxCacheMbytes.Text = L"Max image cache size (MB):";
+	LabelMaxCacheMbytes.SetX(28);
+	LabelMaxCacheMbytes.SetY(250);
+	LabelMaxCacheMbytes.SetText(L"Max image cache size (MB):");
 	LabelMaxCacheMbytes.ResumeLayout();
 	
 	SpinnerMaxCacheMbytes = Controls::Spinner(hWnd, TXT_MAX_IMG_CACHE_MB, UD_MAX_IMG_CACHE_MB, hInstance);
 	SpinnerMaxCacheMbytes.SuspendLayout();
-	SpinnerMaxCacheMbytes.X = 180;
-	SpinnerMaxCacheMbytes.Y = 250;
+	SpinnerMaxCacheMbytes.SetX(180);
+	SpinnerMaxCacheMbytes.SetY(250);
 	SpinnerMaxCacheMbytes.MinValue = UserSettings::MAX_CACHE_MBYTES_LOWER;
 	SpinnerMaxCacheMbytes.MaxValue = UserSettings::MAX_CACHE_MBYTES_UPPER;
 	SpinnerMaxCacheMbytes.ResumeLayout();

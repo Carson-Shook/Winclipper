@@ -54,10 +54,10 @@ bool Controls::Control::Create()
 	// Make sure to set exists = true before returning.
 	handle = CreateWindowExW(WS_EX_LEFT,
 		WC_STATIC,
-		Text,
+		text,
 		WS_CHILD | WS_VISIBLE,
-		DpiScaleX(X), DpiScaleY(Y),
-		DpiScaleX(Width), DpiScaleY(Height),
+		DpiScaleX(x), DpiScaleY(y),
+		DpiScaleX(width), DpiScaleY(height),
 		parentHandle,
 		(HMENU)id,
 		hInstance,
@@ -89,10 +89,10 @@ void Controls::Control::PerformLayout()
 		}
 		else
 		{
-			MoveWindow(handle, DpiScaleX(X), DpiScaleY(Y), DpiScaleX(Width), DpiScaleY(Height), true);
-			SendMessageW(handle, WM_SETTEXT, NULL, (LPARAM)Control::Text);
+			SetPosition(x, y, width, height);
+			SetText(text);
 		}
-		SendMessageW(handle, WM_SETFONT, (WPARAM)Control::font, MAKELPARAM(false, 0));
+		SetFont(font);
 	}
 }
 
@@ -111,6 +111,11 @@ void Controls::Control::ResumeLayout(bool layoutImmediately)
 	}
 }
 
+bool Controls::Control::LayoutSuspended()
+{
+	return layoutSuspended;
+}
+
 HWND Controls::Control::Handle()
 {
 	return handle;
@@ -126,24 +131,112 @@ bool Controls::Control::Exists()
 	return exists;
 }
 
-bool Controls::Control::LayoutSuspended()
+void Controls::Control::SetPosition(int x, int y, int height, int width)
 {
-	return layoutSuspended;
+	Control::x = x;
+	Control::y = y;
+	Control::width = width;
+	Control::height = height;
+	if (!LayoutSuspended())
+	{
+		MoveWindow(handle, DpiScaleX(x), DpiScaleY(y), DpiScaleX(width), DpiScaleY(height), true);
+	}
+}
+
+int Controls::Control::X()
+{
+	return x;
+}
+
+void Controls::Control::SetX(int x)
+{
+	Control::x = x;
+	if (!LayoutSuspended())
+	{
+		MoveWindow(handle, DpiScaleX(x), DpiScaleY(y), DpiScaleX(width), DpiScaleY(height), true);
+	}
+}
+
+int Controls::Control::Y()
+{
+	return y;
+}
+
+void Controls::Control::SetY(int y)
+{
+	Control::y = y;
+	if (!LayoutSuspended())
+	{
+		MoveWindow(handle, DpiScaleX(x), DpiScaleY(y), DpiScaleX(width), DpiScaleY(height), true);
+	}
+}
+
+int Controls::Control::Width()
+{
+	return width;
+}
+
+void Controls::Control::SetWidth(int width)
+{
+	Control::width = width;
+	if (!LayoutSuspended())
+	{
+		MoveWindow(handle, DpiScaleX(x), DpiScaleY(y), DpiScaleX(width), DpiScaleY(height), true);
+	}
+}
+
+int Controls::Control::Height()
+{
+	return height;
+}
+
+void Controls::Control::SetHeight(int height)
+{
+	Control::height = height;
+	if (!LayoutSuspended())
+	{
+		MoveWindow(handle, DpiScaleX(x), DpiScaleY(y), DpiScaleX(width), DpiScaleY(height), true);
+	}
+}
+
+bool Controls::Control::Enabled()
+{
+	return enabled;
 }
 
 void Controls::Control::SetEnabled(bool enabled)
 {
-	EnableWindow(handle, enabled);
+	Control::enabled = enabled;
+	if (!LayoutSuspended())
+	{
+		EnableWindow(handle, enabled);
+	}
+}
+
+LPCWSTR Controls::Control::Text()
+{
+	return text;
 }
 
 void Controls::Control::SetText(LPCWSTR text)
 {
-	Control::Text = text;
-	SendMessageW(handle, WM_SETTEXT, NULL, (LPARAM)Control::Text);
+	Control::text = text;
+	if (!LayoutSuspended())
+	{ 
+		SendMessageW(handle, WM_SETTEXT, NULL, (LPARAM)Control::text);
+	}
+}
+
+HFONT Controls::Control::Font()
+{
+	return font;
 }
 
 void Controls::Control::SetFont(HFONT font)
 {
 	Control::font = font;
-	SendMessageW(handle, WM_SETFONT, (WPARAM)Control::font, MAKELPARAM(false, 0));
+	if (!LayoutSuspended())
+	{
+		SendMessageW(handle, WM_SETFONT, (WPARAM)Control::font, MAKELPARAM(false, 0));
+	}
 }

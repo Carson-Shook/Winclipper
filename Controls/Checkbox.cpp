@@ -10,22 +10,22 @@ bool Controls::Checkbox::Create()
 
 	if (AutoSize)
 	{
-		MeasureString(Text, font, &boxsize);
+		MeasureString(text, font, &boxsize);
 		finalWidth = boxsize.right + checkboxWidth;
 		finalHeight = checkboxWidth > boxsize.bottom ? checkboxWidth : boxsize.bottom;
 	}
 	else
 	{
-		finalWidth = DpiScaleX(Width);
-		finalHeight = DpiScaleX(Height);
+		finalWidth = DpiScaleX(width);
+		finalHeight = DpiScaleX(height);
 	}
 
 
 	handle = CreateWindowExW(WS_EX_LEFT | WS_EX_NOACTIVATE,
 		WC_BUTTON,
-		Text,
+		text,
 		WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_CHECKBOX,
-		DpiScaleX(X), DpiScaleY(Y),
+		DpiScaleX(x), DpiScaleY(y),
 		finalWidth, finalHeight,
 		parentHandle,
 		(HMENU)id,

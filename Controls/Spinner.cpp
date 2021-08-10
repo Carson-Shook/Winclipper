@@ -4,10 +4,10 @@ bool Controls::Spinner::Create()
 {
 	upDownBuddyInternal = Edit(parentHandle, id, hInstance);
 	upDownBuddyInternal.SuspendLayout();
-	upDownBuddyInternal.X = X;
-	upDownBuddyInternal.Y = Y;
-	upDownBuddyInternal.Width = Width;
-	upDownBuddyInternal.Height = Height;
+	upDownBuddyInternal.SetX(x);
+	upDownBuddyInternal.SetY(y);
+	upDownBuddyInternal.SetWidth(width);
+	upDownBuddyInternal.SetHeight(height);
 	upDownBuddyInternal.Numeric = true;
 	upDownBuddyInternal.ResumeLayout();
 	
@@ -29,8 +29,8 @@ Controls::Spinner::Spinner(HWND hWnd, UINT_PTR editId, UINT_PTR upDownId, HINSTA
 { 
 	Spinner::upDownId = upDownId;
 	// Default size of a spinner
-	Width = 50;
-	Height = 19;
+	width = 50;
+	height = 19;
 }
 
 void Controls::Spinner::SetEnabled(bool enabled)

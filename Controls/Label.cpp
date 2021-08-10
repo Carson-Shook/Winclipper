@@ -8,21 +8,21 @@ bool Controls::Label::Create()
 
 	if (AutoSize)
 	{
-		MeasureString(Text, font, &boxsize);
+		MeasureString(text, font, &boxsize);
 		finalWidth = boxsize.right;
 		finalHeight = boxsize.bottom;
 	}
 	else
 	{
-		finalWidth = DpiScaleX(Width);
-		finalHeight = DpiScaleX(Height);
+		finalWidth = DpiScaleX(width);
+		finalHeight = DpiScaleX(height);
 	}
 
 	handle = CreateWindowExW(WS_EX_LEFT,
 		WC_STATIC,
-		Text,
+		text,
 		WS_CHILD | WS_VISIBLE,
-		DpiScaleX(X), DpiScaleY(Y),
+		DpiScaleX(x), DpiScaleY(y),
 		finalWidth, finalHeight,
 		parentHandle,
 		(HMENU)id,
