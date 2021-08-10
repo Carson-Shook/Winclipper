@@ -115,7 +115,7 @@ void ClipsCollection::RemoveBack()
 
 void ClipsCollection::RemoveAllOfFormat(DWORD format)
 {
-	if (format != 0)
+	if (format != 0 && !clips.empty())
 	{
 		std::deque<std::shared_ptr<Clip>>::iterator it = clips.begin()++;
 		while (it != clips.end())
