@@ -6,5 +6,6 @@ class RegistryUtilities
 {
 public:
 	static unsigned int GetWindows10ReleaseId();
+	static bool AppsUseLightTheme();
 	static bool QueryKeyForValue(HKEY, wchar_t*);
 };

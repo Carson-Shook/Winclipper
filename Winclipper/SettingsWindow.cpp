@@ -4,6 +4,8 @@
 
 ATOM SettingsWindow::RegisterSettingsWindowClass(HINSTANCE hInstance)
 {
+	useLightTheme = RegistryUtilities::AppsUseLightTheme();
+
 	WNDCLASSEXW wcex = { sizeof(WNDCLASSEXW) };
 
 	wcex.style = CS_HREDRAW | CS_VREDRAW;
@@ -13,7 +15,14 @@ ATOM SettingsWindow::RegisterSettingsWindowClass(HINSTANCE hInstance)
 	wcex.hInstance = hInstance;
 	wcex.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_WINCLIPPER));
 	wcex.hCursor = LoadCursor(nullptr, IDC_ARROW);
-	wcex.hbrBackground = (HBRUSH)(COLOR_WINDOW);
+	if (useLightTheme)
+	{
+		wcex.hbrBackground = APP_BACKGROUND_COLOR_LIGHT;
+	}
+	else
+	{
+		wcex.hbrBackground = APP_BACKGROUND_COLOR_DARK;
+	}
 	wcex.lpszMenuName = MAKEINTRESOURCEW(IDC_WINCSETTINGS);
 	wcex.lpszClassName = szSettingsWindowClass;
 	wcex.hIconSm = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_WINCLIPPER));
@@ -51,6 +60,8 @@ LRESULT SettingsWindow::SettingsWndProc(HWND hWnd, UINT message, WPARAM wParam, 
 		return DefWindowProcW(hWnd, message, wParam, lParam);
 	}
 
+	LRESULT lResult = 0;
+
 	switch (message)
 	{
 	case WM_COMMAND:
@@ -60,46 +71,46 @@ LRESULT SettingsWindow::SettingsWndProc(HWND hWnd, UINT message, WPARAM wParam, 
 		switch (wmId)
 		{
 		case IDM_ABOUT:
-			pThis->WmCommandIdmAbout(hWnd, wParam, lParam);
+			lResult = pThis->WmCommandIdmAbout(hWnd, wParam, lParam);
 			break;
 		case IDM_EXIT:
-			pThis->WmCommandIdmExit();
+			lResult = pThis->WmCommandIdmExit();
 			break;
 		case IDM_RECREATE_THUMBNAILS:
-			pThis->WmCommandIdmRecreateThumbnails();
+			lResult = pThis->WmCommandIdmRecreateThumbnails();
 			break;
 		case IDM_CLEARCLIPS:
-			pThis->WmCommandIdmClearClips();
+			lResult = pThis->WmCommandIdmClearClips();
 			break;
 		case TXT_MAX_CLIPS_DISPLAY:
-			pThis->WmCommandTxtMaxClipsDisplay(hWnd, wParam, lParam);
+			lResult = pThis->WmCommandTxtMaxClipsDisplay(hWnd, wParam, lParam);
 			break;
 		case TXT_MAX_CLIPS_SAVED:
-			pThis->WmCommandTxtMaxClipsSaved(hWnd, wParam, lParam);
+			lResult = pThis->WmCommandTxtMaxClipsSaved(hWnd, wParam, lParam);
 			break;
 		case TXT_MENU_DISP_CHARS:
-			pThis->WmCommandTxtMenuDispChars(hWnd, wParam, lParam);
+			lResult = pThis->WmCommandTxtMenuDispChars(hWnd, wParam, lParam);
 			break;
 		case CHK_RUN_AT_STARTUP:
-			pThis->WmCommandChkRunAtStartup(hWnd, wParam, lParam);
+			lResult = pThis->WmCommandChkRunAtStartup(hWnd, wParam, lParam);
 			break;
 		case CHK_SAVE_TO_DISK:
-			pThis->WmCommandChkSaveToDisk(hWnd, wParam, lParam);
+			lResult = pThis->WmCommandChkSaveToDisk(hWnd, wParam, lParam);
 			break;
 		case CHK_SLCT_2ND_CLIP:
-			pThis->WmCommandChkSlct2ndClip(hWnd, wParam, lParam);
+			lResult = pThis->WmCommandChkSlct2ndClip(hWnd, wParam, lParam);
 			break;
 		case CHK_SHOW_PREVIEW:
-			pThis->WmCommandChkShowPreview(hWnd, wParam, lParam);
+			lResult = pThis->WmCommandChkShowPreview(hWnd, wParam, lParam);
 			break;
 		case CHK_SAVE_IMAGES:
-			pThis->WmCommandChkSaveImages(hWnd, wParam, lParam);
+			lResult = pThis->WmCommandChkSaveImages(hWnd, wParam, lParam);
 			break;
 		case HKY_SHOW_CLIPS_MENU:
-			pThis->WmCommandHkyShowClipsMenu(hWnd, wParam, lParam);
+			lResult = pThis->WmCommandHkyShowClipsMenu(hWnd, wParam, lParam);
 			break;
 		case TXT_MAX_IMG_CACHE_MB:
-			pThis->WmCommandTxtMaxImageCacheMb(hWnd, wParam, lParam);
+			lResult = pThis->WmCommandTxtMaxImageCacheMb(hWnd, wParam, lParam);
 			break;
 		default:
 			return DefWindowProcW(hWnd, message, wParam, lParam);
@@ -107,15 +118,21 @@ LRESULT SettingsWindow::SettingsWndProc(HWND hWnd, UINT message, WPARAM wParam, 
 	}
 	break;
 	case WM_LBUTTONDOWN:
-		pThis->WmLbuttondown(hWnd);
+		lResult = pThis->WmLbuttondown(hWnd);
+		break;
+	case WM_CTLCOLORSTATIC:
+		lResult = pThis->WmCtlColorStatic(hWnd, wParam, lParam);
+		break;
+	case WM_CTLCOLOREDIT:
+		lResult = pThis->WmCtlColorEdit(hWnd, wParam, lParam);
 		break;
 	case WM_CLOSE:
-		pThis->WmClose(hWnd);
+		lResult = pThis->WmClose(hWnd);
 		break;
 	default:
 		return DefWindowProcW(hWnd, message, wParam, lParam);
 	}
-	return 0;
+	return lResult;
 }
 
 LRESULT SettingsWindow::WmCommandIdmAbout(HWND hWnd, WPARAM wParam, LPARAM lParam)
@@ -238,16 +255,16 @@ LRESULT SettingsWindow::WmCommandChkRunAtStartup(HWND hWnd, WPARAM wParam, LPARA
 {
 	if (HIWORD(wParam) == BN_CLICKED)
 	{
-		if (IsDlgButtonChecked(hWnd, CHK_RUN_AT_STARTUP))
+		bool checkValue = CheckboxRunAtStartup.Value();
+		if (checkValue)
 		{
 			DeleteRegistryRun();
-			CheckDlgButton(hWnd, CHK_RUN_AT_STARTUP, BST_UNCHECKED);
 		}
 		else
 		{
 			WriteRegistryRun();
-			CheckDlgButton(hWnd, CHK_RUN_AT_STARTUP, BST_CHECKED);
 		}
+		CheckboxRunAtStartup.SetValue(!checkValue);
 	}
 	return 0;
 }
@@ -256,16 +273,9 @@ LRESULT SettingsWindow::WmCommandChkSaveToDisk(HWND hWnd, WPARAM wParam, LPARAM 
 {
 	if (HIWORD(wParam) == BN_CLICKED)
 	{
-		if (IsDlgButtonChecked(hWnd, CHK_SAVE_TO_DISK))
-		{
-			UserSettings::SetSaveToDisk(false);
-			CheckDlgButton(hWnd, CHK_SAVE_TO_DISK, BST_UNCHECKED);
-		}
-		else
-		{
-			UserSettings::SetSaveToDisk(true);
-			CheckDlgButton(hWnd, CHK_SAVE_TO_DISK, BST_CHECKED);
-		}
+		bool checkValue = CheckboxSaveToDisk.Value();
+		UserSettings::SetSaveToDisk(!checkValue);
+		CheckboxSaveToDisk.SetValue(!checkValue);
 	}
 	return 0;
 }
@@ -274,16 +284,9 @@ LRESULT SettingsWindow::WmCommandChkSlct2ndClip(HWND hWnd, WPARAM wParam, LPARAM
 {
 	if (HIWORD(wParam) == BN_CLICKED)
 	{
-		if (IsDlgButtonChecked(hWnd, CHK_SLCT_2ND_CLIP))
-		{
-			UserSettings::SetSelect2ndClip(false);
-			CheckDlgButton(hWnd, CHK_SLCT_2ND_CLIP, BST_UNCHECKED);
-		}
-		else
-		{
-			UserSettings::SetSelect2ndClip(true);
-			CheckDlgButton(hWnd, CHK_SLCT_2ND_CLIP, BST_CHECKED);
-		}
+		bool checkValue = CheckboxSelectSecondClip.Value();
+		UserSettings::SetSelect2ndClip(!checkValue);
+		CheckboxSelectSecondClip.SetValue(!checkValue);
 	}
 	return 0;
 }
@@ -292,16 +295,9 @@ LRESULT SettingsWindow::WmCommandChkShowPreview(HWND hWnd, WPARAM wParam, LPARAM
 {
 	if (HIWORD(wParam) == BN_CLICKED)
 	{
-		if (IsDlgButtonChecked(hWnd, CHK_SHOW_PREVIEW))
-		{
-			UserSettings::SetShowPreview(false);
-			CheckDlgButton(hWnd, CHK_SHOW_PREVIEW, BST_UNCHECKED);
-		}
-		else
-		{
-			UserSettings::SetShowPreview(true);
-			CheckDlgButton(hWnd, CHK_SHOW_PREVIEW, BST_CHECKED);
-		}
+		bool checkValue = CheckboxShowPreview.Value();
+		UserSettings::SetShowPreview(!checkValue);
+		CheckboxShowPreview.SetValue(!checkValue);
 	}
 	return 0;
 }
@@ -310,7 +306,9 @@ LRESULT SettingsWindow::WmCommandChkSaveImages(HWND hWnd, WPARAM wParam, LPARAM 
 {
 	if (HIWORD(wParam) == BN_CLICKED)
 	{
-		if (IsDlgButtonChecked(hWnd, CHK_SAVE_IMAGES))
+		bool checkValue = CheckboxSaveImages.Value();
+
+		if (checkValue)
 		{
 			int choice = MessageBoxA(hWnd, 
 				"This will delete all images on the Winclipper clipboard.\r\n\r\n Are you sure you want to do this?", "Winclipper", 
@@ -318,18 +316,16 @@ LRESULT SettingsWindow::WmCommandChkSaveImages(HWND hWnd, WPARAM wParam, LPARAM 
 
 			if (choice == IDYES)
 			{
-				UserSettings::SetSaveImages(false);
-				CheckDlgButton(hWnd, CHK_SAVE_IMAGES, BST_UNCHECKED);
-				EnableWindow(GetDlgItem(hWnd, UD_MAX_IMG_CACHE_MB), false);
-				EnableWindow(GetDlgItem(hWnd, TXT_MAX_IMG_CACHE_MB), false);
+				UserSettings::SetSaveImages(!checkValue);
+				CheckboxSaveImages.SetValue(!checkValue);
+				SpinnerMaxCacheMbytes.SetEnabled(!checkValue);
 			}
 		}
 		else
 		{
-			UserSettings::SetSaveImages(true);
-			CheckDlgButton(hWnd, CHK_SAVE_IMAGES, BST_CHECKED);
-			EnableWindow(GetDlgItem(hWnd, UD_MAX_IMG_CACHE_MB), true);
-			EnableWindow(GetDlgItem(hWnd, TXT_MAX_IMG_CACHE_MB), true);
+			UserSettings::SetSaveImages(!checkValue);
+			CheckboxSaveImages.SetValue(!checkValue);
+			SpinnerMaxCacheMbytes.SetEnabled(!checkValue);;
 		}
 	}
 	return 0;
@@ -395,6 +391,60 @@ LRESULT SettingsWindow::WmLbuttondown(HWND hWnd)
 {
 	SetFocus(hWnd);
 	return 0;
+}
+
+LRESULT SettingsWindow::WmCtlColorStatic(HWND hWnd, WPARAM wParam, LPARAM lParam)
+{
+	HDC hdcStatic = (HDC)wParam;
+	SetBkMode(hdcStatic, TRANSPARENT);
+	if (useLightTheme)
+	{
+		SetTextColor(hdcStatic, FOREGROUND_COLOR_LIGHT);
+	}
+	else
+	{
+		SetTextColor(hdcStatic, FOREGROUND_COLOR_DARK);
+	}
+
+	if (hbrBkgnd == NULL)
+	{
+		if (useLightTheme)
+		{
+			hbrBkgnd = CreateSolidBrush(BACKGROUND_COLOR_LIGHT);
+		}
+		else
+		{
+			hbrBkgnd = CreateSolidBrush(BACKGROUND_COLOR_DARK);
+		}
+	}
+	return (INT_PTR)hbrBkgnd;
+}
+
+LRESULT SettingsWindow::WmCtlColorEdit(HWND hWnd, WPARAM wParam, LPARAM lParam)
+{
+	HDC hdcStatic = (HDC)wParam;
+	SetBkMode(hdcStatic, TRANSPARENT);
+	if (useLightTheme)
+	{
+		SetTextColor(hdcStatic, FOREGROUND_COLOR_LIGHT);
+	}
+	else
+	{
+		SetTextColor(hdcStatic, FOREGROUND_COLOR_DARK);
+	}
+
+	if (hbrCtrlBkgnd == NULL)
+	{
+		if (useLightTheme)
+		{
+			hbrCtrlBkgnd = CreateSolidBrush(BACKGROUND_COLOR_LIGHT);
+		}
+		else
+		{
+			hbrCtrlBkgnd = CreateSolidBrush(BACKGROUND_COLOR_DARK);
+		}
+	}
+	return (INT_PTR)hbrCtrlBkgnd;
 }
 
 LRESULT SettingsWindow::WmClose(HWND hWnd)
@@ -474,27 +524,115 @@ bool SettingsWindow::InitSettingsWindow(HINSTANCE hInstance)
 	SetWindowTextW(hWnd, szTitle);
 
 	windowHandle = hWnd;
-
+	
 	// Add controls in tab order
-	AddLabel(hWnd, hFontStd, 10, 10, hInstance, L"Number of clips to display:", LBL_MAX_CLIPS_DISPLAY);
-	AddSpinner(hWnd, hFontStd, 180, 10, hInstance, UserSettings::MAX_DISPLAY_LOWER, UserSettings::MAX_DISPLAY_UPPER, UD_MAX_CLIPS_DISPLAY, TXT_MAX_CLIPS_DISPLAY);
-	AddLabel(hWnd, hFontStd, 10, 40, hInstance, L"Maximum clips to save:", LBL_MAX_CLIPS_SAVED);
-	AddSpinner(hWnd, hFontStd, 180, 40, hInstance, UserSettings::MAX_SAVED_LOWER, UserSettings::MAX_SAVED_UPPER, UD_MAX_CLIPS_SAVED, TXT_MAX_CLIPS_SAVED);
+	LabelMaxClipsDisplay = Controls::Label(hWnd, LBL_MAX_CLIPS_DISPLAY, hInstance);
+	LabelMaxClipsDisplay.SuspendLayout();
+	LabelMaxClipsDisplay.X = 10;
+	LabelMaxClipsDisplay.Y = 10;
+	LabelMaxClipsDisplay.Text = L"Number of clips to display:";
+	LabelMaxClipsDisplay.ResumeLayout();
 
-	AddLabel(hWnd, hFontStd, 10, 70, hInstance, L"Number of preview characters:", LBL_MENU_DISP_CHARS);
-	AddSpinner(hWnd, hFontStd, 180, 70, hInstance, UserSettings::MENU_CHARS_LOWER, UserSettings::MENU_CHARS_UPPER, UD_MENU_DISP_CHARS, TXT_MENU_DISP_CHARS);
+	SpinnerMaxClipsDisplay = Controls::Spinner(hWnd, TXT_MAX_CLIPS_DISPLAY, UD_MAX_CLIPS_DISPLAY, hInstance);
+	SpinnerMaxClipsDisplay.SuspendLayout();
+	SpinnerMaxClipsDisplay.X = 180;
+	SpinnerMaxClipsDisplay.Y = 10;
+	SpinnerMaxClipsDisplay.MinValue = UserSettings::MAX_DISPLAY_LOWER;
+	SpinnerMaxClipsDisplay.MaxValue = UserSettings::MAX_DISPLAY_UPPER;
+	SpinnerMaxClipsDisplay.ResumeLayout();
 
-	AddLabel(hWnd, hFontStd, 10, 100, hInstance, L"Clips menu shortcut:", LBL_SHOW_CLIPS_HOTK);
+	LabelMaxClipsSaved = Controls::Label(hWnd, LBL_MAX_CLIPS_SAVED, hInstance);
+	LabelMaxClipsSaved.SuspendLayout();
+	LabelMaxClipsSaved.X = 10;
+	LabelMaxClipsSaved.Y = 40;
+	LabelMaxClipsSaved.Text = L"Maximum clips to save:";
+	LabelMaxClipsSaved.ResumeLayout();
+	
+	SpinnerMaxClipsSaved = Controls::Spinner(hWnd, TXT_MAX_CLIPS_SAVED, UD_MAX_CLIPS_SAVED, hInstance);
+	SpinnerMaxClipsSaved.SuspendLayout();
+	SpinnerMaxClipsSaved.X = 180;
+	SpinnerMaxClipsSaved.Y = 40;
+	SpinnerMaxClipsSaved.MinValue = UserSettings::MAX_SAVED_LOWER;
+	SpinnerMaxClipsSaved.MaxValue = UserSettings::MAX_SAVED_UPPER;
+	SpinnerMaxClipsSaved.ResumeLayout();
+
+	LabelMenuDisplayChars = Controls::Label(hWnd, LBL_MENU_DISP_CHARS, hInstance);
+	LabelMenuDisplayChars.SuspendLayout();
+	LabelMenuDisplayChars.X = 10;
+	LabelMenuDisplayChars.Y = 70;
+	LabelMenuDisplayChars.Text = L"Number of preview characters:";
+	LabelMenuDisplayChars.ResumeLayout();
+	
+	SpinnerMenuDisplayChars = Controls::Spinner(hWnd, TXT_MENU_DISP_CHARS, UD_MENU_DISP_CHARS, hInstance);
+	SpinnerMenuDisplayChars.SuspendLayout();
+	SpinnerMenuDisplayChars.X = 180;
+	SpinnerMenuDisplayChars.Y = 70;
+	SpinnerMenuDisplayChars.MinValue = UserSettings::MENU_CHARS_LOWER;
+	SpinnerMenuDisplayChars.MaxValue = UserSettings::MENU_CHARS_UPPER;
+	SpinnerMenuDisplayChars.ResumeLayout();
+	
+	LabelShowClipsHotkey = Controls::Label(hWnd, LBL_SHOW_CLIPS_HOTK, hInstance);
+	LabelShowClipsHotkey.SuspendLayout();
+	LabelShowClipsHotkey.X = 10;
+	LabelShowClipsHotkey.Y = 100;
+	LabelShowClipsHotkey.Text = L"Clips menu shortcut:";
+	LabelShowClipsHotkey.ResumeLayout();
 	HWND hHotKey = AddHotkeyCtrl(hWnd, hFontStd, 130, 100, 100, 20, hInstance, HKY_SHOW_CLIPS_MENU);
 
-	AddCheckbox(hWnd, hFontStd, 10, 130, hInstance, L"Save clips to disk", CHK_SAVE_TO_DISK);
-	AddCheckbox(hWnd, hFontStd, 10, 154, hInstance, L"Run Winclipper at startup", CHK_RUN_AT_STARTUP);
-	AddCheckbox(hWnd, hFontStd, 10, 178, hInstance, L"Auto-select second clip", CHK_SLCT_2ND_CLIP);
-	AddCheckbox(hWnd, hFontStd, 10, 202, hInstance, L"Show clip preview", CHK_SHOW_PREVIEW);
-	AddCheckbox(hWnd, hFontStd, 10, 226, hInstance, L"Save images to the clipboard", CHK_SAVE_IMAGES);
+	CheckboxSaveToDisk = Controls::Checkbox(hWnd, CHK_SAVE_TO_DISK, hInstance);
+	CheckboxSaveToDisk.SuspendLayout();
+	CheckboxSaveToDisk.X = 10;
+	CheckboxSaveToDisk.Y = 130;
+	CheckboxSaveToDisk.Text = L"Save clips to disk";
+	CheckboxSaveToDisk.UseBasicTheme = !useLightTheme;
+	CheckboxSaveToDisk.ResumeLayout();
 
-	AddLabel(hWnd, hFontStd, 28, 250, hInstance, L"Max image cache size (MB):", LBL_MAX_IMG_CACHE_MB);
-	AddSpinner(hWnd, hFontStd, 180, 250, hInstance, UserSettings::MAX_CACHE_MBYTES_LOWER, UserSettings::MAX_CACHE_MBYTES_UPPER, UD_MAX_IMG_CACHE_MB, TXT_MAX_IMG_CACHE_MB);
+	CheckboxRunAtStartup = Controls::Checkbox(hWnd, CHK_RUN_AT_STARTUP, hInstance);
+	CheckboxRunAtStartup.SuspendLayout();
+	CheckboxRunAtStartup.X = 10;
+	CheckboxRunAtStartup.Y = 154;
+	CheckboxRunAtStartup.Text = L"Run Winclipper at startup";
+	CheckboxRunAtStartup.UseBasicTheme = !useLightTheme;
+	CheckboxRunAtStartup.ResumeLayout();
+
+	CheckboxSelectSecondClip = Controls::Checkbox(hWnd, CHK_SLCT_2ND_CLIP, hInstance);
+	CheckboxSelectSecondClip.SuspendLayout();
+	CheckboxSelectSecondClip.X = 10;
+	CheckboxSelectSecondClip.Y = 178;
+	CheckboxSelectSecondClip.Text = L"Auto-select second clip";
+	CheckboxSelectSecondClip.UseBasicTheme = !useLightTheme;
+	CheckboxSelectSecondClip.ResumeLayout();
+
+	CheckboxShowPreview = Controls::Checkbox(hWnd, CHK_SHOW_PREVIEW, hInstance);
+	CheckboxShowPreview.SuspendLayout();
+	CheckboxShowPreview.X = 10;
+	CheckboxShowPreview.Y = 202;
+	CheckboxShowPreview.Text = L"Show clip preview";
+	CheckboxShowPreview.UseBasicTheme = !useLightTheme;
+	CheckboxShowPreview.ResumeLayout();
+
+	CheckboxSaveImages = Controls::Checkbox(hWnd, CHK_SAVE_IMAGES, hInstance);
+	CheckboxSaveImages.SuspendLayout();
+	CheckboxSaveImages.X = 10;
+	CheckboxSaveImages.Y = 226;
+	CheckboxSaveImages.Text = L"Save images to the clipboard";
+	CheckboxSaveImages.UseBasicTheme = !useLightTheme;
+	CheckboxSaveImages.ResumeLayout();
+
+	LabelMaxCacheMbytes = Controls::Label(hWnd, LBL_MAX_IMG_CACHE_MB, hInstance);
+	LabelMaxCacheMbytes.SuspendLayout();
+	LabelMaxCacheMbytes.X = 28;
+	LabelMaxCacheMbytes.Y = 250;
+	LabelMaxCacheMbytes.Text = L"Max image cache size (MB):";
+	LabelMaxCacheMbytes.ResumeLayout();
+	
+	SpinnerMaxCacheMbytes = Controls::Spinner(hWnd, TXT_MAX_IMG_CACHE_MB, UD_MAX_IMG_CACHE_MB, hInstance);
+	SpinnerMaxCacheMbytes.SuspendLayout();
+	SpinnerMaxCacheMbytes.X = 180;
+	SpinnerMaxCacheMbytes.Y = 250;
+	SpinnerMaxCacheMbytes.MinValue = UserSettings::MAX_CACHE_MBYTES_LOWER;
+	SpinnerMaxCacheMbytes.MaxValue = UserSettings::MAX_CACHE_MBYTES_UPPER;
+	SpinnerMaxCacheMbytes.ResumeLayout();
 
 	// Load values from user settings
 	SetDlgItemInt(hWnd, TXT_MAX_CLIPS_DISPLAY, UserSettings::MaxDisplayClips(), false);
@@ -507,33 +645,16 @@ bool SettingsWindow::InitSettingsWindow(HINSTANCE hInstance)
 	{
 		if (RegistryUtilities::QueryKeyForValue(hOpened, L"Winclipper") == true)
 		{
-			CheckDlgButton(hWnd, CHK_RUN_AT_STARTUP, BST_CHECKED);
+			CheckboxRunAtStartup.SetValue(true);
+			//CheckDlgButton(hWnd, CHK_RUN_AT_STARTUP, BST_CHECKED);
 		}
 	}
 	RegCloseKey(hOpened);
-	if (UserSettings::SaveToDisk())
-	{
-		CheckDlgButton(hWnd, CHK_SAVE_TO_DISK, BST_CHECKED);
-	}
-	if (UserSettings::Select2ndClip())
-	{
-		CheckDlgButton(hWnd, CHK_SLCT_2ND_CLIP, BST_CHECKED);
-	}
-	if (UserSettings::ShowPreview())
-	{
-		CheckDlgButton(hWnd, CHK_SHOW_PREVIEW, BST_CHECKED);
-	}
-	if (UserSettings::SaveImages())
-	{
-		CheckDlgButton(hWnd, CHK_SAVE_IMAGES, BST_CHECKED);
-		EnableWindow(GetDlgItem(hWnd, UD_MAX_IMG_CACHE_MB), true);
-		EnableWindow(GetDlgItem(hWnd, TXT_MAX_IMG_CACHE_MB), true);
-	}
-	else
-	{
-		EnableWindow(GetDlgItem(hWnd, UD_MAX_IMG_CACHE_MB), false);
-		EnableWindow(GetDlgItem(hWnd, TXT_MAX_IMG_CACHE_MB), false);
-	}
+	CheckboxSaveToDisk.SetValue(UserSettings::SaveToDisk());
+	CheckboxSelectSecondClip.SetValue(UserSettings::Select2ndClip());
+	CheckboxShowPreview.SetValue(UserSettings::ShowPreview());
+	CheckboxSaveImages.SetValue(UserSettings::SaveImages());
+	SpinnerMaxCacheMbytes.SetEnabled(UserSettings::SaveImages());
 
 	SendMessageW(hHotKey, HKM_SETHOTKEY, UserSettings::ClipsMenuHotkey(), 0);
 

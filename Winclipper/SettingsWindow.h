@@ -1,6 +1,7 @@
 #pragma once
 #include "resource.h"
 #include "string.h"
+#include "Controls.h"
 #include "ControlUtilities.h"
 #include "RegistryUtilities.h"
 #include "Notify.h"
@@ -35,10 +36,20 @@
 class SettingsWindow : public Notify
 {
 private:
+	bool						useLightTheme = true;
+	HBRUSH						APP_BACKGROUND_COLOR_LIGHT = (HBRUSH)(COLOR_WINDOW + 1);
+	HBRUSH						APP_BACKGROUND_COLOR_DARK = CreateSolidBrush(RGB(32, 32, 32));
+	COLORREF					FOREGROUND_COLOR_LIGHT = RGB(0, 0, 0);
+	COLORREF					FOREGROUND_COLOR_DARK = RGB(255, 255, 255);
+	COLORREF					BACKGROUND_COLOR_LIGHT = GetSysColor(COLOR_WINDOW);
+	COLORREF					BACKGROUND_COLOR_DARK = RGB(32, 32, 32);
+
 	wchar_t						szSettingsWindowClass[MAX_LOADSTRING];      // the settings window class name
 	wchar_t						szTitle[MAX_LOADSTRING];                    // The title bar text
 	
 	HFONT						hFontStd;
+	HBRUSH						hbrBkgnd;
+	HBRUSH						hbrCtrlBkgnd;
 	HWND						windowHandle = nullptr;
 
 	ATOM						RegisterSettingsWindowClass(HINSTANCE hInstance);
@@ -58,7 +69,24 @@ private:
 	LRESULT						WmCommandTxtMaxImageCacheMb(HWND hWnd, WPARAM wParam, LPARAM lParam);
 	LRESULT						WmCommandHkyShowClipsMenu(HWND hWnd, WPARAM wParam, LPARAM lParam);
 	LRESULT						WmLbuttondown(HWND hWnd);
+	LRESULT						WmCtlColorStatic(HWND hWnd, WPARAM wParam, LPARAM lParam);
+	LRESULT						WmCtlColorEdit(HWND hWnd, WPARAM wParam, LPARAM lParam);
 	LRESULT						WmClose(HWND hWnd);
+
+	Controls::Label				LabelMaxClipsDisplay;
+	Controls::Spinner			SpinnerMaxClipsDisplay;
+	Controls::Label				LabelMaxClipsSaved;
+	Controls::Spinner			SpinnerMaxClipsSaved;
+	Controls::Label				LabelMenuDisplayChars;
+	Controls::Spinner			SpinnerMenuDisplayChars;
+	Controls::Label				LabelShowClipsHotkey;
+	Controls::Checkbox			CheckboxSaveToDisk;
+	Controls::Checkbox			CheckboxRunAtStartup;
+	Controls::Checkbox			CheckboxSelectSecondClip;
+	Controls::Checkbox			CheckboxShowPreview;
+	Controls::Checkbox			CheckboxSaveImages;
+	Controls::Label				LabelMaxCacheMbytes;
+	Controls::Spinner			SpinnerMaxCacheMbytes;
 
 	bool						WriteRegistryRun();
 	bool						DeleteRegistryRun();

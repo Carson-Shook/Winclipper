@@ -36,6 +36,37 @@ unsigned int RegistryUtilities::GetWindows10ReleaseId()
 	return retVal;
 }
 
+bool RegistryUtilities::AppsUseLightTheme()
+{
+	bool retVal = 1;
+	HKEY hOpened;
+
+	if (RegOpenKeyExW(HKEY_CURRENT_USER, L"Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize", 0, KEY_QUERY_VALUE, &hOpened) == ERROR_SUCCESS)
+	{
+		if (QueryKeyForValue(hOpened, L"AppsUseLightTheme") == true)
+		{
+			const size_t bufferSize = 4096;
+			INT32 data;
+			DWORD cbData = DWORD{ bufferSize };
+
+			if (RegQueryValueExW(hOpened, L"AppsUseLightTheme", nullptr, nullptr, reinterpret_cast<LPBYTE>(&data), &cbData) == ERROR_SUCCESS)
+			{
+				try
+				{
+					retVal = data == 1;
+				}
+				catch (const std::exception&)
+				{
+					retVal = 1;
+				}
+			}
+		}
+	}
+	RegCloseKey(hOpened);
+
+	return retVal;
+}
+
 // Determines whether or not a particular value exists for a given key
 bool RegistryUtilities::QueryKeyForValue(HKEY hKey, wchar_t* checkValue)
 {
