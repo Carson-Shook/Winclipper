@@ -38,7 +38,7 @@ unsigned int RegistryUtilities::GetWindows10ReleaseId()
 
 bool RegistryUtilities::AppsUseLightTheme()
 {
-	bool retVal = 1;
+	bool retVal = true;
 	HKEY hOpened;
 
 	if (RegOpenKeyExW(HKEY_CURRENT_USER, L"Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize", 0, KEY_QUERY_VALUE, &hOpened) == ERROR_SUCCESS)
@@ -57,7 +57,7 @@ bool RegistryUtilities::AppsUseLightTheme()
 				}
 				catch (const std::exception&)
 				{
-					retVal = 1;
+					retVal = true;
 				}
 			}
 		}
@@ -65,6 +65,105 @@ bool RegistryUtilities::AppsUseLightTheme()
 	RegCloseKey(hOpened);
 
 	return retVal;
+}
+
+bool RegistryUtilities::ClipboardHistoryEnabled()
+{
+	bool retVal = false;
+	HKEY hOpened;
+
+	if (RegOpenKeyExW(HKEY_CURRENT_USER, L"Software\\Microsoft\\Clipboard", 0, KEY_QUERY_VALUE, &hOpened) == ERROR_SUCCESS)
+	{
+		if (QueryKeyForValue(hOpened, L"EnableClipboardHistory") == true)
+		{
+			const size_t bufferSize = 4096;
+			INT32 data;
+			DWORD cbData = DWORD{ bufferSize };
+
+			if (RegQueryValueExW(hOpened, L"EnableClipboardHistory", nullptr, nullptr, reinterpret_cast<LPBYTE>(&data), &cbData) == ERROR_SUCCESS)
+			{
+				try
+				{
+					retVal = data == 1;
+				}
+				catch (const std::exception&)
+				{
+					retVal = false;
+				}
+			}
+		}
+	}
+	RegCloseKey(hOpened);
+
+	return retVal;
+}
+
+bool RegistryUtilities::DisableClipboardHistory()
+{
+	HKEY hOpened;
+
+	if (RegOpenKeyExW(HKEY_CURRENT_USER, L"Software\\Microsoft\\Clipboard", 0, KEY_ALL_ACCESS, &hOpened) == ERROR_SUCCESS)
+	{
+		DWORD lpData = 0;
+		RegSetKeyValueW(hOpened, nullptr, L"EnableClipboardHistory", REG_DWORD, reinterpret_cast<LPBYTE>(&lpData), sizeof(lpData));
+	}
+	else
+	{
+		return false;
+	}
+
+	RegCloseKey(hOpened);
+	return true;
+}
+
+bool RegistryUtilities::ClipboardStartupWarningDisabled()
+{
+	bool retVal = false;
+	HKEY hOpened;
+
+	if (RegOpenKeyExW(HKEY_CURRENT_USER, L"Software\\Winclipper", 0, KEY_QUERY_VALUE, &hOpened) == ERROR_SUCCESS)
+	{
+		if (QueryKeyForValue(hOpened, L"DisableStartupWarning") == true)
+		{
+			const size_t bufferSize = 4096;
+			INT32 data;
+			DWORD cbData = DWORD{ bufferSize };
+
+			if (RegQueryValueExW(hOpened, L"DisableStartupWarning", nullptr, nullptr, reinterpret_cast<LPBYTE>(&data), &cbData) == ERROR_SUCCESS)
+			{
+				try
+				{
+					retVal = data == 1;
+				}
+				catch (const std::exception&)
+				{
+					retVal = false;
+				}
+			}
+		}
+	}
+	RegCloseKey(hOpened);
+
+	return retVal;
+}
+
+bool RegistryUtilities::DisableClipboardStartupWarning()
+{
+	HKEY hOpened;
+	LPDWORD phkResult = nullptr;
+
+	if (RegCreateKeyExW(HKEY_CURRENT_USER, L"Software\\Winclipper", 0, nullptr, REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, nullptr, &hOpened, phkResult) == ERROR_SUCCESS)
+	{
+		DWORD lpData = 1;
+		RegSetKeyValueW(hOpened, nullptr, L"DisableStartupWarning", REG_DWORD, reinterpret_cast<LPBYTE>(&lpData), sizeof(lpData));
+	}
+	else
+	{
+		return false;
+	}
+
+	RegCloseKey(hOpened);
+	return true;
 }
 
 // Determines whether or not a particular value exists for a given key

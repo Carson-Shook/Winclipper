@@ -23,6 +23,27 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 	{
 		try
 		{
+			if (RegistryUtilities::ClipboardHistoryEnabled() && !RegistryUtilities::ClipboardStartupWarningDisabled())
+			{
+				int choice = MessageBoxW(nullptr,
+					L"It looks like you have Windows Clipboard History enabled. It can cause issues with Winclipper. Would you like to turn it off now? It can always be re-enabled in the Settings app.\r\n\r\nIf you want to leave it on, choose \"No\" to ignore this warning.", L"Winclipper",
+					MB_YESNOCANCEL | MB_ICONINFORMATION | MB_TASKMODAL | MB_SETFOREGROUND);
+
+				if (choice == IDYES)
+				{
+					RegistryUtilities::DisableClipboardHistory();
+				}
+				else if (choice == IDNO)
+				{
+					RegistryUtilities::DisableClipboardStartupWarning();
+				}
+				else
+				{
+					CoUninitialize();
+					return 1;
+				}
+			}
+
 			UserSettings::InitializeSettings();
 
 			SettingsWindow settingsWindow = SettingsWindow(hInstance);
@@ -31,7 +52,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 			hInst = hInstance; // Store instance handle in our global variable
 
 			HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_WINCSETTINGS));
-
 
 			// Main message loop:
 			while (GetMessage(&msg, nullptr, 0, 0))
