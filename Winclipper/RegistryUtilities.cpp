@@ -182,8 +182,7 @@ bool RegistryUtilities::QueryKeyForValue(HKEY hKey, wchar_t* checkValue)
 
 	DWORD i, retCode;
 
-	wchar_t * achValue;
-	achValue = new wchar_t[MAX_REG_VALUE_NAME];
+	std::unique_ptr<wchar_t> achValue(new wchar_t[MAX_REG_VALUE_NAME]);
 	DWORD cchValue = MAX_REG_VALUE_NAME;
 
 	// Get the class name and the value count. 
@@ -207,10 +206,10 @@ bool RegistryUtilities::QueryKeyForValue(HKEY hKey, wchar_t* checkValue)
 	{
 		for (i = 0, retCode = ERROR_SUCCESS; i<cValues; i++)
 		{
-			cchValue = MAX_REG_VALUE_NAME;
-			achValue[0] = '\0';
+			DWORD cchValue = MAX_REG_VALUE_NAME;
+			achValue.get()[0] = '\0';
 			retCode = RegEnumValueW(hKey, i,
-				achValue,
+				achValue.get(),
 				&cchValue,
 				NULL,
 				NULL,
@@ -219,13 +218,12 @@ bool RegistryUtilities::QueryKeyForValue(HKEY hKey, wchar_t* checkValue)
 
 			if (retCode == ERROR_SUCCESS)
 			{
-				if (wcscmp(checkValue, achValue) == 0)
+				if (wcscmp(checkValue, achValue.get()) == 0)
 				{
 					return true;
 				}
 			}
 		}
 	}
-	delete[] achValue;
 	return false;
 }
