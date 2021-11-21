@@ -605,13 +605,16 @@ void ClipsManager::ShowClipsMenu(HWND hWnd, const LPPOINT cPos, bool showExit)
 				retries--;
 			}
 
-			retries = 10;
-			unsigned int inputCount = SendPasteInput();
-			while (inputCount != 4 && retries > 0)
+			if (UserSettings::PasteOnClick())
 			{
-				Sleep(100);
-				inputCount = SendPasteInput();
-				retries--;
+				retries = 10;
+				unsigned int inputCount = SendPasteInput();
+				while (inputCount != 4 && retries > 0)
+				{
+					Sleep(100);
+					inputCount = SendPasteInput();
+					retries--;
+				}
 			}
             break;
         }

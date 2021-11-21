@@ -9,6 +9,7 @@ WORD UserSettings::clipsMenuHotkey;
 bool UserSettings::saveToDisk;
 bool UserSettings::select2ndClip;
 bool UserSettings::showPreview;
+bool UserSettings::pasteOnClick;
 bool UserSettings::saveImages;
 unsigned int UserSettings::maxCacheMegabytes;
 int	UserSettings::settingWriterWaitCount = 0;
@@ -84,6 +85,7 @@ void UserSettings::InitializeSettings()
 	select2ndClip = SLCT_2ND_CLIP_DEF;
 	showPreview = SHOW_PREVIEW_DEF;
 	saveImages = SAVE_IMAGES_DEF;
+	pasteOnClick = PASTE_ON_CLICK_DEF;
 	maxCacheMegabytes = MAX_CACHE_MBYTES_DEF;
 
 	settingWriterWaitCount = 0;
@@ -307,6 +309,20 @@ void UserSettings::SetShowPreview(bool showPreview)
     }
 }
 
+bool UserSettings::PasteOnClick()
+{
+	return UserSettings::pasteOnClick;
+}
+
+void UserSettings::SetPasteOnClick(bool pasteOnClick)
+{
+	if (pasteOnClick != UserSettings::pasteOnClick)
+	{
+		UserSettings::pasteOnClick = pasteOnClick;
+		SaveSettingsAsync();
+	}
+}
+
 bool UserSettings::SaveImages()
 {
 	return UserSettings::saveImages;
@@ -379,7 +395,8 @@ std::vector<std::wstring> UserSettings::Serialize()
         (std::to_wstring(SLCT_2ND_CLIP) + SEPARATOR + std::to_wstring(Select2ndClip())),
 		(std::to_wstring(SHOW_PREVIEW) + SEPARATOR + std::to_wstring(ShowPreview())),
 		(std::to_wstring(SAVE_IMAGES) + SEPARATOR + std::to_wstring(SaveImages())),
-		(std::to_wstring(MAX_CACHE_MBYTES) + SEPARATOR + std::to_wstring(MaxCacheMegabytes()))
+		(std::to_wstring(MAX_CACHE_MBYTES) + SEPARATOR + std::to_wstring(MaxCacheMegabytes())),
+		(std::to_wstring(PASTE_ON_CLICK) + SEPARATOR + std::to_wstring(PasteOnClick())),
     };
 
     return retVal;
@@ -452,8 +469,16 @@ void UserSettings::Deserialize(std::vector<std::wstring> srData)
 			}
 		break;
 		case MAX_CACHE_MBYTES:
-			SetMaxCacheMegabytes(stoi(pair.second));
+			{
+				SetMaxCacheMegabytes(stoi(pair.second));
+			}
 			break;
+		case PASTE_ON_CLICK:
+			{
+				bool result = pair.second.compare(std::to_wstring(true)) == 0;
+				SetPasteOnClick(result);
+			}
+		break;
         default:
             break;
         }

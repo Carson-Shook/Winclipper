@@ -103,6 +103,9 @@ LRESULT SettingsWindow::SettingsWndProc(HWND hWnd, UINT message, WPARAM wParam, 
 		case CHK_SHOW_PREVIEW:
 			lResult = pThis->WmCommandChkShowPreview(hWnd, wParam, lParam);
 			break;
+		case CHK_PASTE_ON_CLICK:
+			lResult = pThis->WmCommandChkPasteOnClick(hWnd, wParam, lParam);
+			break;
 		case CHK_SAVE_IMAGES:
 			lResult = pThis->WmCommandChkSaveImages(hWnd, wParam, lParam);
 			break;
@@ -298,6 +301,17 @@ LRESULT SettingsWindow::WmCommandChkShowPreview(HWND hWnd, WPARAM wParam, LPARAM
 		bool checkValue = CheckboxShowPreview.Value();
 		UserSettings::SetShowPreview(!checkValue);
 		CheckboxShowPreview.SetValue(!checkValue);
+	}
+	return 0;
+}
+
+LRESULT SettingsWindow::WmCommandChkPasteOnClick(HWND hWnd, WPARAM wParam, LPARAM lParam)
+{
+	if (HIWORD(wParam) == BN_CLICKED)
+	{
+		bool checkValue = CheckboxPasteOnClick.Value();
+		UserSettings::SetPasteOnClick(!checkValue);
+		CheckboxPasteOnClick.SetValue(!checkValue);
 	}
 	return 0;
 }
@@ -514,7 +528,7 @@ SettingsWindow::~SettingsWindow()
 bool SettingsWindow::InitSettingsWindow(HINSTANCE hInstance)
 {
 	HWND hWnd = CreateWindowExW(0, szSettingsWindowClass, szTitle, WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU,
-		CW_USEDEFAULT, CW_USEDEFAULT, ScaleX(260), ScaleY(340), nullptr, nullptr, hInstance, this);
+		CW_USEDEFAULT, CW_USEDEFAULT, ScaleX(260), ScaleY(364), nullptr, nullptr, hInstance, this);
 
 	if (!hWnd)
 	{
@@ -611,10 +625,18 @@ bool SettingsWindow::InitSettingsWindow(HINSTANCE hInstance)
 	CheckboxShowPreview.UseBasicTheme = !useLightTheme;
 	CheckboxShowPreview.ResumeLayout();
 
+	CheckboxPasteOnClick = Controls::Checkbox(hWnd, CHK_PASTE_ON_CLICK, hInstance);
+	CheckboxPasteOnClick.SuspendLayout();
+	CheckboxPasteOnClick.SetX(10);
+	CheckboxPasteOnClick.SetY(226);
+	CheckboxPasteOnClick.SetText(L"Paste immediately on click");
+	CheckboxPasteOnClick.UseBasicTheme = !useLightTheme;
+	CheckboxPasteOnClick.ResumeLayout();
+
 	CheckboxSaveImages = Controls::Checkbox(hWnd, CHK_SAVE_IMAGES, hInstance);
 	CheckboxSaveImages.SuspendLayout();
 	CheckboxSaveImages.SetX(10);
-	CheckboxSaveImages.SetY(226);
+	CheckboxSaveImages.SetY(250);
 	CheckboxSaveImages.SetText(L"Save images to the clipboard");
 	CheckboxSaveImages.UseBasicTheme = !useLightTheme;
 	CheckboxSaveImages.ResumeLayout();
@@ -622,14 +644,14 @@ bool SettingsWindow::InitSettingsWindow(HINSTANCE hInstance)
 	LabelMaxCacheMbytes = Controls::Label(hWnd, LBL_MAX_IMG_CACHE_MB, hInstance);
 	LabelMaxCacheMbytes.SuspendLayout();
 	LabelMaxCacheMbytes.SetX(28);
-	LabelMaxCacheMbytes.SetY(250);
+	LabelMaxCacheMbytes.SetY(274);
 	LabelMaxCacheMbytes.SetText(L"Max image cache size (MB):");
 	LabelMaxCacheMbytes.ResumeLayout();
 	
 	SpinnerMaxCacheMbytes = Controls::Spinner(hWnd, TXT_MAX_IMG_CACHE_MB, UD_MAX_IMG_CACHE_MB, hInstance);
 	SpinnerMaxCacheMbytes.SuspendLayout();
 	SpinnerMaxCacheMbytes.SetX(180);
-	SpinnerMaxCacheMbytes.SetY(250);
+	SpinnerMaxCacheMbytes.SetY(274);
 	SpinnerMaxCacheMbytes.SetMinValue(UserSettings::MAX_CACHE_MBYTES_LOWER);
 	SpinnerMaxCacheMbytes.SetMaxValue(UserSettings::MAX_CACHE_MBYTES_UPPER);
 	SpinnerMaxCacheMbytes.ResumeLayout();
@@ -653,6 +675,7 @@ bool SettingsWindow::InitSettingsWindow(HINSTANCE hInstance)
 	CheckboxSaveToDisk.SetValue(UserSettings::SaveToDisk());
 	CheckboxSelectSecondClip.SetValue(UserSettings::Select2ndClip());
 	CheckboxShowPreview.SetValue(UserSettings::ShowPreview());
+	CheckboxPasteOnClick.SetValue(UserSettings::PasteOnClick());
 	CheckboxSaveImages.SetValue(UserSettings::SaveImages());
 	SpinnerMaxCacheMbytes.SetEnabled(UserSettings::SaveImages());
 

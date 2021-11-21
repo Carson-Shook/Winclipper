@@ -32,6 +32,8 @@
 #define TXT_MAX_IMG_CACHE_MB    217
 #define UD_MAX_IMG_CACHE_MB     218
 
+#define CHK_PASTE_ON_CLICK	    219
+
 
 class SettingsWindow : public Notify
 {
@@ -65,6 +67,7 @@ private:
 	LRESULT						WmCommandChkSaveToDisk(HWND hWnd, WPARAM wParam, LPARAM lParam);
 	LRESULT						WmCommandChkSlct2ndClip(HWND hWnd, WPARAM wParam, LPARAM lParam);
 	LRESULT						WmCommandChkShowPreview(HWND hWnd, WPARAM wParam, LPARAM lParam);
+	LRESULT						WmCommandChkPasteOnClick(HWND hWnd, WPARAM wParam, LPARAM lParam);
 	LRESULT						WmCommandChkSaveImages(HWND hWnd, WPARAM wParam, LPARAM lParam);
 	LRESULT						WmCommandTxtMaxImageCacheMb(HWND hWnd, WPARAM wParam, LPARAM lParam);
 	LRESULT						WmCommandHkyShowClipsMenu(HWND hWnd, WPARAM wParam, LPARAM lParam);
@@ -84,6 +87,7 @@ private:
 	Controls::Checkbox			CheckboxRunAtStartup;
 	Controls::Checkbox			CheckboxSelectSecondClip;
 	Controls::Checkbox			CheckboxShowPreview;
+	Controls::Checkbox			CheckboxPasteOnClick;
 	Controls::Checkbox			CheckboxSaveImages;
 	Controls::Label				LabelMaxCacheMbytes;
 	Controls::Spinner			SpinnerMaxCacheMbytes;

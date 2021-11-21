@@ -37,6 +37,9 @@
 #define MAX_CACHE_MBYTES		9
 #define MAX_CACHE_MBYTES_DEF	100
 
+#define PASTE_ON_CLICK		10
+#define PASTE_ON_CLICK_DEF	true
+
 // Save and load user settings to and from disk
 class UserSettings : public Notify
 {
@@ -49,6 +52,7 @@ private:
     static bool				saveToDisk;
     static bool				select2ndClip;
     static bool				showPreview;
+	static bool				pasteOnClick;
 	static bool				saveImages;
 	static unsigned int		maxCacheMegabytes;
 
@@ -104,6 +108,9 @@ public:
 
 	static bool				ShowPreview();
 	static void				SetShowPreview(bool showPreview);
+
+	static bool				PasteOnClick();
+	static void				SetPasteOnClick(bool pasteOnClick);
 
 	static bool				SaveImages();
 	static void				SetSaveImages(bool saveImages);
