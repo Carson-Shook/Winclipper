@@ -147,7 +147,7 @@ void ClipsManager::SetSaveToDisk(bool saveToDisk)
 
 void ClipsManager::UpdateSavedImages()
 {
-	if (UserSettings::SaveImages())
+	if (!UserSettings::SaveImages())
 	{
 		ClearBitmaps();
 		SaveClipsAsync();
