@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
-	<Product Id="*" Name="Winclipper" Language="1033" Version="1.3.4.0" Manufacturer="Carson Shook" UpgradeCode="34e3392e-e835-41c9-ac2b-f0c68176f4ca">
+	<Product Id="*" Name="Winclipper" Language="1033" Version="1.4.0.0" Manufacturer="Carson Shook" UpgradeCode="34e3392e-e835-41c9-ac2b-f0c68176f4ca">
 		<Package InstallerVersion="301" Compressed="yes" InstallScope="perMachine" />
 
 		<MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
