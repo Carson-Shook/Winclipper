@@ -12,6 +12,9 @@ You will need Visual Studio 2017 to build Winclipper. The solution file should c
 
 ## Changelog
 
+**1.4.1** - 2021-11-21
+Quick fix for updater continuously popping up on startup.
+
 **1.4** - 2021-11-21
 This release of Winclipper includes the following features and bug fixes:
 - Dark Mode! Winclipper now follows your window color settings in Windows 10 and up in the Settings menu. I might expand this in the future.
