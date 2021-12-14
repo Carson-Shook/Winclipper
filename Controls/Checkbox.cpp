@@ -6,7 +6,7 @@ bool Controls::Checkbox::Create()
 	int finalWidth = 0;
 	int finalHeight = 0;
 
-	int checkboxWidth = GetCheckboxWidth();
+	int checkboxWidth = GetCheckboxWidth() + (GetCheckboxBorderWidth() * 2);
 
 	if (AutoSize)
 	{
@@ -62,4 +62,9 @@ int Controls::Checkbox::GetCheckboxWidth()
 {
 	// Will return 0 if not found
 	return GetSystemMetrics(SM_CXMENUCHECK);
+}
+
+int Controls::Checkbox::GetCheckboxBorderWidth()
+{
+	return GetSystemMetrics(SM_CXEDGE);
 }

@@ -20,5 +20,6 @@ namespace Controls
 		Checkbox();
 		Checkbox(HWND hWnd, UINT_PTR id, HINSTANCE hInstance);
 		int GetCheckboxWidth();
+		int GetCheckboxBorderWidth();
 	};
 }
