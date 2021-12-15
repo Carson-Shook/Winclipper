@@ -68,36 +68,64 @@ void ClipsManager::ReadClips()
     }
 }
 
-unsigned int ClipsManager::SendPasteInput(void) noexcept
+bool ClipsManager::SendPasteInput(void) noexcept
 {
-	INPUT inputCtrlKey;
-	INPUT inputVKey;
+	bool success = false;
+	bool ctrlPressed = GetKeyState(VK_CONTROL) & 0x8000;
 
-	inputCtrlKey.type = INPUT_KEYBOARD;
-	inputCtrlKey.ki.wVk = VK_CONTROL;
-	inputCtrlKey.ki.wScan = 0;
-	inputCtrlKey.ki.time = 0;
-	inputCtrlKey.ki.dwFlags = 0;
-	inputCtrlKey.ki.dwExtraInfo = 0;
+	// I hate duplicating this much code, but it seems
+	// that arrays are the more correct and more reliable
+	// way to handle this, and they require consts.
+	// Unfortunately, that means this duplication is unavoidable.
+	if (ctrlPressed)
+	{
+		const int INPUT_COUNT = 3;
+		INPUT inputs[INPUT_COUNT] = {};
+		ZeroMemory(inputs, sizeof(inputs));
 
-	inputVKey.type = INPUT_KEYBOARD;
-	inputVKey.ki.wVk = 0x56;
-	inputVKey.ki.wScan = 0;
-	inputVKey.ki.time = 0;
-	inputVKey.ki.dwFlags = 0;
-	inputVKey.ki.dwExtraInfo = 0;
+		inputs[0].type = INPUT_KEYBOARD;
+		inputs[0].ki.time = 0;
+		inputs[0].ki.wVk = VK_CONTROL;
 
-	const unsigned int in1 = SendInput(1, &inputCtrlKey, sizeof(INPUT));
-	const unsigned int in2 = SendInput(1, &inputVKey, sizeof(INPUT));
+		inputs[1].type = INPUT_KEYBOARD;
+		inputs[1].ki.time = 0;
+		inputs[1].ki.wVk = 0x56;
 
-	Sleep(50);
+		inputs[2].type = INPUT_KEYBOARD;
+		inputs[2].ki.time = 0;
+		inputs[2].ki.wVk = 0x56;
+		inputs[2].ki.dwFlags = KEYEVENTF_KEYUP;
 
-	inputCtrlKey.ki.dwFlags = KEYEVENTF_KEYUP;
-	inputVKey.ki.dwFlags = KEYEVENTF_KEYUP;
-	const unsigned int in3 = SendInput(1, &inputVKey, sizeof(INPUT));
-	const unsigned int in4 = SendInput(1, &inputCtrlKey, sizeof(INPUT));
+		success = (SendInput(INPUT_COUNT, inputs, sizeof(INPUT)) == INPUT_COUNT);
+	}
+	else
+	{
+		const int INPUT_COUNT = 4;
+		INPUT inputs[4] = {};
+		ZeroMemory(inputs, sizeof(inputs));
 
-	return in1 + in2 + in3 + in4;
+		inputs[0].type = INPUT_KEYBOARD;
+		inputs[0].ki.time = 0;
+		inputs[0].ki.wVk = VK_CONTROL;
+
+		inputs[1].type = INPUT_KEYBOARD;
+		inputs[1].ki.time = 0;
+		inputs[1].ki.wVk = 0x56;
+
+		inputs[2].type = INPUT_KEYBOARD;
+		inputs[2].ki.time = 0;
+		inputs[2].ki.wVk = 0x56;
+		inputs[2].ki.dwFlags = KEYEVENTF_KEYUP;
+
+		inputs[3].type = INPUT_KEYBOARD;
+		inputs[3].ki.time = 0;
+		inputs[3].ki.wVk = VK_CONTROL;
+		inputs[3].ki.dwFlags = KEYEVENTF_KEYUP;
+
+		success = (SendInput(INPUT_COUNT, inputs, sizeof(INPUT)) == INPUT_COUNT);
+	}
+	
+	return success;
 }
 
 void ClipsManager::ClearBitmaps()
@@ -608,11 +636,12 @@ void ClipsManager::ShowClipsMenu(HWND hWnd, const LPPOINT cPos, bool showExit)
 			if (UserSettings::PasteOnClick())
 			{
 				retries = 10;
-				unsigned int inputCount = SendPasteInput();
-				while (inputCount != 4 && retries > 0)
+				bool pasteSuccess = SendPasteInput();
+				while (!pasteSuccess && retries > 0)
 				{
+					OutputDebugString(L"retying Paste\r\n");
 					Sleep(100);
-					inputCount = SendPasteInput();
+					pasteSuccess = SendPasteInput();
 					retries--;
 				}
 			}

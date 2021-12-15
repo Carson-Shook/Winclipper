@@ -36,7 +36,7 @@ private:
     static void                     DelayClipsWriter(int* waitCount, ClipsManager* cs);
     void                            WriteClips();
     void                            ReadClips();
-	unsigned int					SendPasteInput(void) noexcept;
+	bool							SendPasteInput(void) noexcept;
 	void							ClearBitmaps();
 
 public:
