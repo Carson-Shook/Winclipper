@@ -657,27 +657,23 @@ void ClipsManager::ShowClipsMenu(HWND hWnd, const LPPOINT cPos, bool showExit)
 
 void ClipsManager::SelectDefaultMenuItem(bool select2ndClip) noexcept
 {
-    INPUT inputDownKey;
+	INPUT inputs[2] = {};
+	ZeroMemory(inputs, sizeof(inputs));
 
-    inputDownKey.type = INPUT_KEYBOARD;
-    inputDownKey.ki.wVk = VK_DOWN;
-    inputDownKey.ki.wScan = 0;
-    inputDownKey.ki.time = 0;
-    inputDownKey.ki.dwFlags = 0;
-    inputDownKey.ki.dwExtraInfo = 0;
+	inputs[0].type = INPUT_KEYBOARD;
+	inputs[0].ki.time = 0;
+	inputs[0].ki.wVk = VK_DOWN;
 
-    SendInput(1, &inputDownKey, sizeof(INPUT));
-    Sleep(50);
-    inputDownKey.ki.dwFlags = KEYEVENTF_KEYUP;
-    SendInput(1, &inputDownKey, sizeof(INPUT));
+	inputs[1].type = INPUT_KEYBOARD;
+	inputs[1].ki.time = 0;
+	inputs[1].ki.wVk = VK_DOWN;
+	inputs[1].ki.dwFlags = KEYEVENTF_KEYUP;
+
+    SendInput(2, inputs, sizeof(INPUT));
 
     if (select2ndClip)
     {
-        inputDownKey.ki.dwFlags = 0;
-        SendInput(1, &inputDownKey, sizeof(INPUT));
-        Sleep(50);
-        inputDownKey.ki.dwFlags = KEYEVENTF_KEYUP;
-        SendInput(1, &inputDownKey, sizeof(INPUT));
+		SendInput(2, inputs, sizeof(INPUT));
     }
     return;
 }
