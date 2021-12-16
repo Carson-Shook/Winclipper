@@ -12,10 +12,18 @@ You will need Visual Studio 2017 to build Winclipper. The solution file should c
 
 ## Changelog
 
+**1.4.2** - 2021-12-15
+
+This release of Winclipper includes the following bug fixes:
+- Fixed an issue with checkbox labels getting cut off at the end in Settings.
+- Added checks to make sure the control key has its state properly restored if the user is holding it down while selecting a clip (thanks [micjoh](https://github.com/micjoh) for giving me a way to reproduce the "phtantom V issue"!). 
+
 **1.4.1** - 2021-11-21
+
 Quick fix for updater continuously popping up on startup.
 
 **1.4** - 2021-11-21
+
 This release of Winclipper includes the following features and bug fixes:
 - Dark Mode! Winclipper now follows your window color settings in Windows 10 and up in the Settings menu. I might expand this in the future.
 - Adds an option for "Paste immediately on click" that can be disabled so that Winclipper only adds items to the clipboard, but still lets the user do the pasting.
